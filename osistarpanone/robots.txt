@@ -1,8 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /osis/
-Disallow: /login.html
-Disallow: /db/
-
-Sitemap: https://osistarpanone.my.id/sitemap.xml
-
