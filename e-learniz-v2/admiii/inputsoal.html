@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="add_new_question">Input Soal Simulasi • Admin Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent, #00eaff);
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent, #00eaff);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .radio-correct {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent, #00eaff);
+        }
+
+        .btn-save {
+            background: var(--accent, #00eaff);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .question-list-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .q-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .q-item:last-child { border-bottom: none; }
+
+        .q-content { flex: 1; }
+        .q-text { font-weight: 600; margin-bottom: 5px; }
+        .q-meta { font-size: 0.8rem; opacity: 0.6; }
+
+        .q-actions { display: flex; gap: 10px; }
+        .btn-action {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn-edit { background: rgba(0, 234, 255, 0.2); color: var(--accent); }
+        .btn-delete { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .badge-subject {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            background: rgba(0, 234, 255, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="admin-container">
+            <div class="glow" style="margin-bottom: 25px;">
+                <h1><i class="fa-solid fa-database"></i> Input Soal Simulasi</h1>
+                <p style="opacity: 0.7;">Kelola soal simulasi ujian per mata pelajaran.</p>
+            </div>
+
+            <!-- Form Tambah/Edit -->
+            <div class="form-card">
+                <h3 id="formTitle" style="margin-bottom: 20px;" data-i18n="add_new_question">Tambah Soal Baru</h3>
+                <input type="hidden" id="editId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label data-i18n="subject_lesson">Mata Pelajaran</label>
+                        <select id="inputSubject" class="form-control">
+                            <!-- Populated from subjects_config -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="target_class">Target Kelas</label>
+                        <select id="inputClass" class="form-control">
+                            <option value="0" data-i18n="all_classes_global">Semua Kelas (Global)</option>
+                            <option value="1">Kelas 10 (SIJA/RPL)</option>
+                            <option value="2">Master Class (Pusat)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Pertanyaan</label>
+                    <textarea id="inputQuestion" class="form-control" rows="3" placeholder="Tulis soal di sini..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="answer_choices">Pilihan Jawaban (Centang yang benar)</label>
+                    <div class="options-list">
+                        <div class="option-item">
+                            <input type="radio" name="correctAnswer" value="0" class="radio-correct" checked>
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_a" placeholder="Pilihan A">
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="correctAnswer" value="1" class="radio-correct">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_b" placeholder="Pilihan B">
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="correctAnswer" value="2" class="radio-correct">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_c" placeholder="Pilihan C">
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="correctAnswer" value="3" class="radio-correct">
+                            <input type="text" class="form-control option-input" data-i18n-placeholder="choice_d" placeholder="Pilihan D">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Penjelasan (Opsional)</label>
+                    <textarea id="inputExplanation" class="form-control" rows="2" placeholder="Muncul kalo user jawab bener..."></textarea>
+                </div>
+
+                <button id="btnSave" class="btn-save" data-i18n="save_question">Simpan Soal</button>
+                <button id="btnCancel" class="btn-save" style="background:transparent; color:white; border:1px solid rgba(255,255,255,0.2); margin-top:10px; display:none;" data-i18n="cancel_edit">Batal Edit</button>
+            </div>
+
+            <!-- List Soal -->
+            <div class="question-list-card">
+                <div class="filter-bar">
+                    <select id="filterSubject" class="form-control" style="width: auto; min-width: 200px;">
+                        <option value="all" data-i18n="all_subjects">Semua Mapel</option>
+                    </select>
+                    <div style="flex: 1;"></div>
+                    <div id="countInfo" style="font-size: 0.9rem; opacity: 0.7; align-self: center;">0 Soal ditemukan</div>
+                </div>
+
+                <div id="questionsList">
+                    <!-- Questions will be injected here -->
+                    <p style="text-align: center; padding: 20px; opacity: 0.5;" data-i18n="loading">Memuat soal...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="jsadmiii/inputsoal.js" defer></script>
+
+</body>
+
+</html>

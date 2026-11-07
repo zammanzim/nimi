@@ -1,0 +1,718 @@
+// =========================================================================
+// HOME — jejak organisasi, bento slider, ticker
+// =========================================================================
+
+const Home = {
+    cachePimpinan: {},
+    cacheAnggota: {},
+    tahunAktif: null,
+    tahunList: [],
+    fotoPopup: null,
+    terinisialisasi: false,
+
+    async init() {
+        if (Home.terinisialisasi) return;
+        Home.terinisialisasi = true;
+        Home.renderTicker();
+        Home.bindGlobal();
+        // Prestasi & kegiatan sekarang DB-driven (prestasi.js/kegiatan.js handle popup sendiri)
+        // Tidak perlu listener hardcode di sini.
+        await Home.muatArsip();
+    },
+
+    // Listener global (ESC/panah/back) didaftarkan sekali saat script dimuat,
+    // BUKAN di init() — init() cuma jalan kalau view Home dibuka, padahal
+    // popup foto/struktur bisa dibuka dari galeri/prestasi/kegiatan.
+    bindGlobal() {
+        if (Home._globalBound) return;
+        Home._globalBound = true;
+        document.addEventListener("keydown", (e) => {
+            const active = document.activeElement;
+            if (active && (active.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName))) return;
+            // Kunci milik modal teratas: kalau uniPopup / form lain terbuka, mereka yang urus
+            if (document.getElementById("uniOverlay") || (window.ModalNav && ModalNav.adaYangTerbuka())) return;
+            if (e.key === "Escape") Home.tutupModal();
+            if (e.key === "ArrowLeft") Home.geserModalAktif(-1);
+            if (e.key === "ArrowRight") Home.geserModalAktif(1);
+        });
+        window.addEventListener("popstate", (e) => {
+            if (e && e.__modalKonsumsi) return;
+            if ((window.__abaikanBack | 0) > 0) {
+                window.__abaikanBack--;
+                if (e) e.__modalKonsumsi = true;
+                return;
+            }
+            if (Home.selfBack) {
+                Home.selfBack = false;
+                return;
+            }
+            // Back milik modal teratas: kalau uniPopup / form lain di atas, mereka yang urus
+            if (window.__topModal) {
+                const t = window.__topModal();
+                if (t && t.sys !== "home") return;
+            }
+            if (document.querySelector(".struktur-modal")) Home.tutupModal(true);
+        });
+    },
+
+    // ============ SWIPE HORIZONTAL (mouse & sentuh) ============
+    // Masalah sebelumnya: cuma pointerdown+pointerup. Di HP, begitu jari
+    // gerak sedikit diagonal, browser ambil alih buat scroll vertikal lalu
+    // menembak pointercancel → swipe batal → berasa "gabisa geser".
+    // Helper ini merebut gesture (setPointerCapture) begitu arah horizontal
+    // dominan, jadi swipe tidak dibatalkan browser.
+    pasangSwipe(el, cb) {
+        if (!el || typeof cb !== "function") return;
+        let sx = 0, sy = 0, track = false, merebut = false;
+        const abaikan = (t) => t && t.closest && (
+            t.closest('[contenteditable="true"]') ||
+            t.closest("input, textarea, select, button, a") ||
+            t.closest(".foto-hint") ||
+            t.closest(".foto-caption")
+        );
+        el.addEventListener("pointerdown", (e) => {
+            if (e.button !== undefined && e.button !== 0) return;
+            if (abaikan(e.target)) return;
+            track = true; merebut = false;
+            sx = e.clientX; sy = e.clientY;
+        });
+        el.addEventListener("pointermove", (e) => {
+            if (!track || merebut) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                merebut = true;
+                try { el.setPointerCapture(e.pointerId); } catch (err) {}
+            }
+        });
+        const batal = () => { track = false; merebut = false; };
+        el.addEventListener("pointercancel", batal);
+        el.addEventListener("pointerup", (e) => {
+            if (!track) return;
+            track = false;
+            const direbut = merebut;
+            merebut = false;
+            if (abaikan(e.target) && !direbut) return;
+            const dx = e.clientX - sx, dy = e.clientY - sy;
+            if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+                // Telan klik berikutnya biar foto/link tidak ikut kebuka habis swipe
+                el.addEventListener("click", (ev) => { ev.stopPropagation(); ev.preventDefault(); }, { capture: true, once: true });
+                cb(dx < 0 ? 1 : -1);
+            }
+        });
+    },
+
+    // ============ POPUP FOTO ============
+    // Media popup: foto = <img>, video = <video controls> (thumbnail di
+    // grid tidak autoplay; di popup langsung coba play bersuara, fallback
+    // muted kalau browser menolak).
+    mediaPopupHtml(src, judul) {
+        const j = escapeHtml(judul || "");
+        if (typeof isVideoPath === "function" && isVideoPath(src)) {
+            return `<video src="${src}" controls playsinline preload="metadata"></video>`;
+        }
+        return `<span class="media-muat media-muat-tinggi" style="width:100%"><img src="${src}" alt="${j}" draggable="false" onload="this.closest('.media-muat').classList.add('sudah-muat')" onerror="this.closest('.media-muat').classList.add('sudah-muat')"><span class="media-muat-loading" aria-hidden="true"><span class="spinner"></span></span></span>`;
+    },
+
+    cobaPutarPopup(modal) {
+        const v = modal ? modal.querySelector(".foto-pop video") : null;
+        if (!v) return;
+        try {
+            v.muted = false;
+            const p = v.play();
+            if (p && p.catch) p.catch(() => { try { v.muted = true; v.play().catch(() => {}); } catch {} });
+        } catch {}
+    },
+
+    bukaFotoPopup(img, judul, caption, opsi = {}) {
+        Home.tutupModal();
+        Home.statePushed = false;
+        try {
+            history.pushState({ foto: true }, "");
+            Home.statePushed = true;
+        } catch (e) {}
+
+        const gallery = Array.isArray(opsi.gallery) ? opsi.gallery : null;
+        const startIndex = gallery ? Math.max(0, Math.min(opsi.index || 0, gallery.length - 1)) : 0;
+        const current = gallery ? gallery[startIndex] : null;
+        // Pill cuma boleh editable kalau pemanggil pasang onChange (= ada
+        // jalur simpan, mis. Prestasi/Kegiatan/Arsip/Galeri.bindPopupCaption).
+        // Tanpa ini, popup tanpa jalur simpan (angkatan, bukti, lampiran)
+        // pill-nya kelihatan bisa diketik tapi editnya hilang percuma.
+        const adaPenyimpan = typeof opsi.onChange === "function";
+        Home.fotoPopup = gallery ? { gallery, index: startIndex, onChange: opsi.onChange || null, bisaEditCaption: false } : null;
+
+        const src = current ? current.src : ((img && img.src) ? img.src : getFoto(FOTO_DEFAULT[(img && img.dataset.foto) || ""] || ""));
+        const finalJudul = current ? (current.judul || judul || "") : (judul || "");
+        const finalCaption = current ? (current.caption || "") : (caption || "");
+        const olehAwal = String((current && current.oleh) || opsi.oleh || "").trim();
+        const canEditCaption = adaPenyimpan && document.body.classList.contains("edit-mode") && (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+        if (Home.fotoPopup) Home.fotoPopup.bisaEditCaption = canEditCaption;
+        const captionPill = `<span class="foto-caption-pill" ${canEditCaption ? 'contenteditable="true" spellcheck="false"' : ''}>${escapeHtml(finalCaption || "")}</span>`;
+        // Caption = floating overlay di atas foto (bukan area di bawah foto)
+        const captionHtml = finalCaption || canEditCaption ? `<div class="foto-caption">${captionPill}</div>` : "";
+        // Pindah foto via swipe (arrow dihapus biar tidak nutupin foto).
+        // Hint tampil sampai user menutupnya sekali via X.
+        const multi = !!(gallery && gallery.length > 1);
+        let hintOff = false;
+        try { hintOff = localStorage.getItem("fotoSwipeHintOff") === "1"; } catch (e) {}
+        const hintHtml = multi && !hintOff
+            ? `<div class="foto-hint" id="fotoSwipeHint"><i class="fa-solid fa-arrows-left-right"></i><span>Geser buat pindah foto</span><button type="button" id="fotoHintX" title="Tutup">&times;</button></div>`
+            : "";
+        const modal = document.createElement("div");
+        modal.className = "struktur-modal foto-modal";
+        try { modal.dataset.seq = String((window.__seqModal = (window.__seqModal || 0) + 1)); } catch (e) {}
+        modal.innerHTML = `
+            <div class="struktur-modal-bg"></div>
+            <div class="struktur-modal-box foto-only">
+                <div class="struktur-head">
+                    <h4>${escapeHtml(finalJudul)}</h4>
+                    <button class="struktur-close" type="button">&times;</button>
+                </div>
+                <div class="foto-pop">
+                    ${hintHtml}
+                    <div class="foto-media" style="width:100%">${Home.mediaPopupHtml(src, finalJudul)}</div>
+                    ${olehAwal ? `<div class="foto-oleh" id="fotoOleh">Diupload oleh ${escapeHtml(olehAwal)}</div>` : `<div class="foto-oleh" id="fotoOleh" style="display:none"></div>`}
+                    ${captionHtml}
+                </div>
+            </div>`;
+        modal.querySelector(".struktur-modal-bg").addEventListener("click", () => Home.tutupModal());
+        modal.querySelector(".struktur-close").addEventListener("click", () => Home.tutupModal());
+        modal.querySelector("#fotoHintX")?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            document.getElementById("fotoSwipeHint")?.remove();
+            try { localStorage.setItem("fotoSwipeHintOff", "1"); } catch (err) {}
+        });
+        // Swipe kanan-kiri untuk pindah foto (mouse & sentuh)
+        const pop = modal.querySelector(".foto-pop");
+        if (pop && multi) Home.pasangSwipe(pop, (arah) => Home.geserFotoPopup(arah));
+        document.body.appendChild(modal);
+        document.body.style.overflow = "hidden";
+        Home.cobaPutarPopup(modal);
+        if (Home.fotoPopup && typeof Home.fotoPopup.onChange === "function") {
+            Home.fotoPopup.onChange(Home.fotoPopup.index, modal);
+        }
+    },
+
+    geserFotoPopup(arah) {
+        if (!Home.fotoPopup || !Array.isArray(Home.fotoPopup.gallery) || Home.fotoPopup.gallery.length < 2) return;
+        const modal = document.querySelector(".struktur-modal");
+        if (!modal || !modal.querySelector(".foto-pop")) return;
+        // Flush dulu: DOM pill bakal ditimpa foto berikut, jadi baca teks
+        // yang sedang diketik SEBELUM kehapus. Idempoten, aman double-save.
+        if (typeof modal._flushCaption === "function") {
+            try { modal._flushCaption(); } catch (e) {}
+        }
+        const total = Home.fotoPopup.gallery.length;
+        Home.fotoPopup.index = (Home.fotoPopup.index + arah + total) % total;
+        const item = Home.fotoPopup.gallery[Home.fotoPopup.index];
+        const title = modal.querySelector(".struktur-head h4");
+        const mediaWrap = modal.querySelector(".foto-pop .foto-media");
+        let captionEl = modal.querySelector(".foto-caption");
+        const canEditCaption = !!(Home.fotoPopup && Home.fotoPopup.bisaEditCaption);
+
+        if (title) title.textContent = item.judul || "";
+        const olehEl = modal.querySelector("#fotoOleh");
+        if (olehEl) {
+            const oleh = String(item.oleh || "").trim();
+            olehEl.style.display = oleh ? "" : "none";
+            olehEl.textContent = oleh ? "Diupload oleh " + oleh : "";
+        }
+        // Render ulang medianya (bisa pindah foto<->video) + auto-play kalau video.
+        if (mediaWrap) {
+            mediaWrap.innerHTML = Home.mediaPopupHtml(item.src || "", item.judul || "");
+            Home.cobaPutarPopup(modal);
+        } else {
+            const img = modal.querySelector(".foto-pop img");
+            if (img) {
+                img.src = item.src || "";
+                img.alt = item.judul || "";
+            }
+        }
+        if ((item.caption || canEditCaption) && !captionEl) {
+            captionEl = document.createElement("div");
+            captionEl.className = "foto-caption";
+            captionEl.innerHTML = `<span class="foto-caption-pill" ${canEditCaption ? 'contenteditable="true" spellcheck="false"' : ''}></span>`;
+            const pop = modal.querySelector(".foto-pop");
+            if (pop) pop.appendChild(captionEl);
+        }
+        const pill = captionEl ? captionEl.querySelector(".foto-caption-pill") : null;
+        if (pill) {
+            pill.contentEditable = canEditCaption ? "true" : "false";
+            pill.spellcheck = false;
+            pill.textContent = item.caption || "";
+            if (!item.caption && !canEditCaption && captionEl) captionEl.remove();
+        } else if (captionEl) {
+            captionEl.textContent = item.caption || "";
+            if (!item.caption && !canEditCaption) captionEl.remove();
+        }
+        if (typeof Home.fotoPopup.onChange === "function") {
+            Home.fotoPopup.onChange(Home.fotoPopup.index, modal);
+        }
+    },
+
+    // ============ TICKER ============
+    renderTicker() {
+        const track = document.getElementById("tickerTrack");
+        if (!track) return;
+        // Duplikasi isi biar loop mulus
+        track.innerHTML += track.innerHTML;
+    },
+
+    // ============ ARSIP ANGKATAN — SWR (cache dulu biar instant) ============
+    async muatArsip() {
+        const grid = document.getElementById("yearGrid");
+        if (!grid) return;
+
+        const cachedP = Cache.get("pimpinan");
+        const cachedA = Cache.get("pengurus");
+        if (cachedP && cachedA) {
+            Home.renderArsip(cachedP, cachedA);
+            Promise.all([getPimpinan(), getPengurus()]).then(([freshP, freshA]) => {
+                if (JSON.stringify(freshP) !== JSON.stringify(cachedP) || JSON.stringify(freshA) !== JSON.stringify(cachedA)) {
+                    Cache.set("pimpinan", freshP);
+                    Cache.set("pengurus", freshA);
+                    Home.renderArsip(freshP, freshA);
+                }
+            }).catch(() => {});
+            return;
+        }
+
+        grid.innerHTML = `<div class="year-card" style="grid-column: 1 / -1; aspect-ratio: auto; cursor: default;">
+            <div class="year-loading"><div class="spinner"></div>Memuat jejak organisasi...</div>
+        </div>`;
+
+        try {
+            const [freshP, freshA] = await Promise.all([getPimpinan(), getPengurus()]);
+            Cache.set("pimpinan", freshP);
+            Cache.set("pengurus", freshA);
+            Home.renderArsip(freshP, freshA);
+        } catch (err) {
+            console.error("Gagal muat arsip:", err);
+            grid.innerHTML = `<div class="year-card" style="grid-column: 1 / -1; aspect-ratio: auto; cursor: default;">
+                <div class="year-loading">Gagal memuat data. Cek koneksi & konfigurasi.</div>
+            </div>`;
+        }
+    },
+
+    // Render daftar tahun DINAMIS dari data DB (bukan loop fix).
+    // Tahun = gabungan unik tahun di tabel pimpinan + pengurus, terbaru dulu.
+    // Tahun tanpa data tidak tampil — tambah via tombol Tambah (edit mode).
+    renderArsip(listPimpinan, listAnggota) {
+        const grid = document.getElementById("yearGrid");
+        if (!grid) return;
+        Home.cachePimpinan = {};
+        Home.cacheAnggota = {};
+        (listPimpinan || []).forEach(p => { Home.cachePimpinan[String(p.tahun)] = p; });
+        (listAnggota || []).forEach(a => {
+            const k = String(a.tahun);
+            if (!Home.cacheAnggota[k]) Home.cacheAnggota[k] = [];
+            Home.cacheAnggota[k].push(a);
+        });
+        const setTahun = new Set();
+        Object.keys(Home.cachePimpinan).forEach(k => {
+            const t = parseInt(k, 10);
+            if (!isNaN(t)) setTahun.add(t);
+        });
+        Object.keys(Home.cacheAnggota).forEach(k => {
+            const t = parseInt(k, 10);
+            if (!isNaN(t)) setTahun.add(t);
+        });
+        // Terbaru paling atas
+        Home.tahunList = [...setTahun].sort((a, b) => b - a);
+        const min = Home.tahunList.length ? Home.tahunList[Home.tahunList.length - 1] : null;
+        const maks = Home.tahunList.length ? Home.tahunList[0] : null;
+        const labelRentang = Home.tahunList.length > 1 ? `${min}–${maks}` : (maks ?? "—");
+        const chipTahun = document.getElementById("chipTahun");
+        if (chipTahun) chipTahun.textContent = labelRentang;
+        const chipJejak = document.getElementById("chipJejak");
+        if (chipJejak) chipJejak.textContent = labelRentang;
+        if (Home.tahunList.length === 0) {
+            grid.innerHTML = `<div class="pesan-empty" style="grid-column:1/-1">Belum ada data angkatan.</div>`;
+            return;
+        }
+        let html = "";
+        Home.tahunList.forEach((thn, idx) => {
+            const p = Home.cachePimpinan[String(thn)];
+            const foto = (p && p.foto_angkatan) ? p.foto_angkatan : `angkatan/foto-${thn}.jpg`;
+            const era = thn >= 2023 ? "era-adiabi" : "era-angkatan";
+            html += `
+                <div class="year-item ${era}" style="--i:${idx}">
+                    <span class="year-dot" aria-hidden="true"></span>
+                    <div class="year-card media-muat" onclick="Home.toggleStruktur(${thn})" role="button" tabindex="0" aria-label="Lihat angkatan ${thn}">
+                        <button type="button" class="year-del-btn" onclick="event.stopPropagation();Home.hapusAngkatan(event,${thn})" title="Hapus angkatan ${thn}" aria-label="Hapus angkatan ${thn}">&times;</button>
+                        <img src="${getFoto(foto)}" alt="Angkatan ${thn}" loading="lazy"
+                             onload="this.closest('.media-muat').classList.add('sudah-muat')"
+                             onerror="this.closest('.media-muat').classList.add('sudah-muat');this.remove();"><span class="media-muat-loading" aria-hidden="true"><span class="spinner"></span></span>
+                            <div class="year-overlay">
+                            <div class="year-bottom">
+                                <div class="year-text">
+                                    <span class="year-num">${thn}</span>
+                                    <span class="year-label">${labelTahun(thn)}</span>
+                                </div>
+                                <span class="year-more">Lihat selengkapnya <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        grid.innerHTML = html;
+        if (document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.injectPhotoButtons) {
+            SiteEdit.injectPhotoButtons();
+        }
+    },
+
+    // Tambah angkatan baru (edit mode): bikin baris pimpinan kosong untuk
+    // tahun pilihan, lalu render ulang. Isi detail via popup angkatan.
+    async tambahAngkatan() {
+        const u = (typeof OsisAuth !== "undefined" && OsisAuth.getUser) ? OsisAuth.getUser() : null;
+        if (!u || u.mode !== "osis") {
+            if (typeof showToast === "function") showToast("Login OSIS dulu buat nambah angkatan.", "error");
+            return;
+        }
+        const list = (Home.tahunList && Home.tahunList.length) ? Home.tahunList : [new Date().getFullYear() - 1];
+        const usulan = Math.max(...list) + 1;
+        const input = await showPopup("Tahun angkatan baru", "form", {
+            title: "Tambah Angkatan",
+            fields: [{ name: "tahun", label: "Tahun", type: "number", value: String(usulan) }]
+        });
+        if (input === null || input === false) return;
+        const tahun = parseInt(input, 10);
+        if (isNaN(tahun) || tahun < 2000 || tahun > 2100) {
+            if (typeof showToast === "function") showToast("Tahun tidak valid (2000–2100).", "error");
+            return;
+        }
+        if (Home.cachePimpinan[String(tahun)]) {
+            if (typeof showToast === "function") showToast(`Angkatan ${tahun} sudah ada.`, "error");
+            return;
+        }
+        try {
+            await simpanPimpinan({ tahun, ketua_nama: "", wakil_nama: "", ketua_foto: "", wakil_foto: "", foto_angkatan: "" });
+            const key = String(tahun);
+            Home.cachePimpinan[key] = { tahun, ketua_nama: "", wakil_nama: "", ketua_foto: "", wakil_foto: "", foto_angkatan: "" };
+            Cache.set("pimpinan", Object.values(Home.cachePimpinan));
+            Home.renderArsip(Object.values(Home.cachePimpinan), Object.values(Home.cacheAnggota).flat());
+            if (typeof showToast === "function") showToast(`Angkatan ${tahun} ditambahkan — klik card buat isi detail.`, "success");
+        } catch (err) {
+            console.error(err);
+            if (typeof showToast === "function") showToast("Gagal nambah angkatan: " + (err.message || err), "error");
+        }
+    },
+
+    // Hapus angkatan (edit mode): hapus baris pimpinan + semua pengurus
+    // tahun itu (biar card tidak muncul lagi dari data pengurus) + foto storage.
+    async hapusAngkatan(ev, tahun) {
+        if (ev) ev.stopPropagation();
+        const u = (typeof OsisAuth !== "undefined" && OsisAuth.getUser) ? OsisAuth.getUser() : null;
+        if (!u || u.mode !== "osis") {
+            if (typeof showToast === "function") showToast("Login OSIS dulu buat hapus angkatan.", "error");
+            return;
+        }
+        tahun = parseInt(tahun, 10);
+        if (!tahun || isNaN(tahun)) return;
+        const key = String(tahun);
+        const anggota = (Home.cacheAnggota && Home.cacheAnggota[key]) || [];
+        const ok = await showPopup(
+            `Hapus angkatan ${tahun}${anggota.length ? ` beserta ${anggota.length} anggota` : ""}? Data tidak bisa dikembalikan.`,
+            "confirm"
+        );
+        if (!ok) return;
+        const pimp = (Home.cachePimpinan && Home.cachePimpinan[key]) || {};
+        try {
+            await hapusPimpinan(tahun);
+            const hasil = await Promise.allSettled(
+                anggota.filter(a => a && a.id != null).map(a => hapusPengurus(parseInt(a.id, 10)))
+            );
+            const gagal = hasil.filter(h => h.status === "rejected").length;
+            // Bersihkan foto storage yang yatim (fire-and-forget)
+            [pimp.foto_angkatan, pimp.ketua_foto, pimp.wakil_foto,
+                ...anggota.map(a => a && a.foto).filter(Boolean)].forEach(path => {
+                if (path && typeof hapusFotoStorage === "function") hapusFotoStorage(path).catch(() => {});
+            });
+            delete Home.cachePimpinan[key];
+            delete Home.cacheAnggota[key];
+            Cache.set("pimpinan", Object.values(Home.cachePimpinan));
+            Cache.set("pengurus", Object.values(Home.cacheAnggota).flat());
+            Home.renderArsip(Object.values(Home.cachePimpinan), Object.values(Home.cacheAnggota).flat());
+            if (typeof showToast === "function") {
+                showToast(gagal ? `Angkatan ${tahun} dihapus, tapi ${gagal} anggota gagal dihapus.` : `Angkatan ${tahun} dihapus.`, gagal ? "error" : "success");
+            }
+        } catch (err) {
+            console.error(err);
+            if (typeof showToast === "function") showToast("Gagal hapus angkatan: " + (err.message || err), "error");
+        }
+    },
+
+    // ============ STRUKTUR DETAIL (POPUP) ============
+    toggleStruktur(tahun) {
+        if (Home.tahunAktif === tahun && document.querySelector(".struktur-modal")) {
+            Home.tutupModal();
+            return;
+        }
+        Home.tahunAktif = tahun;
+        Home.bukaModal(tahun);
+    },
+
+    tutupModal(dariBack = false) {
+        const modal = document.querySelector(".struktur-modal");
+        // Flush caption popup foto yang belum ke-save (mis. user ketik lalu
+        // langsung tap X/backdrop/back). Di HP tap itu tidak memindah fokus
+        // → focusout tidak fires → tanpa flush edit hilang. Fire-and-forget:
+        // RPC jalan walau modal sudah dilepas.
+        if (modal && typeof modal._flushCaption === "function") {
+            try { modal._flushCaption(); } catch (e) {}
+            modal._flushCaption = null;
+        }
+        // auto-save kalau lagi edit mode (tanpa ubah layout, tanpa tombol)
+        if (modal && document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.savePopup) {
+            const t = parseInt(modal.dataset.tahun, 10);
+            if (t && !isNaN(t)) SiteEdit.savePopup(t, modal);
+        }
+        if (modal) {
+            // Stop video popup biar suaranya tidak lanjut pas modal ditutup.
+            try { modal.querySelectorAll("video").forEach(v => v.pause()); } catch {}
+            modal.classList.add("tutup");
+            setTimeout(() => {
+                if (modal.parentNode) modal.remove();
+            }, 200);
+        }
+        Home.tahunAktif = null;
+        Home.fotoPopup = null;
+        document.body.style.overflow = "";
+        const perluBack = !dariBack && Home.statePushed;
+        Home.statePushed = false;
+        if (perluBack) {
+            Home.selfBack = true;
+            setTimeout(() => { Home.selfBack = false; }, 300);
+            history.back();
+        }
+    },
+
+    bukaModal(tahun, tanpaHistory = false, tanpaAnimasi = false) {
+        if (!tanpaHistory) {
+            Home.statePushed = false;
+            try {
+                history.pushState({ struktur: tahun }, "");
+                Home.statePushed = true;
+            } catch (e) {}
+        }
+        const pimpinan = Home.cachePimpinan[String(tahun)] || null;
+        // Ketua/wakil sudah tampil di kartu pimpinan atas — kecualikan dari
+        // list anggota (cocok nama, atau jabatan persis Ketua/Wakil Ketua).
+        const norm = s => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+        const namaPimp = [pimpinan && pimpinan.ketua_nama, pimpinan && pimpinan.wakil_nama].map(norm).filter(Boolean);
+        const jabPimp = ["ketua osis", "wakil ketua", "ketua", "wakil"];
+        const anggota = (Home.cacheAnggota[String(tahun)] || []).filter(a => !namaPimp.includes(norm(a.nama)) && !jabPimp.includes(norm(a.jabatan)));
+        const foto = (pimpinan && pimpinan.foto_angkatan) ? pimpinan.foto_angkatan : `angkatan/foto-${tahun}.jpg`;
+        const isEdit = document.body.classList.contains("edit-mode") && (typeof OsisAuth !== "undefined" && OsisAuth.getUser && OsisAuth.getUser()?.mode === "osis");
+
+        let chips = "";
+        const fotoHtml = (a, tempKey) => {
+            const kunci = (tempKey != null) ? `temp:${tempKey}` : `id:${a.id}`;
+            const cam = isEdit ? `<button type="button" class="anggota-cam" onclick="event.stopPropagation();SiteEdit.pilihFotoAnggota(event,${tahun},'${kunci}')" title="Ganti foto" aria-label="Ganti foto"><i class="fa-solid fa-camera"></i></button>` : "";
+            const klik = (a.foto && !tempKey) ? ` onclick="event.stopPropagation();Home.bukaFotoAnggota(${tahun},${a.id})" style="cursor:pointer"` : "";
+            const isi = a.foto
+                ? `<img src="${getFoto(a.foto)}" alt="${escapeHtml(a.nama || "Anggota")}" loading="lazy" onerror="this.remove()">`
+                : `<span class="anggota-inisial">${escapeHtml(Home.inisial(a.nama))}</span>`;
+            return `<div class="anggota-photo${a.foto ? "" : " kosong"}"${klik}>${isi}${cam}</div>`;
+        };
+        if (!isEdit) {
+            if (anggota.length > 0) {
+                chips = anggota.map(a => `
+                    <div class="anggota-chip">
+                        ${fotoHtml(a)}
+                        <div class="anggota-info"><b>${escapeHtml(a.nama)}</b><span>${escapeHtml(a.jabatan)}</span></div>
+                    </div>`).join("");
+            } else {
+                chips = `<div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--gray); font-weight: 700;">Belum ada data anggota tahun ini.</div>`;
+            }
+        } else {
+            if (anggota.length > 0) {
+                chips = anggota.map(a => `
+                    <div class="anggota-chip" data-anggota-id="${a.id}">
+                        <button type="button" class="chip-x" onclick="SiteEdit.hapusChipInline(event, ${a.id}, ${tahun})" title="Hapus anggota" aria-label="Hapus anggota">&times;</button>
+                        ${fotoHtml(a)}
+                        <div class="anggota-info"><b contenteditable="true" spellcheck="false" data-field="nama" data-anggota-id="${a.id}">${escapeHtml(a.nama)}</b><span contenteditable="true" spellcheck="false" data-field="jabatan" data-anggota-id="${a.id}">${escapeHtml(a.jabatan)}</span></div>
+                    </div>`).join("");
+            } else {
+                chips = "";
+            }
+            chips += `<div class="anggota-chip tambah" onclick="SiteEdit.tambahAnggotaInline(${tahun})" style="border-style:dashed; cursor:pointer; align-items:center; justify-content:center; color:var(--gray); min-height:56px;"><span><i class="fa-solid fa-plus"></i> Tambah anggota</span></div>`;
+            if (anggota.length === 0) {
+                chips = `<div style="grid-column: 1 / -1; font-size: 0.75rem; color: var(--gray); font-weight: 700; margin-bottom:6px;">Belum ada data anggota tahun ini.</div>` + chips;
+            }
+        }
+
+        const modal = document.createElement("div");
+        modal.className = tanpaAnimasi ? "struktur-modal no-anim" : "struktur-modal";
+        try { modal.dataset.seq = String((window.__seqModal = (window.__seqModal || 0) + 1)); } catch (e) {}
+        // simpan tahun di dataset modal biar auto-save tau konteksnya
+        modal.dataset.tahun = String(tahun);
+        // Ganti angkatan via swipe (arrow dihapus). Hint tampil sampai ditutup via X.
+        let hintAOff = false;
+        try { hintAOff = localStorage.getItem("angkatanSwipeHintOff") === "1"; } catch (e) {}
+        const hintAngkatan = !hintAOff
+            ? `<div class="foto-hint angkatan-hint" id="angkatanSwipeHint"><i class="fa-solid fa-arrows-left-right"></i><span>Geser buat ganti angkatan</span><button type="button" id="angkatanHintX" title="Tutup">&times;</button></div>`
+            : "";
+        modal.innerHTML = `
+            <div class="struktur-modal-bg"></div>
+            <div class="struktur-modal-box">
+                ${hintAngkatan}
+                <div class="struktur-head">
+                    <h4>${labelTahun(tahun)} (${tahun})</h4>
+                    <div class="struktur-head-btns">
+                        <button class="struktur-nav" type="button" data-nav="-1" title="Angkatan sebelumnya" aria-label="Angkatan sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="struktur-nav" type="button" data-nav="1" title="Angkatan berikutnya" aria-label="Angkatan berikutnya"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button class="struktur-close" type="button">&times;</button>
+                    </div>
+                </div>
+                <div class="struktur-modal-body">
+                    <div class="struktur-side">
+                    <div class="struktur-foto media-muat media-muat-tinggi">
+                        <img src="${getFoto(foto)}" alt="Angkatan ${tahun}" loading="lazy"
+                             onclick="Home.bukaFotoAngkatan(${tahun}, 'angkatan')"
+                             onload="this.closest('.media-muat').classList.add('sudah-muat')"
+                             onerror="this.closest('.media-muat').classList.add('sudah-muat');this.remove();"><span class="media-muat-loading" aria-hidden="true"><span class="spinner"></span></span>
+                    </div>
+
+                    <div class="struktur-pimpinan">
+                        <div class="pimp-card">
+                            <div class="pimp-photo media-muat mini">
+                                <img src="${getFoto(pimpinan ? pimpinan.ketua_foto : "")}" alt="Ketua OSIS"
+                                     onclick="Home.bukaFotoAngkatan(${tahun}, 'ketua')"
+                                     onload="this.closest('.media-muat').classList.add('sudah-muat')"
+                                     onerror="this.closest('.media-muat').classList.add('sudah-muat');this.remove();"><span class="media-muat-loading" aria-hidden="true"><span class="spinner"></span></span>
+                            </div>
+                            <div class="pimp-info">
+                                ${isEdit ? `<b contenteditable="true" spellcheck="false" data-pimp-field="ketua_nama" data-tahun="${tahun}">${pimpinan && pimpinan.ketua_nama ? escapeHtml(pimpinan.ketua_nama) : ""}</b>` : `<b>${pimpinan && pimpinan.ketua_nama ? escapeHtml(pimpinan.ketua_nama) : "Belum Ada"}</b>`}
+                                <span>Ketua OSIS</span>
+                            </div>
+                        </div>
+                        <div class="pimp-card">
+                            <div class="pimp-photo media-muat mini">
+                                <img src="${getFoto(pimpinan ? pimpinan.wakil_foto : "")}" alt="Wakil Ketua"
+                                     onclick="Home.bukaFotoAngkatan(${tahun}, 'wakil')"
+                                     onload="this.closest('.media-muat').classList.add('sudah-muat')"
+                                     onerror="this.closest('.media-muat').classList.add('sudah-muat');this.remove();"><span class="media-muat-loading" aria-hidden="true"><span class="spinner"></span></span>
+                            </div>
+                            <div class="pimp-info">
+                                ${isEdit ? `<b contenteditable="true" spellcheck="false" data-pimp-field="wakil_nama" data-tahun="${tahun}">${pimpinan && pimpinan.wakil_nama ? escapeHtml(pimpinan.wakil_nama) : ""}</b>` : `<b>${pimpinan && pimpinan.wakil_nama ? escapeHtml(pimpinan.wakil_nama) : "Belum Ada"}</b>`}
+                                <span>Wakil Ketua</span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="struktur-anggota">
+                        <div class="pembatas">Anggota</div>
+                        <div class="anggota-grid">${chips}</div>
+                    </div>
+
+                </div>
+            </div>
+        `;
+
+        modal.querySelector(".struktur-modal-bg").addEventListener("click", () => Home.tutupModal());
+        modal.querySelector(".struktur-close").addEventListener("click", () => Home.tutupModal());
+        modal.querySelectorAll(".struktur-nav").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                Home.geserStruktur(parseInt(btn.dataset.nav, 10) || 0);
+            });
+        });
+        modal.querySelector("#angkatanHintX")?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            document.getElementById("angkatanSwipeHint")?.remove();
+            try { localStorage.setItem("angkatanSwipeHintOff", "1"); } catch (err) {}
+        });
+        // Swipe kanan-kiri untuk ganti angkatan (mouse & sentuh).
+        // Dipasang di badan modal (area scroll), bukan seluruh box, supaya
+        // header/tombol navigasi tidak ikut ke-swipe.
+        const geserEl = modal.querySelector(".struktur-modal-body") || modal.querySelector(".struktur-modal-box");
+        if (geserEl) Home.pasangSwipe(geserEl, (arah) => Home.geserStruktur(arah));
+        document.body.appendChild(modal);
+        // Cegah drag bawaan gambar (desktop) supaya mouse-swipe tidak putus
+        modal.querySelectorAll("img").forEach((im) => {
+            try { im.draggable = false; } catch (err) {}
+            im.addEventListener("dragstart", (e) => e.preventDefault());
+        });
+        if (typeof isEdit !== "undefined" && isEdit && typeof SiteEdit !== "undefined" && SiteEdit.injectModalFotoButtons) {
+            SiteEdit.injectModalFotoButtons(modal, tahun);
+        }
+        document.body.style.overflow = "hidden";
+    },
+
+    getGaleriAngkatan(tahun) {
+        const pimpinan = Home.cachePimpinan[String(tahun)] || null;
+        const fotoAngkatan = (pimpinan && pimpinan.foto_angkatan) ? pimpinan.foto_angkatan : `angkatan/foto-${tahun}.jpg`;
+        const dasar = [
+            { key: "angkatan", src: getFoto(fotoAngkatan), judul: `Angkatan ${tahun}`, caption: labelTahun(tahun) },
+            { key: "ketua", src: getFoto(pimpinan ? pimpinan.ketua_foto : ""), judul: "Ketua OSIS", caption: pimpinan && pimpinan.ketua_nama ? pimpinan.ketua_nama : "" },
+            { key: "wakil", src: getFoto(pimpinan ? pimpinan.wakil_foto : ""), judul: "Wakil Ketua", caption: pimpinan && pimpinan.wakil_nama ? pimpinan.wakil_nama : "" }
+        ];
+        const angg = ((Home.cacheAnggota && Home.cacheAnggota[String(tahun)]) || [])
+            .filter(a => a && a.foto)
+            .map(a => ({ key: `anggota-${a.id}`, src: getFoto(a.foto), judul: a.nama || "Anggota", caption: a.jabatan || "" }));
+        return [...dasar, ...angg].filter(item => item.src);
+    },
+
+    // Inisial nama buat avatar kosong ("Siti Aminah" -> "SA")
+    inisial(nama) {
+        const kata = String(nama || "").trim().split(/\s+/).filter(Boolean);
+        if (!kata.length) return "?";
+        return (kata[0][0] + (kata.length > 1 ? kata[kata.length - 1][0] : "")).toUpperCase();
+    },
+
+    bukaFotoAnggota(tahun, id) {
+        const gallery = Home.getGaleriAngkatan(tahun);
+        if (gallery.length === 0) return;
+        const index = Math.max(0, gallery.findIndex(item => item.key === `anggota-${id}`));
+        Home.bukaFotoPopup(null, gallery[index].judul, gallery[index].caption, { gallery, index });
+    },
+
+    bukaFotoAngkatan(tahun, key) {
+        const gallery = Home.getGaleriAngkatan(tahun);
+        if (gallery.length === 0) return;
+        const index = Math.max(0, gallery.findIndex(item => item.key === key));
+        Home.bukaFotoPopup(null, gallery[index].judul, gallery[index].caption, { gallery, index });
+    },
+
+    geserModalAktif(arah) {
+        const modal = document.querySelector(".struktur-modal");
+        if (!modal) return;
+        if (Home.fotoPopup) {
+            Home.geserFotoPopup(arah);
+            return;
+        }
+        if (modal.dataset.tahun) Home.geserStruktur(arah);
+    },
+
+    geserStruktur(arah) {
+        const modal = document.querySelector(".struktur-modal[data-tahun]");
+        if (!modal) return;
+        const tahun = parseInt(modal.dataset.tahun, 10);
+        if (!tahun || isNaN(tahun)) return;
+        // Urutan visual: tahun terbaru (2026) di atas -> terlama (2010) di bawah.
+        // Swipe kanan (arah -1) = mundur/menurunkan tahun; swipe kiri (arah +1) = maju/menaikkan.
+        const tahunList = (Home.tahunList && Home.tahunList.length ? [...Home.tahunList] : [tahun]).sort((a, b) => b - a);
+        const idx = tahunList.indexOf(tahun);
+        if (idx < 0) return;
+        const next = tahunList[(idx + arah + tahunList.length) % tahunList.length];
+        if (document.body.classList.contains("edit-mode") && typeof SiteEdit !== "undefined" && SiteEdit.savePopup) {
+            SiteEdit.savePopup(tahun, modal);
+        }
+        modal.remove();
+        Home.tahunAktif = next;
+        Home.bukaModal(next, true, true);
+    }
+};
+
+// Daftarkan listener global segera (lihat bindGlobal) — jangan tunggu init home.
+Home.bindGlobal();
+
+if (typeof Router !== "undefined") {
+    Router.register("home", () => Home.init());
+} else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => Home.init());
+} else {
+    Home.init();
+}

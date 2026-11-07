@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="sidebar_admin">Admin - User Management & Activity • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/auth.js?v=20260822"></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+<script src="../js/lang.js?v=20260822"></script>
+<script src="../js/basicfeat.js?v=20260822"></script>
+<script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/theme.js?v=20260822"></script>
+<script src="../js/toast.js?v=20260822"></script>
+<script src="../js/footer.js?v=20260822"></script>
+<link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .admin-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 191, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .user-table th {
+            text-align: left;
+            color: #00eaff;
+            padding: 12px;
+            border-bottom: 2px solid #00eaff;
+        }
+        .user-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-online { color: #2ecc71; font-weight: bold; }
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            background: rgba(0, 234, 255, 0.2);
+            color: #00eaff;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        .btn-edit { background: #f1c40f; color: black; }
+        .btn-del { background: #e74c3c; color: white; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </div>
+            <h2 style="color: #00eaff; margin-left: 15px;">Admin Central</h2>
+        </div>
+        <div class="profile-box" id="profileTrigger">
+            <span id="headerName">Admin</span>
+            <img id="headerPP" class="header-pp">
+        </div>
+    </header>
+
+    <div class="sidebar" id="sidebar"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="admin-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3><i class="fa-solid fa-users"></i> User Directory</h3>
+                    <div id="userCount" class="role-badge">0 Users</div>
+                </div>
+                
+                <input type="text" id="userSearch" class="search-box" data-i18n-placeholder="search_user_placeholder" placeholder="Cari nama, nickname, atau role..." oninput="filterUsers()">
+
+                <div style="overflow-x: auto;">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th data-i18n="class">Class</th>
+                                <th data-i18n="last_activity">Last Activity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let activityLogs = [];
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user || !user.role.includes('admin')) {
+                window.location.href = "login";
+                return;
+            }
+            await loadInitialData();
+        });
+
+        async function loadInitialData() {
+            // 1. Fetch Users
+            const { data: users, error: uErr } = await supabase
+                .from('users')
+                .select('*')
+                .order('full_name', { ascending: true });
+
+            // 2. Fetch Latest Activity (Visitors)
+            const { data: visitors, error: vErr } = await supabase
+                .from('visitors')
+                .select('user_id, last_page, visited_at')
+                .order('visited_at', { ascending: false });
+
+            if (uErr || vErr) return console.error("Load Error");
+
+            allUsers = users;
+            activityLogs = visitors;
+            renderUsers(allUsers);
+        }
+
+        function renderUsers(data) {
+            const body = document.getElementById('userListBody');
+            document.getElementById('userCount').innerText = `${data.length} Users`;
+            body.innerHTML = "";
+
+            data.forEach(u => {
+                // Cari aktivitas terakhir user ini
+                const lastAct = activityLogs.find(v => v.user_id === u.id);
+                const timeStr = lastAct ? new Date(lastAct.visited_at).toLocaleString('id-ID', {hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'}) : "Never";
+                const pageStr = lastAct ? lastAct.last_page : "-";
+
+                const tr = `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <img src="${u.avatar_url || '../icons/profpicture.png'}" style="width:30px; height:30px; border-radius:50%;">
+                                <div>
+                                    <div style="font-weight:bold;">${u.full_name}</div>
+                                    <div style="font-size:11px; opacity:0.6;">@${u.nickname || 'no-nick'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="role-badge">${u.role}</span></td>
+                        <td>${u.class_id || '-'}</td>
+                        <td>
+                            <div style="font-size:12px;">${timeStr}</div>
+                            <div style="font-size:10px; color:#00eaff;">${pageStr}</div>
+                        </td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editUser('${u.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-action btn-del" onclick="deleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                body.innerHTML += tr;
+            });
+        }
+
+        function filterUsers() {
+            const val = document.getElementById('userSearch').value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                u.full_name?.toLowerCase().includes(val) || 
+                u.nickname?.toLowerCase().includes(val) || 
+                u.role?.toLowerCase().includes(val)
+            );
+            renderUsers(filtered);
+        }
+
+        async function changeRole(userId) {
+            const newRole = await showPopup('Ubah Role User', 'form', {
+                placeholder: 'student/class_admin/super_admin',
+                title: 'Masukkan Role Baru'
+            });
+            if (!newRole) return;
+
+            const { error } = await supabase
+                .from('users')
+                .update({ role: newRole })
+                .eq('id', userId);
+
+            if (!error) {
+                showPopup("Role diperbarui!", "success");
+                loadInitialData();
+            }
+        }
+
+        async function deleteUser(id) {
+            const ok = await showPopup(t('confirm_delete_user'), "confirm");
+            if (!ok) return;
+            
+            const { error } = await supabase
+                .from('users')
+                .delete()
+                .eq('id', id);
+
+            if (!error) {
+                showPopup("User dihapus.", "success");
+                loadInitialData();
+            }
+        }
+    </script>
+</body>
+</html>

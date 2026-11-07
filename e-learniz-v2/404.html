@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error • E-Learning Nizam</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabase-clients.js?v=20260822" defer></script>
+  <script src="../js/ctx-menu.js?v=20260822"></script>
+  <script src="../js/ui-components.js?v=20260822" defer></script>
+  <script src="../js/sidebar.js?v=20260822"></script>
+  <script src="../js/lang.js?v=20260822"></script>
+  <script src="../js/basicfeat.js?v=20260822"></script>
+  <script src="../js/show-popup.js?v=20260822"></script>
+  <script src="../js/auth.js?v=20260822" defer></script>
+  <script src="../js/activity.js?v=20260822" defer></script>
+  <script src="../js/visitor.js?v=20260822" defer></script>
+  <script src="../js/subject-manager.js?v=20260822" defer></script>
+  <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+  <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body style="overflow: hidden; display: flex; justify-content: center; align-items: center;">
+
+  <div class="sidebar" id="sidebar"></div>
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+
+  <div class="course-card animate-pop-up" style="text-align:center">
+
+    <i class="fa-solid fa-circle-exclamation uni-icon error" style="font-size:72px; margin-bottom:15px;"></i>
+
+    <h2 style="margin-bottom:8px;">404 — Halaman Tidak Ditemukan</h2>
+
+    <p style="opacity:.85; line-height:1.6;">
+      Mungkin halaman belum selesai dibuat,<br>
+      atau bisa jadi link salah.
+    </p>
+
+    <div style="margin-top:25px; display:flex; justify-content:center; gap:12px;">
+      <a href="../../../../../" class="uni-btn" style="text-decoration: none;">
+                        <i class="fa-solid fa-house"></i> <span data-i18n="home">Beranda</span>
+      </a>
+    </div>
+
+
+
+  </div>
+
+  <script>
+    // Log 404 ke database biar tau broken link
+    document.addEventListener('DOMContentLoaded', () => {
+      const payload = {
+        url: window.location.href,
+        referrer: document.referrer || '',
+        user_agent: navigator.userAgent,
+        user_id: (() => {
+          try {
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            return u.id || u.email || '';
+          } catch { return ''; }
+        })()
+      };
+      supabase.from('page_errors').insert(payload).then(({ error }) => {
+        if (error) console.warn('Gagal log 404:', error);
+      });
+
+      // Did-you-mean logic
+      (function() {
+        var knownPages = [
+          { prefix: '/a/', pages: ['index', 'user', 'updates', 'tugas', 'theme', 'settingacc', 'send', 'search', 'scores', 'subject', 'quiz', 'kisi-kisi', 'susulan', 'kirim-tugas', 'keaktifan', 'inifeedrusak', 'forum', 'feed', 'class-profile'] },
+          { prefix: '/admiii/', pages: ['visitor', 'tugas-masuk', 'send_notice', 'progress-tugas', 'nilai-psts', 'monitor_simulasi', 'monitor_nilai', 'menu', 'inputsoal', 'files', 'csv-sql', 'control', 'cleanup-storage', 'bottom-nav'] },
+          { prefix: '/', pages: ['index', 'login', 'homev2', 'bahasaindonesia', 'announcements'] }
+        ];
+
+        var path = window.location.pathname.replace(/\/+$/, '');
+        var segments = path.split('/');
+        var pageName = (segments[segments.length - 1] || '').replace(/\.html$/i, '').toLowerCase();
+        if (!pageName) return;
+
+        var allPages = [];
+        for (var g = 0; g < knownPages.length; g++) {
+          var group = knownPages[g];
+          for (var p = 0; p < group.pages.length; p++) {
+            var name = group.pages[p];
+            var fp = name === 'announcements' ? '/' : group.prefix + name + '.html';
+            allPages.push({ name: name, prefix: group.prefix, fullPath: fp });
+          }
+        }
+
+        function levenshtein(a, b) {
+          var m = a.length, n = b.length;
+          var dp = [];
+          for (var i = 0; i <= m; i++) { dp[i] = []; for (var j = 0; j <= n; j++) dp[i][j] = 0; }
+          for (var i = 0; i <= m; i++) dp[i][0] = i;
+          for (var j = 0; j <= n; j++) dp[0][j] = j;
+          for (var i = 1; i <= m; i++) {
+            for (var j = 1; j <= n; j++) {
+              dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+          }
+          return dp[m][n];
+        }
+
+        // 1. Direct match — page name exists but wrong prefix
+        for (var i = 0; i < allPages.length; i++) {
+          if (allPages[i].name === pageName) {
+            window.location.href = allPages[i].fullPath;
+            return;
+          }
+        }
+
+        // 2. Fuzzy match (typo) — Levenshtein distance <= 3
+        var best = null, bestDist = Infinity;
+        for (var i = 0; i < allPages.length; i++) {
+          var dist = levenshtein(pageName, allPages[i].name);
+          if (dist < bestDist && dist <= 3) {
+            bestDist = dist;
+            best = allPages[i];
+          }
+        }
+        if (best) window.location.href = best.fullPath;
+      })();
+    });
+  </script>
+</body>
+  
+</html>

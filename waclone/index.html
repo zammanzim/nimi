@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp Archive — Pembaca Arsip Chat (.txt)</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Global Drag & Drop Overlay -->
+  <div id="dropOverlay" class="drop-overlay" hidden>
+    <div class="drop-overlay-box">
+      <div class="drop-icon" aria-hidden="true">📂</div>
+      <h2>Lepaskan file export WhatsApp (.txt) di sini</h2>
+      <p>File diproses secara lokal, lalu arsip disimpan ke Supabase (cadangan tetap ada di browser)</p>
+    </div>
+  </div>
+
+  <!-- Main Application Shell -->
+  <div id="appShell" class="app-shell">
+    <!-- LEFT SIDEBAR -->
+    <aside id="sidebarPanel" class="sidebar-panel" aria-label="Daftar Arsip Percakapan">
+      <!-- Sidebar Header -->
+      <header class="sidebar-header">
+        <div class="brand-title">
+          <span class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.625.846 5.059 2.284 7.033l-1.492 5.448 5.587-1.466c1.911 1.258 4.195 1.985 6.652 1.985 6.627 0 12-5.373 12-12s-5.373-12-12.031-12z"/>
+            </svg>
+          </span>
+          <h1>WhatsApp Archive</h1>
+        </div>
+
+        <!-- Sidebar 3-dots Menu -->
+        <div class="sidebar-actions">
+          <input id="fileInput" type="file" accept=".txt,text/plain" multiple hidden />
+          <input id="appendFileInput" type="file" accept=".txt,text/plain" multiple hidden />
+
+          <div class="dropdown-wrapper">
+            <button id="btnSidebarMenu" type="button" class="btn-kebab" title="Menu Utama" aria-label="Menu Utama" aria-expanded="false">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <circle cx="12" cy="5" r="2"/>
+                <circle cx="12" cy="12" r="2"/>
+                <circle cx="12" cy="19" r="2"/>
+              </svg>
+            </button>
+
+            <div id="sidebarDropdownMenu" class="dropdown-menu" role="menu" hidden>
+              <button id="menuNewChat" type="button" class="dropdown-item" role="menuitem">
+                <span class="dropdown-item-icon">💬</span>
+                <span>Buat Percakapan Baru</span>
+              </button>
+              <button id="menuImportTxt" type="button" class="dropdown-item" role="menuitem">
+                <span class="dropdown-item-icon">📂</span>
+                <span>Import File TXT</span>
+              </button>
+              <button id="menuLoadDemo" type="button" class="dropdown-item" role="menuitem">
+                <span class="dropdown-item-icon">✨</span>
+                <span>Muat Contoh Percakapan</span>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button id="menuSyncAllSupabase" type="button" class="dropdown-item" role="menuitem">
+                <span class="dropdown-item-icon">☁️</span>
+                <span>Sinkronkan Semua ke Supabase</span>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button id="menuClearAllData" type="button" class="dropdown-item dropdown-item-danger" role="menuitem">
+                <span class="dropdown-item-icon">🗑️</span>
+                <span>Hapus Seluruh Data Lokal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Global / Sidebar Search Bar -->
+      <div class="sidebar-search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            id="sidebarSearchInput"
+            type="search"
+            placeholder="Cari arsip atau isi pesan di percakapan aktif..."
+            autocomplete="off"
+          />
+          <button id="btnClearSidebarSearch" type="button" class="btn-clear-input" hidden title="Bersihkan Pencarian">✕</button>
+        </div>
+      </div>
+
+      <!-- Archive List & Sidebar Search Results -->
+      <div class="sidebar-content">
+        <!-- Inline Search Results Section when searching messages from sidebar -->
+        <div id="sidebarSearchResultsSection" class="sidebar-search-results" hidden>
+          <div class="sidebar-section-title">
+            <span>Hasil Pencarian Pesan</span>
+            <span id="sidebarSearchCountBadge" class="badge-pill">0</span>
+          </div>
+          <div id="sidebarSearchResultsList" class="sidebar-search-results-list"></div>
+        </div>
+
+        <div class="sidebar-section-title">
+          <span>Daftar Percakapan</span>
+          <span id="archiveTotalBadge" class="badge-pill">0</span>
+        </div>
+
+        <div id="archiveList" class="archive-list" role="listbox" aria-label="Arsip yang tersimpan">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- RIGHT CHAT PANEL -->
+    <main id="chatPanel" class="chat-panel">
+      <!-- Empty Welcome State (shown when no archive is selected) -->
+      <div id="emptyStateView" class="empty-state-view">
+        <div class="empty-state-card">
+          <div class="empty-illustration" aria-hidden="true">💬</div>
+          <h2>WhatsApp Chat Archive Viewer</h2>
+          <p>
+            Baca arsip percakapan WhatsApp hasil export <code>.txt</code> dengan tampilan menyerupai WhatsApp Desktop.
+            Arsip disimpan di <strong>Supabase</strong> (terisolir per perangkat) dengan cadangan lokal di browser
+            agar tetap bisa dibuka saat offline.
+          </p>
+          <div class="empty-state-actions">
+            <button id="btnEmptyImportTxt" type="button" class="btn-primary-large">
+              📂 Pilih File Export (.txt)
+            </button>
+            <button id="btnEmptyLoadDemo" type="button" class="btn-secondary-large">
+              ✨ Coba Data Contoh (almira &amp; zim)
+            </button>
+          </div>
+          <div class="drop-hint">
+            Atau tarik dan lepaskan (drag &amp; drop) file <code>.txt</code> langsung ke halaman ini.
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Conversation View -->
+      <div id="activeChatView" class="active-chat-view" hidden>
+        <!-- Chat Header -->
+        <header class="chat-header">
+          <div class="chat-header-left">
+            <button id="btnMobileBack" type="button" class="btn-kebab mobile-back-btn" title="Kembali ke Daftar Arsip" aria-label="Kembali ke Daftar Arsip">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="19" y1="12" x2="5" y2="12"/>
+                <polyline points="12 19 5 12 12 5"/>
+              </svg>
+            </button>
+            <div id="chatHeaderAvatar" class="contact-avatar">WA</div>
+            <div class="chat-header-info">
+              <div class="chat-title-row">
+                <h2 id="chatHeaderTitle" class="chat-contact-name">Nama Kontak</h2>
+              </div>
+              <p id="chatHeaderSubtitle" class="chat-contact-subtitle">0 pesan</p>
+            </div>
+          </div>
+
+          <!-- Header 3-Dots Menu (All Chat Actions Inside Dropdown) -->
+          <div class="chat-header-controls">
+            <div class="dropdown-wrapper">
+              <button id="btnChatMenu" type="button" class="btn-kebab" title="Menu Percakapan" aria-label="Menu Percakapan" aria-expanded="false">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <circle cx="12" cy="5" r="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <circle cx="12" cy="19" r="2"/>
+                </svg>
+              </button>
+
+              <div id="chatDropdownMenu" class="dropdown-menu dropdown-menu-right" role="menu" hidden>
+                <button id="menuToggleSearch" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">🔍</span>
+                  <span>Cari di Percakapan</span>
+                </button>
+                <button id="menuJumpDate" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">📅</span>
+                  <span>Lompat ke Tanggal...</span>
+                </button>
+                <button id="menuChangeOwner" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">👤</span>
+                  <span>Atur Pengirim Anda (Kanan)...</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button id="menuScrollFirst" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">⇈</span>
+                  <span>Ke Pesan Paling Awal</span>
+                </button>
+                <button id="menuScrollLast" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">⇊</span>
+                  <span>Ke Pesan Paling Akhir</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button id="menuAppendTxt" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">➕</span>
+                  <span>Tambah Chat dari File TXT...</span>
+                </button>
+                <button id="menuSyncChatSupabase" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">☁️</span>
+                  <span>Simpan / Update ke Supabase</span>
+                </button>
+                <button id="menuRenameArchive" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">✏️</span>
+                  <span>Ubah Nama Arsip...</span>
+                </button>
+                <button id="menuExportTxt" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">📥</span>
+                  <span>Export ke File TXT</span>
+                </button>
+                <button id="menuShowStats" type="button" class="dropdown-item" role="menuitem">
+                  <span class="dropdown-item-icon">ℹ️</span>
+                  <span>Info &amp; Ringkasan Arsip</span>
+                </button>
+                <div class="dropdown-divider"></div>
+                <button id="menuDeleteArchive" type="button" class="dropdown-item dropdown-item-danger" role="menuitem">
+                  <span class="dropdown-item-icon">🗑️</span>
+                  <span>Hapus Arsip Ini</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- In-Chat Search Toolbar & Collapsible Results Drawer -->
+        <div id="inChatSearchBar" class="in-chat-search-bar" hidden>
+          <div class="in-chat-search-controls">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                id="chatSearchInput"
+                type="search"
+                placeholder="Cari kata atau kalimat dalam percakapan..."
+                autocomplete="off"
+              />
+            </div>
+
+            <span id="chatSearchCounter" class="search-counter">0 / 0</span>
+
+            <button id="btnSearchPrev" type="button" class="btn-icon-small" title="Hasil Sebelumnya (Shift+Enter)">
+              ▲
+            </button>
+            <button id="btnSearchNext" type="button" class="btn-icon-small" title="Hasil Berikutnya (Enter)">
+              ▼
+            </button>
+            <button id="btnToggleResultsDrawer" type="button" class="btn-secondary-small" title="Tampilkan/Sembunyikan Daftar Hasil">
+              Daftar Hasil
+            </button>
+            <button id="btnCloseChatSearch" type="button" class="btn-icon-small" title="Tutup Pencarian (Esc)">
+              ✕
+            </button>
+          </div>
+
+          <!-- Search Results List Drawer -->
+          <div id="chatSearchResultsDrawer" class="chat-search-results-drawer" hidden>
+            <div id="chatSearchResultsList" class="chat-search-results-list"></div>
+          </div>
+        </div>
+
+        <!-- Import / Parse Status Banner (dismissible) -->
+        <div id="statusBanner" class="status-banner" hidden>
+          <span id="statusBannerText"></span>
+          <button id="btnCloseStatusBanner" type="button" class="btn-close-banner" aria-label="Tutup notifikasi">✕</button>
+        </div>
+
+        <!-- Chat Messages Scroll Viewport -->
+        <div id="chatViewport" class="chat-messages-viewport">
+          <!-- Sticky Floating Current Date Pill -->
+          <div class="floating-date-container">
+            <span id="floatingDateBadge" class="floating-date-badge" hidden></span>
+          </div>
+
+          <!-- Virtual Scrolled Messages Container -->
+          <div id="chatMessagesList" class="chat-messages-list"></div>
+        </div>
+
+        <!-- Chat Composer Footer (Send Message & Append/Export TXT) -->
+        <footer class="chat-composer-footer">
+          <button id="btnComposerAppendTxt" type="button" class="btn-kebab btn-composer-attach" title="Tambah Chat dari File TXT ke Percakapan Ini" aria-label="Tambah Chat dari File TXT">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+
+          <div class="composer-sender-badge" id="composerSenderBadge" title="Klik untuk mengganti pengirim aktif">
+            <span class="composer-sender-dot"></span>
+            <span id="composerSenderName">zim</span>
+          </div>
+
+          <div class="composer-input-wrap">
+            <textarea
+              id="composerInput"
+              class="composer-textarea"
+              rows="1"
+              placeholder="Ketik pesan... (Enter untuk kirim, Shift+Enter baris baru)"
+            ></textarea>
+          </div>
+
+          <button id="btnSendMessage" type="button" class="btn-send-message" title="Kirim Pesan (Enter)" aria-label="Kirim Pesan">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating Context Menu for Individual Chat Bubble (Arrow Down Action & Right-Click on Bubble) -->
+  <div id="bubbleActionMenu" class="dropdown-menu bubble-action-menu" role="menu" hidden>
+    <button id="bubbleMenuCopy" type="button" class="dropdown-item" role="menuitem">
+      <span class="dropdown-item-icon">📋</span>
+      <span>Salin Teks</span>
+    </button>
+    <button id="bubbleMenuEdit" type="button" class="dropdown-item" role="menuitem">
+      <span class="dropdown-item-icon">✏️</span>
+      <span>Edit Pesan...</span>
+    </button>
+    <button id="bubbleMenuInfo" type="button" class="dropdown-item" role="menuitem">
+      <span class="dropdown-item-icon">ℹ️</span>
+      <span>Info Pesan</span>
+    </button>
+    <div class="dropdown-divider"></div>
+    <button id="bubbleMenuDelete" type="button" class="dropdown-item dropdown-item-danger" role="menuitem">
+      <span class="dropdown-item-icon">🗑️</span>
+      <span>Hapus Pesan</span>
+    </button>
+  </div>
+
+  <!-- Dynamic Right-Click Context Menu (Anywhere in App) -->
+  <div id="globalContextMenu" class="dropdown-menu bubble-action-menu" role="menu" hidden></div>
+
+  <!-- Unified Custom Popup Modal (Confirm, Info, Date Picker, Owner Selector, Rename, Stats) -->
+  <div id="customPopupBackdrop" class="modal-backdrop" hidden>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="customPopupTitle">
+      <div class="modal-header">
+        <h3 id="customPopupTitle">Judul Popup</h3>
+        <button id="btnCloseCustomPopup" type="button" class="btn-icon-small" aria-label="Tutup">✕</button>
+      </div>
+      <div id="customPopupBody" class="modal-body"></div>
+      <div id="customPopupFooter" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

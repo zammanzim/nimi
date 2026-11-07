@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk — OSIS TARPAN ONE</title>
+    <meta name="description" content="Masuk ke aplikasi web OSIS SMK Taruna Harapan 1 Cipatat.">
+    <meta name="theme-color" content="#e11d2e">
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OSIS TARPAN ONE">
+    <link rel="stylesheet" href="css/style.css?v=40">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="js/supabase.min.js?v=10"></script>
+    <script src="js/config.js?v=14"></script>
+    <script src="js/db.js?v=35" defer></script>
+    <script src="js/aktivitas.js?v=10" defer></script>
+    <script src="js/app.js?v=10" defer></script>
+    <script src="js/dropdown.js?v=3" defer></script>
+    <script src="js/notice.js?v=10" defer></script>
+    <script src="js/osis-auth.js?v=19" defer></script>
+    <script src="js/login.js?v=20" defer></script>
+    <script src="js/pwa.js?v=11" defer></script>
+</head>
+<body class="login-body">
+
+    <div class="login-wrap">
+        <div class="login-card">
+            <div class="login-logo">
+                <img data-foto="logo1" alt="Logo OSIS">
+            </div>
+            <h1>Masuk</h1>
+            <p class="login-sub">Login ke web OSIS</p>
+
+            <div class="slider-window">
+                <div class="slider-content" id="mainSlider">
+
+                    <!-- STEP 1: form masuk (OSIS / akun biasa, otomatis) -->
+                    <div class="slide-step">
+                        <label class="lbl">Username</label>
+                        <input type="text" id="loginUsername" class="admin-input" placeholder="Username" maxlength="30" autocomplete="username">
+                        <label class="lbl">Password</label>
+                        <input type="password" id="loginPassword" class="admin-input" placeholder="Password" autocomplete="current-password">
+                        <button class="btn btn-red btn-block" id="btnMasuk" onclick="Login.masuk()"><i class="fa-solid fa-right-to-bracket"></i> Masuk</button>
+                        <div class="login-or"><span>atau</span></div>
+                        <a class="login-back login-center" onclick="Login.pilih('daftar')"><i class="fa-solid fa-user-plus"></i> Belum punya akun? Daftar dulu sini</a>
+                    </div>
+
+                    <!-- STEP 2: daftar akun biasa (tanpa hak OSIS) -->
+                    <div class="slide-step">
+                        <label class="lbl">Username</label>
+                        <input type="text" id="daftarUsername" class="admin-input" placeholder="Username (3-30 karakter)" maxlength="30" autocomplete="off">
+                        <label class="lbl">Nama</label>
+                        <input type="text" id="daftarNama" class="admin-input" placeholder="Nama kamu" maxlength="80" autocomplete="off">
+                        <label class="lbl">Password</label>
+                        <input type="password" id="daftarPassword" class="admin-input" placeholder="Password (min. 6 karakter)" autocomplete="new-password">
+                        <button class="btn btn-red btn-block" id="btnDaftar" onclick="Login.daftar()"><i class="fa-solid fa-user-plus"></i> Daftar</button>
+                        <a class="login-back login-center" onclick="Login.pilih('')"><i class="fa-solid fa-arrow-left"></i> Sudah punya akun? Masuk</a>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="login-error" id="loginError"></div>
+
+            <a class="login-back login-center" href="index#/"><i class="fa-solid fa-house"></i> Kembali ke beranda</a>
+        </div>
+    </div>
+
+</body>
+</html>

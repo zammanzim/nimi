@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Tugas • E-learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1>
+                    <i class="fa-solid fa-list-check" style="font-size: 26px;"></i>
+                    <span data-i18n="task_list"></span>
+                </h1>
+            </div>
+
+            <div id="userTaskProfile" class="daily-card-final" style="margin-bottom: 25px; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <img id="userTaskPP" src=""
+                        style="width: 65px; height: 65px; border-radius: 50%; border: 2px solid #00eaff; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <h3 id="userTaskName" style="margin: 0; font-size: 18px; color: #fff;">...</h3>
+                        <div>
+                            <div
+                                style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px">
+                                <span style="color: #aaa;" data-i18n="complete_status"></span>
+                                <span id="userTaskCount" style="color: #00eaff; font-weight: bold;">0/0</span>
+                            </div>
+                            <div
+                                style="width: 100%; height: 25px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; position: relative;">
+                                <div id="taskProgressCenter"
+                                    style="position: absolute; width: 100%; text-align: center; line-height: 25px; font-size: 11px; font-weight: 800; color: white; z-index: 5; text-shadow: 0 0 5px rgba(0,0,0,0.5); pointer-events: none;">
+                                </div>
+                                <div id="userTaskBar"
+                                    style="width: 0%; height: 100%; background: linear-gradient(90deg, #00eaff, #007bff); transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <small style="font-size: 14px;" data-i18n="small_text"></small>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div id="taskFilters" class="filter-group-wrapper">
+                <div id="filterSlider" class="filter-slider-bg"></div>
+
+                <button class="filter-btn-new active" onclick="filterTasks('pending', this)">
+                    <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="not_finish"></span>
+                </button>
+
+                <button class="filter-btn-new" onclick="filterTasks('all', this)">
+                    <i class="fa-solid fa-layer-group"></i> <span data-i18n="all_tasks"></span>
+                </button>
+            </div>
+
+            <!-- Filter Mapel -->
+            <div id="mapelFilterWrap" style="display:none; margin-bottom:18px;">
+                <div id="mapelFilterChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+
+            <div id="taskList" class="announcements"></div>
+            <div id="editControls"></div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => SkeletonUI.render('taskList', 'tugas', 2));
+            </script>
+        </div>
+    </div>
+
+    <script src="../js/tugas.js?v=20260822" defer></script>
+</body>
+
+</html>

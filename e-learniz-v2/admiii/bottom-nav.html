@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bottom Nav Manager • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+<script src="../js/lang.js?v=20260822"></script>
+<script src="../js/basicfeat.js?v=20260822"></script>
+<script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ── PAGE LAYOUT ── */
+        .bn-page {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 0 40px;
+        }
+
+        /* ── PHONE PREVIEW ── */
+        .preview-wrap {
+            position: relative;
+            width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .phone-shell {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 16px 16px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-screen {
+            background: linear-gradient(180deg, #0d0f1a 0%, #131520 100%);
+            border-radius: 12px 12px 0 0;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: none;
+        }
+
+        .phone-screen-placeholder {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Live bottom nav preview */
+        #bnPreview {
+            display: flex;
+            background: rgba(8, 10, 18, 0.96);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            min-height: 54px;
+        }
+
+        .pv-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 4px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+            cursor: default;
+            user-select: none;
+        }
+
+        .pv-item.pv-active {
+            color: var(--accent, #00eaff);
+        }
+
+        .pv-item i {
+            font-size: 19px;
+        }
+
+        .pv-empty {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.12);
+            font-weight: 600;
+            border-left: 1px dashed rgba(255, 255, 255, 0.06);
+            padding: 8px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* ── SECTION BOX ── */
+        .section-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent, #00eaff);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        /* ── CLASS SELECTOR ── */
+        .class-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .class-row label {
+            font-size: 11px;
+            color: #666;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .class-row select {
+            flex: 1;
+        }
+
+        /* ── CURRENT NAV ITEMS (drag list) ── */
+        .nav-slot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 48px;
+        }
+
+        .nav-slot {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-left: 3px solid var(--accent, #00eaff);
+            border-radius: 12px;
+            padding: 10px 12px;
+            cursor: grab;
+            user-select: none;
+            transition: background 0.15s, opacity 0.15s;
+        }
+
+        .nav-slot:active {
+            cursor: grabbing;
+        }
+
+        .nav-slot.dragging {
+            opacity: 0.35;
+        }
+
+        .nav-slot.drag-over {
+            border-top: 2px solid var(--accent, #00eaff);
+            background: rgba(0, 234, 255, 0.06);
+        }
+
+        .slot-handle {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .slot-icon-box {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            border-radius: 9px;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent, #00eaff);
+            font-size: 14px;
+        }
+
+        .slot-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .slot-info h4 {
+            margin: 0 0 2px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slot-info small {
+            font-size: 11px;
+            color: #444;
+        }
+
+        .slot-order {
+            font-size: 10px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 5px;
+            padding: 2px 7px;
+            flex-shrink: 0;
+        }
+
+        .btn-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            border: none;
+            background: rgba(255, 71, 87, 0.08);
+            color: rgba(255, 71, 87, 0.5);
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 71, 87, 0.18);
+            color: #ff4757;
+            transform: scale(1.08);
+        }
+
+        /* empty slot placeholder */
+        .slot-empty-hint {
+            text-align: center;
+            padding: 20px;
+            color: #333;
+            font-size: 12px;
+        }
+
+        /* ── MAX WARNING ── */
+        .max-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 211, 42, 0.3);
+            background: rgba(255, 211, 42, 0.08);
+            color: #ffd32a;
+            margin-left: auto;
+        }
+
+        .max-badge.ok {
+            border-color: rgba(0, 234, 255, 0.2);
+            background: rgba(0, 234, 255, 0.05);
+            color: rgba(0, 234, 255, 0.5);
+        }
+
+        /* ── PICKER: Add item ── */
+        .picker-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .picker-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 9px 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .picker-item:hover {
+            background: rgba(0, 234, 255, 0.07);
+            border-color: rgba(0, 234, 255, 0.25);
+        }
+
+        .picker-item.already-added {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .picker-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+
+        .picker-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .picker-path {
+            font-size: 10px;
+            color: #444;
+        }
+
+        /* custom add form */
+        .custom-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .custom-add-row .glass-input {
+            flex: 1;
+            font-size: 12px;
+            padding: 9px 12px;
+        }
+
+        .custom-add-row .glass-input.narrow {
+            flex: 0 0 90px;
+        }
+
+        .btn-add-custom {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--accent, #00eaff), #0099cc);
+            border: none;
+            border-radius: 10px;
+            padding: 0 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0a0a0c;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .btn-add-custom:hover {
+            opacity: 0.85;
+        }
+
+        .btn-add-custom:disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* ── ICON MINI PICKER ── */
+        .icon-mini-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        #iconPreviewBtn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+            color: var(--accent, #00eaff);
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        #iconPreviewBtn:hover {
+            background: rgba(0, 234, 255, 0.18);
+        }
+
+        .icon-dropdown {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 0;
+            background: #111;
+            border: 1px solid rgba(0, 234, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px;
+            display: none;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            z-index: 999;
+            width: 220px;
+        }
+
+        .icon-dropdown.open {
+            display: grid;
+        }
+
+        .idb {
+            width: 36px;
+            height: 36px;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid transparent;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+        }
+
+        .idb:hover {
+            background: rgba(0, 234, 255, 0.12);
+            border-color: rgba(0, 234, 255, 0.3);
+            color: var(--accent, #00eaff);
+        }
+
+        .idb.selected {
+            background: rgba(0, 234, 255, 0.15);
+            border-color: rgba(0, 234, 255, 0.4);
+            color: var(--accent, #00eaff);
+        }
+
+        /* ── SEARCH FILTER ── */
+        .search-mini {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .search-mini:focus {
+            outline: none;
+            border-color: rgba(0, 234, 255, 0.4);
+        }
+
+        .cat-label {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(0, 234, 255, 0.4);
+            padding: 8px 0 4px;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 480px) {
+            .picker-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .custom-add-row {
+                flex-wrap: wrap;
+            }
+
+            .custom-add-row .glass-input.narrow {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="bn-page">
+
+                <!-- ── HEADER ── -->
+                <div class="glow" style="margin-bottom: 20px;">
+                    <h1><i class="fa-solid fa-mobile-screen-button"></i> Bottom Nav</h1>
+                    <p style="color:#aaa; font-size:13px; margin-top:4px;">Kustomisasi menu bar bawah per kelas.</p>
+                </div>
+
+                <!-- ── CLASS SELECTOR ── -->
+                <div class="section-box">
+                    <div class="class-row">
+                        <label><i class="fa-solid fa-users"></i> <span data-i18n="class">Kelas</span></label>
+                        <select id="selClass" class="glass-input" onchange="onClassChange()">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ── PREVIEW ── -->
+                <div class="preview-wrap">
+                    <div class="phone-shell">
+                        <div class="phone-screen">
+                            <span class="phone-screen-placeholder">
+                                <i class="fa-solid fa-mobile-screen-button" style="margin-right:6px; opacity:0.5;"></i>
+                                Preview Aplikasi
+                            </span>
+                        </div>
+                        <div id="bnPreview">
+                            <div class="pv-empty">Pilih kelas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── CURRENT ITEMS ── -->
+                <div class="section-box" id="currentBox" style="display:none;">
+                    <div class="section-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        Item Aktif
+                        <span class="max-badge ok" id="countBadge">0 / 5</span>
+                    </div>
+                    <div class="nav-slot-list" id="slotList">
+                        <div class="slot-empty-hint">Belum ada item.</div>
+                    </div>
+                </div>
+
+                <!-- ── ADD FROM EXISTING ── -->
+                <div class="section-box" id="pickerBox" style="display:none;">
+                    <div class="section-title">
+                        <i class="fa-solid fa-plus"></i>
+                        <span data-i18n="add_item">Tambah Item</span>
+                    </div>
+                    <input type="text" class="search-mini" id="searchPicker" data-i18n-placeholder="search_page_placeholder" placeholder="Cari halaman..."
+                        oninput="renderPicker(this.value)">
+                    <div class="picker-grid" id="pickerGrid"></div>
+
+                    <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:12px;margin-bottom:6px;" data-i18n="custom_manual">Custom / manual</div>
+                    <div class="custom-add-row">
+                        <div class="icon-mini-wrap">
+                            <button type="button" id="iconPreviewBtn" onclick="toggleIconDropdown()">
+                                <i id="iconPreviewIcon" class="fa-solid fa-circle-plus"></i>
+                            </button>
+                            <div class="icon-dropdown" id="iconDropdown"></div>
+                        </div>
+                        <input type="text" id="customLabel" class="glass-input" placeholder="Label" spellcheck="false">
+                        <input type="text" id="customHref" class="glass-input narrow" placeholder="URL / slug">
+                        <button class="btn-add-custom" id="btnAddCustom" onclick="addCustomItem()">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="add">Tambah</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ══════════════════════════════════════════════════════════
+        // DATA & STATE
+        // ══════════════════════════════════════════════════════════
+        let currentItems = [];   // baris DB menu_group='bottomnav' untuk kelas terpilih
+        let selectedClassId = null;
+        let selectedIcon = 'fa-circle-plus';
+        let dragSrc = null;
+
+        const MAX_ITEMS = 4;
+
+        // Halaman-halaman yang tersedia untuk dipick
+        const PAGES = [
+            { slug: 'announcements', label: 'Home', icon: 'fa-table-columns', cat: 'Utama' },
+            { slug: 'tugas', label: 'Tugas', icon: 'fa-list-check', cat: 'Utama' },
+            { slug: 'feed', label: 'Feed', icon: 'fa-newspaper', cat: 'Utama' },
+            { slug: 'forum', label: 'Forum', icon: 'fa-comments', cat: 'Utama' },
+            { slug: 'kisi-kisi', label: 'Kisi-Kisi', icon: 'fa-file-lines', cat: 'Utama' },
+            { slug: 'search', label: 'Cari', icon: 'fa-magnifying-glass', cat: 'Utama' },
+            { slug: 'nilai-psasi2526', label: 'Nilai PSASI', icon: 'fa-chart-bar', cat: 'Nilai' },
+            { slug: 'nilai-psts2526', label: 'Nilai PSTS', icon: 'fa-chart-bar', cat: 'Nilai' },
+            { slug: 'user', label: 'Profil', icon: 'fa-circle-user', cat: 'Akun' },
+            { slug: 'settingacc', label: 'Setting', icon: 'fa-user-gear', cat: 'Akun' },
+            { slug: 'theme', label: 'Tema', icon: 'fa-palette', cat: 'Akun' },
+        ];
+
+        const QUICK_ICONS = [
+            'fa-house', 'fa-table-columns', 'fa-newspaper', 'fa-comments', 'fa-magnifying-glass',
+            'fa-list-check', 'fa-circle-user', 'fa-book', 'fa-bell', 'fa-star',
+            'fa-file-lines', 'fa-calendar-days', 'fa-chart-bar', 'fa-palette', 'fa-gear',
+            'fa-trophy', 'fa-fire', 'fa-bolt', 'fa-graduation-cap', 'fa-bookmark',
+        ];
+
+        // ══════════════════════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadClasses();
+            renderIconDropdown();
+
+            // Klik di luar icon dropdown → tutup
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.icon-mini-wrap')) {
+                    document.getElementById('iconDropdown').classList.remove('open');
+                }
+            });
+        });
+
+        async function loadClasses() {
+            const sel = document.getElementById('selClass');
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (!data) return;
+            data.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+            // Auto-select kelas user jika bukan super admin
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (user && user.role !== 'super_admin' && user.class_id) {
+                    sel.value = user.class_id;
+                    onClassChange();
+                }
+            } catch { }
+        }
+
+        async function onClassChange() {
+            const sel = document.getElementById('selClass');
+            selectedClassId = sel.value || null;
+
+            if (!selectedClassId) {
+                document.getElementById('currentBox').style.display = 'none';
+                document.getElementById('pickerBox').style.display = 'none';
+                renderPreview([]);
+                return;
+            }
+
+            document.getElementById('currentBox').style.display = 'block';
+            document.getElementById('pickerBox').style.display = 'block';
+
+            await fetchCurrentItems();
+        }
+
+        async function fetchCurrentItems() {
+            if (!selectedClassId) return;
+
+            const { data, error } = await supabase
+                .from('subjects_config')
+                .select('*')
+                .eq('class_id', selectedClassId)
+                .eq('menu_group', 'bottomnav')
+                .order('display_order', { ascending: true });
+
+            currentItems = error ? [] : (data || []);
+            renderAll();
+        }
+
+        function renderAll() {
+            renderSlotList();
+            renderPreview(currentItems);
+            renderPicker(document.getElementById('searchPicker')?.value || '');
+            updateCountBadge();
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // SLOT LIST (drag-reorder)
+        // ══════════════════════════════════════════════════════════
+        function renderSlotList() {
+            const list = document.getElementById('slotList');
+            list.innerHTML = '';
+
+            if (currentItems.length === 0) {
+                list.innerHTML = `<div class="slot-empty-hint"><i class="fa-solid fa-plus" style="margin-right:6px; opacity:0.4;"></i>Tambah item di bawah.</div>`;
+                return;
+            }
+
+            currentItems.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'nav-slot';
+                div.draggable = true;
+                div.dataset.id = item.id;
+                div.dataset.idx = idx;
+
+                let icon = (item.icon || 'fa-circle').trim();
+                if (!icon.includes(' ')) icon = 'fa-solid ' + icon;
+
+                div.innerHTML = `
+                <i class="fa-solid fa-grip-vertical slot-handle"></i>
+                <div class="slot-icon-box"><i class="${icon}"></i></div>
+                <div class="slot-info">
+                    <h4>${item.subject_name}</h4>
+                    <small>${item.subject_id || '—'}</small>
+                </div>
+                <span class="slot-order">#${idx + 1}</span>
+                <button class="btn-remove" title="${t('remove_from_bottom_nav')}"><i class="fa-solid fa-xmark"></i></button>
+            `;
+
+                div.querySelector('.btn-remove').onclick = () => removeItem(item.id);
+
+                // Drag events
+                div.addEventListener('dragstart', () => { dragSrc = div; div.classList.add('dragging'); });
+                div.addEventListener('dragend', () => { dragSrc = null; div.classList.remove('dragging'); document.querySelectorAll('.nav-slot').forEach(el => el.classList.remove('drag-over')); });
+                div.addEventListener('dragover', (e) => { e.preventDefault(); if (div !== dragSrc) div.classList.add('drag-over'); });
+                div.addEventListener('dragleave', () => div.classList.remove('drag-over'));
+                div.addEventListener('drop', (e) => { e.preventDefault(); div.classList.remove('drag-over'); onDrop(div); });
+
+                list.appendChild(div);
+            });
+        }
+
+        async function onDrop(target) {
+            if (!dragSrc || dragSrc === target) return;
+            const srcIdx = parseInt(dragSrc.dataset.idx);
+            const destIdx = parseInt(target.dataset.idx);
+            if (isNaN(srcIdx) || isNaN(destIdx)) return;
+
+            // Reorder array
+            const [moved] = currentItems.splice(srcIdx, 1);
+            currentItems.splice(destIdx, 0, moved);
+
+            // Save new order ke DB
+            await saveOrder();
+            renderAll();
+        }
+
+        async function saveOrder() {
+            for (let i = 0; i < currentItems.length; i++) {
+                await supabase.from('subjects_config')
+                    .update({ display_order: i + 1 })
+                    .eq('id', currentItems[i].id);
+                currentItems[i].display_order = i + 1;
+            }
+            if (typeof showToast === 'function') showToast('Urutan disimpan!', 'success');
+        }
+
+        function updateCountBadge() {
+            const badge = document.getElementById('countBadge');
+            const count = currentItems.length;
+            badge.textContent = `${count} / ${MAX_ITEMS}`;
+            badge.className = count >= MAX_ITEMS ? 'max-badge' : 'max-badge ok';
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // LIVE PREVIEW
+        // ══════════════════════════════════════════════════════════
+        function renderPreview(items) {
+            const preview = document.getElementById('bnPreview');
+            preview.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                preview.innerHTML = `<div class="pv-empty">Pilih kelas dulu</div>`;
+                return;
+            }
+
+            const capped = items.slice(0, 5);
+            const half = Math.floor(capped.length / 2);
+            const leftItems = capped.slice(0, half);
+            const rightItems = capped.slice(half);
+
+            function makeItem(item, i) {
+                let icon = (item.icon || 'fa-circle').trim();
+                if (!icon.includes(' ')) icon = 'fa-solid ' + icon;
+                const div = document.createElement('div');
+                div.className = `pv-item${i === 0 ? ' pv-active' : ''}`;
+                div.innerHTML = `<i class="${icon}"></i><span>${item.subject_name}</span>`;
+                return div;
+            }
+
+            leftItems.forEach((item, i) => preview.appendChild(makeItem(item, i)));
+
+            // Center FAB
+            const fab = document.createElement('div');
+            fab.style.cssText = 'flex:0 0 56px;display:flex;align-items:flex-start;justify-content:center;position:relative;';
+            fab.innerHTML = `<div style="position:absolute;top:-16px;width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#00eaff,#0077cc);border:3px solid rgba(6,8,15,1);box-shadow:0 5px 18px rgba(0,234,255,0.4),inset 0 1px 0 rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;color:#03111a;font-size:16px;"><i class='fa-solid fa-bars'></i></div>`;
+            preview.appendChild(fab);
+
+            rightItems.forEach((item, i) => preview.appendChild(makeItem(item, leftItems.length + i)));
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // PICKER (add from known pages)
+        // ══════════════════════════════════════════════════════════
+        function renderPicker(q = '') {
+            const grid = document.getElementById('pickerGrid');
+            grid.innerHTML = '';
+
+            const currentHrefs = new Set(currentItems.map(i => i.subject_id));
+            const filtered = q
+                ? PAGES.filter(p => p.label.toLowerCase().includes(q.toLowerCase()) || p.slug.toLowerCase().includes(q.toLowerCase()))
+                : PAGES;
+
+            const bycat = {};
+            filtered.forEach(p => { if (!bycat[p.cat]) bycat[p.cat] = []; bycat[p.cat].push(p); });
+
+            for (const [cat, pages] of Object.entries(bycat)) {
+                const catEl = document.createElement('div');
+                catEl.className = 'cat-label';
+                catEl.textContent = cat;
+                grid.appendChild(catEl);
+
+                pages.forEach(p => {
+                    const isAdded = currentHrefs.has(p.slug);
+                    const div = document.createElement('div');
+                    div.className = `picker-item${isAdded ? ' already-added' : ''}`;
+                    div.innerHTML = `
+                    <div class="picker-icon"><i class="fa-solid ${p.icon}"></i></div>
+                    <div>
+                        <div class="picker-label">${t(p.slug) || p.label}</div>
+                        <div class="picker-path">/${p.slug}</div>
+                    </div>
+                `;
+                    if (!isAdded) div.onclick = () => addPage(p);
+                    grid.appendChild(div);
+                });
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div style="color:#444; font-size:12px; padding:12px 0; text-align:center; grid-column:1/-1;">Tidak ditemukan.</div>`;
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ADD & REMOVE
+        // ══════════════════════════════════════════════════════════
+        async function addPage(page) {
+            if (currentItems.length >= MAX_ITEMS) {
+                if (typeof showPopup === 'function') showPopup(`Maksimal ${MAX_ITEMS} item (tombol menu di tengah sudah otomatis)!`, 'error');
+                return;
+            }
+            if (!selectedClassId) return;
+
+            const nextOrder = currentItems.length + 1;
+            const payload = {
+                class_id: selectedClassId,
+                subject_name: page.label,
+                subject_id: page.slug,
+                icon: page.icon,
+                menu_group: 'bottomnav',
+                display_order: nextOrder,
+                badge: null,
+                badge_type: null,
+            };
+
+            const { data, error } = await supabase.from('subjects_config').insert([payload]).select().single();
+            if (error) {
+                if (typeof showPopup === 'function') showPopup('Gagal tambah: ' + error.message, 'error');
+                return;
+            }
+            currentItems.push(data);
+            renderAll();
+            if (typeof showToast === 'function') showToast(`"${page.label}" ditambahkan!`, 'success');
+        }
+
+        async function addCustomItem() {
+            if (currentItems.length >= MAX_ITEMS) {
+                if (typeof showPopup === 'function') showPopup(`Maksimal ${MAX_ITEMS} item!`, 'error');
+                return;
+            }
+            const label = document.getElementById('customLabel').value.trim();
+            const href = document.getElementById('customHref').value.trim();
+            if (!label || !href) {
+                if (typeof showPopup === 'function') showPopup('Label dan URL wajib diisi!', 'error');
+                return;
+            }
+            if (!selectedClassId) return;
+
+            const btn = document.getElementById('btnAddCustom');
+            btn.disabled = true;
+
+            const payload = {
+                class_id: selectedClassId,
+                subject_name: label,
+                subject_id: href,
+                icon: selectedIcon,
+                menu_group: 'bottomnav',
+                display_order: currentItems.length + 1,
+                badge: null,
+                badge_type: null,
+            };
+
+            const { data, error } = await supabase.from('subjects_config').insert([payload]).select().single();
+            btn.disabled = false;
+            if (error) {
+                if (typeof showPopup === 'function') showPopup('Gagal tambah: ' + error.message, 'error');
+                return;
+            }
+            currentItems.push(data);
+            document.getElementById('customLabel').value = '';
+            document.getElementById('customHref').value = '';
+            renderAll();
+            if (typeof showToast === 'function') showToast(`"${label}" ditambahkan!`, 'success');
+        }
+
+        async function removeItem(id) {
+            const item = currentItems.find(i => i.id === id);
+            if (!item) return;
+
+            const ok = typeof showPopup === 'function'
+                ? await showPopup(`Hapus <b>${item.subject_name}</b> dari bottom nav?`, 'confirm')
+                : confirm(`Hapus ${item.subject_name}?`);
+            if (!ok) return;
+
+            const { error } = await supabase.from('subjects_config').delete().eq('id', id);
+            if (error) {
+                if (typeof showPopup === 'function') showPopup('Gagal hapus: ' + error.message, 'error');
+                return;
+            }
+
+            currentItems = currentItems.filter(i => i.id !== id);
+            // Re-number order
+            for (let i = 0; i < currentItems.length; i++) {
+                await supabase.from('subjects_config').update({ display_order: i + 1 }).eq('id', currentItems[i].id);
+                currentItems[i].display_order = i + 1;
+            }
+            renderAll();
+            if (typeof showToast === 'function') showToast(`Dihapus dari bottom nav.`, 'success');
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ICON MINI DROPDOWN
+        // ══════════════════════════════════════════════════════════
+        function renderIconDropdown() {
+            const grid = document.getElementById('iconDropdown');
+            QUICK_ICONS.forEach(icon => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `idb${selectedIcon === icon ? ' selected' : ''}`;
+                btn.title = icon;
+                btn.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                btn.onclick = () => selectIcon(icon);
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectIcon(icon) {
+            selectedIcon = icon;
+            document.getElementById('iconPreviewIcon').className = `fa-solid ${icon}`;
+            document.querySelectorAll('.idb').forEach(b => {
+                b.classList.toggle('selected', b.title === icon);
+            });
+            document.getElementById('iconDropdown').classList.remove('open');
+        }
+
+        function toggleIconDropdown() {
+            document.getElementById('iconDropdown').classList.toggle('open');
+        }
+    </script>
+</body>
+
+</html>

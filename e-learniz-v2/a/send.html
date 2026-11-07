@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+    <style>
+        .upload-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .upload-card h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-card h2 i {
+            color: var(--accent, #00eaff);
+        }
+
+        .drop-zone {
+            border: 2px dashed rgba(0, 234, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s;
+            background: rgba(0, 234, 255, 0.02);
+            position: relative;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: #00eaff;
+            background: rgba(0, 234, 255, 0.05);
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drop-zone .dz-icon {
+            font-size: 1.8rem;
+            color: rgba(0, 234, 255, 0.35);
+            margin-bottom: .6rem;
+        }
+
+        .dz-text {
+            font-size: .875rem;
+            color: #bbb;
+        }
+
+        .drop-zone .dz-hint {
+            font-size: .72rem;
+            color: #777;
+            margin-top: .3rem;
+        }
+
+        .file-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .fq-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 234, 255, 0.04);
+            border: 1px solid rgba(0, 234, 255, 0.12);
+            border-radius: 10px;
+        }
+
+        .fq-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            background: rgba(0, 234, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00eaff;
+            font-size: .8rem;
+            flex-shrink: 0;
+        }
+
+        .fq-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fq-name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #efefef;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fq-size {
+            font-size: .7rem;
+            color: #888;
+        }
+
+        .fq-status {
+            font-size: .7rem;
+            margin-top: 2px;
+        }
+
+        .fq-status.pending {
+            color: #888;
+        }
+
+        .fq-status.uploading {
+            color: #00eaff;
+        }
+
+        .fq-status.done {
+            color: #0be881;
+        }
+
+        .fq-status.error {
+            color: #ff4757;
+        }
+
+        .fq-prog {
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .fq-prog-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00eaff, #0070ff);
+            border-radius: 2px;
+            width: 0%;
+            transition: width .3s;
+        }
+
+        .fq-remove {
+            background: none;
+            border: none;
+            color: #777;
+            cursor: pointer;
+            font-size: .9rem;
+            padding: 3px;
+            transition: color .15s;
+            flex-shrink: 0;
+        }
+
+        .fq-remove:hover {
+            color: #ff4757;
+        }
+
+        .fq-remove:disabled {
+            opacity: .3;
+            cursor: default;
+        }
+
+        textarea.msg-input {
+            width: 100%;
+            margin-top: 1rem;
+            padding: .7rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #eee;
+            font-size: .875rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 70px;
+            box-sizing: border-box;
+            transition: border-color .2s;
+        }
+
+        textarea.msg-input:focus {
+            outline: none;
+            border-color: rgba(0, 234, 255, 0.3);
+        }
+
+        textarea.msg-input::placeholder {
+            color: #666;
+        }
+
+        .btn-upload {
+            width: 100%;
+            margin-top: 1rem;
+            padding: .8rem;
+            background: var(--accent, #00eaff);
+            color: #0a0a0c;
+            border: none;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-upload:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-upload:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .overall-progress {
+            display: none;
+            margin-top: .6rem;
+            font-size: .75rem;
+            color: #888;
+            text-align: center;
+        }
+
+        .overall-progress.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-paper-plane" style="font-size:26px;"></i> <span data-i18n="send_file">Kirim File</span></h1>
+            </div>
+        </div>
+        <div class="right-section">
+            <div class="upload-card">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="upload_file">Upload File</span></h2>
+
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" multiple>
+                    <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <div class="dz-text">Klik atau seret file ke sini</div>
+                    <div class="dz-hint" data-i18n="all_formats_max">Semua format file didukung. Maks 40 MB</div>
+                </div>
+
+                <div class="file-queue" id="fileQueue"></div>
+
+                <textarea class="msg-input" id="msgInput" placeholder="Masukkan keterangan atau pesan"></textarea>
+
+                <div class="overall-progress" id="overallProgress"></div>
+
+                <button class="btn-upload" id="btnUpload" onclick="doUpload()">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span id="btnLabel">Kirim</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.title = t('send_file') + ' • ' + t('app_name');
+
+        let fileQueue = [];
+        let uploading = false;
+
+        function getFileIcon(type, name) {
+            const ext = (name || '').split('.').pop().toLowerCase();
+            type = type || '';
+            if (type.startsWith('image/')) return 'fa-image';
+            if (type.startsWith('video/')) return 'fa-film';
+            if (type.startsWith('audio/')) return 'fa-music';
+            if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'fa-file-zipper';
+            if (ext === 'pdf') return 'fa-file-pdf';
+            if (['doc', 'docx'].includes(ext)) return 'fa-file-word';
+            if (['xls', 'xlsx'].includes(ext)) return 'fa-file-excel';
+            if (['ppt', 'pptx'].includes(ext)) return 'fa-file-powerpoint';
+            if (['js', 'ts', 'py', 'html', 'css', 'php', 'java', 'cpp', 'c', 'json'].includes(ext)) return 'fa-file-code';
+            return 'fa-file';
+        }
+        function fmtSize(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+        function uid() { return Math.random().toString(36).slice(2); }
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            addFiles([...e.target.files]); e.target.value = '';
+        });
+        const dz = document.getElementById('dropZone');
+        dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+        dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+        dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); addFiles([...e.dataTransfer.files]); });
+
+        function addFiles(files) {
+            const MAX = 40 * 1024 * 1024;
+            files.forEach(f => {
+                if (f.size > MAX) { showPopup(`"${f.name}" terlalu besar (maks 40 MB)`, 'error'); return; }
+                const item = { file: f, id: uid(), status: 'pending', progress: 0 };
+                fileQueue.push(item);
+                renderItem(item);
+            });
+            updateBtn();
+        }
+
+        function renderItem(item) {
+            const q = document.getElementById('fileQueue');
+            const div = document.createElement('div');
+            div.className = 'fq-item'; div.id = `fq-${item.id}`;
+            div.innerHTML = `
+                <div class="fq-icon"><i class="fa-solid ${getFileIcon(item.file.type, item.file.name)}"></i></div>
+                <div class="fq-info">
+                    <div class="fq-name">${item.file.name}</div>
+                    <div class="fq-size">${fmtSize(item.file.size)}</div>
+                    <div class="fq-status pending" id="fqs-${item.id}">${t('pending')}</div>
+                    <div class="fq-prog"><div class="fq-prog-fill" id="fqp-${item.id}"></div></div>
+                </div>
+                <button class="fq-remove" id="fqr-${item.id}" onclick="removeItem('${item.id}')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>`;
+            q.appendChild(div);
+        }
+
+        function removeItem(id) {
+            if (uploading) return;
+            fileQueue = fileQueue.filter(i => i.id !== id);
+            document.getElementById(`fq-${id}`)?.remove();
+            updateBtn();
+        }
+
+        function updateBtn() {
+            const n = fileQueue.filter(i => i.status === 'pending').length;
+            document.getElementById('btnLabel').textContent = n > 1 ? t('send_n_file', { n }) : t('btn_send');
+        }
+
+        function setStatus(id, cls, txt) {
+            const el = document.getElementById(`fqs-${id}`);
+            if (el) { el.className = `fq-status ${cls}`; el.textContent = txt; }
+        }
+        function setProg(id, pct) {
+            const el = document.getElementById(`fqp-${id}`);
+            if (el) el.style.width = pct + '%';
+        }
+
+        async function doUpload() {
+            // Reset item yang error jadi pending dulu supaya bisa di-retry
+            fileQueue.filter(i => i.status === 'error').forEach(i => {
+                i.status = 'pending';
+                setStatus(i.id, 'pending', t('pending'));
+                setProg(i.id, 0);
+            });
+
+            const pending = fileQueue.filter(i => i.status === 'pending');
+            if (!pending.length) { showToast(t('select_file_first') + '!', 'error'); return; }
+
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (!user) { showToast(t('not_logged_in'), 'error'); return; }
+
+            uploading = true;
+            document.getElementById('btnUpload').disabled = true;
+            document.querySelectorAll('.fq-remove').forEach(b => b.disabled = true);
+
+            const msg = document.getElementById('msgInput').value.trim();
+            const op = document.getElementById('overallProgress');
+            op.classList.add('show');
+            let done = 0, failed = 0;
+
+            for (const item of pending) {
+                setStatus(item.id, 'uploading', t('uploading_text'));
+                let fake = 0;
+                const iv = setInterval(() => { fake = Math.min(fake + Math.random() * 20, 85); setProg(item.id, fake); }, 250);
+
+                try {
+                    const safeName = item.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const filePath = `${user.id}/${Date.now()}_${safeName}`;
+
+                    const { error: se } = await supabase.storage.from('transfers').upload(filePath, item.file, { upsert: false });
+                    if (se) throw se;
+                    setProg(item.id, 95);
+
+                    const { error: de } = await supabase.from('file_transfers').insert({
+                        user_id: user.id,
+                        uploader_name: user.nickname || user.full_name || user.name,
+                        uploader_class: user.class_name || String(user.class_id || ''),
+                        file_name: item.file.name, file_path: filePath,
+                        file_size: item.file.size, file_type: item.file.type || 'application/octet-stream',
+                        message: msg || null,
+                    });
+                    if (de) throw de;
+
+                    clearInterval(iv); setProg(item.id, 100);
+                    setStatus(item.id, 'done', t('sent_success'));
+                    item.status = 'done'; done++;
+                } catch (err) {
+                    clearInterval(iv);
+                    setStatus(item.id, 'error', t('send_failed') + (err.message ? ' ' + err.message : ''));
+                    item.status = 'error'; failed++;
+                }
+
+                op.textContent = `${t('done')} ${done + failed} / ${pending.length}`;
+            }
+
+            uploading = false;
+            document.getElementById('btnUpload').disabled = false;
+            document.querySelectorAll('.fq-remove').forEach(b => b.disabled = false);
+
+            if (failed === 0) {
+                showToast(t('sent_success') + ' (' + done + ')');
+                setTimeout(() => {
+                    document.getElementById('msgInput').value = '';
+                    op.classList.remove('show');
+                    fileQueue = fileQueue.filter(i => i.status !== 'done');
+                    document.querySelectorAll('.fq-item').forEach(el => {
+                        const id = el.id.replace('fq-', '');
+                        if (!fileQueue.find(i => i.id === id)) el.remove();
+                    });
+                    updateBtn();
+                }, 1500);
+            } else {
+                showToast(t('done') + ' ' + done + ', ' + t('failed_generic') + ' ' + failed, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

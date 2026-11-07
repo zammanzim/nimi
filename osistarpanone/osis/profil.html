@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSIS - Profil Saya</title>
+    <link rel="stylesheet" href="../css/style.css?v=40" />
+    <link rel="stylesheet" href="../css/osis2.css?v=12" />
+    <meta name="theme-color" content="#e11d2e" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="OSIS TARPAN ONE" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/osis-profil.css?v=3" />
+    <script src="../js/supabase.min.js?v=10"></script>
+    <script src="../js/config.js?v=14"></script>
+    <script src="../js/db.js?v=35" defer></script>
+    <script src="../js/aktivitas.js?v=10" defer></script>
+    <script src="../js/app.js?v=10" defer></script>
+    <script src="../js/dropdown.js?v=3" defer></script>
+    <script src="../js/toast.js?v=10" defer></script>
+    <script src="../js/notice.js?v=10" defer></script>
+    <script src="../js/upload.js?v=10" defer></script>
+    <script src="../js/show-popup.js?v=15" defer></script>
+    <script src="../js/osis-auth.js?v=19" defer></script>
+    <script src="../js/osis-visitor.js?v=5" defer></script>
+    <script src="../js/osis-sidebar.js?v=45" defer></script>
+    <script src="../js/osis-header.js?v=14" defer></script>
+    <script src="../js/form-persist.js?v=10" defer></script>
+    <script src="../js/profil.js?v=10" defer></script>
+  </head>
+  <body>
+    <header class="top-nav">
+      <a href="../index#/" class="brand">
+        <div class="logo-box"><img data-foto="logo1" alt="Logo" /></div>
+        <div class="brand-text">
+          <h2>OSIS</h2>
+          <p>Profil Saya</p>
+        </div>
+      </a>
+      <div class="top-nav-extra">
+        <a href="../index#/" class="btn btn-white btn-sm" style="display: inline-flex"
+          ><i class="fa-solid fa-house"></i> Beranda</a
+        >
+        <div id="areaAuth"></div>
+      </div>
+    </header>
+
+    <div class="osis-wrap">
+      <div class="profil-cols">
+      <div class="profil-side">
+
+      <div class="profil-hero">
+        <div class="profil-avatar">
+          <img id="profilImg" alt="Foto profil" />
+          <span id="profilPlaceholder">O</span>
+        </div>
+        <div style="flex: 1; min-width: 200px">
+          <h1 id="profilHeroNama">Memuat...</h1>
+          <div class="uname" id="profilHeroUser">@-</div>
+          <span class="jabatan" id="profilHeroJabatan">OSIS</span>
+          <p class="bio" id="profilHeroBio"></p>
+        </div>
+      </div>
+
+      <div class="osis-panel">
+          <h3><i class="fa-solid fa-camera"></i> Foto Profil</h3>
+          <div class="profil-drop" id="profilDrop">
+            <div><i class="fa-solid fa-cloud-arrow-up"></i> Klik / seret foto ke sini</div>
+            <small id="profilFotoHint" style="display: none; color: var(--gray)">Foto baru siap — klik Simpan Profil biar permanen.</small>
+          </div>
+          <input type="file" id="profilFile" accept="image/*" style="display: none" />
+          <div class="profil-actions">
+            <button class="btn btn-white btn-sm" id="btnHapusFoto" style="display: none">
+              <i class="fa-solid fa-trash-can"></i> Hapus foto
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="profil-main">
+
+        <div class="osis-panel">
+          <h3><i class="fa-solid fa-id-card"></i> Data Diri</h3>
+          <div class="field"><label>Nama lengkap</label><input type="text" id="profilNama" class="admin-input" maxlength="80" autocomplete="off" /></div>
+          <div class="field"><label>Jabatan</label><input type="text" id="profilJabatan" class="admin-input" readonly /></div>
+          <div class="field"><label>Bio</label><textarea id="profilBio" class="admin-input admin-textarea" maxlength="300" rows="3"></textarea></div>
+          <div class="profil-actions">
+            <button class="btn btn-red" id="btnSimpanProfil"><i class="fa-solid fa-floppy-disk"></i> Simpan Profil</button>
+          </div>
+        </div>
+
+        <div class="osis-panel">
+          <h3><i class="fa-solid fa-at"></i> Username</h3>
+          <div class="field"><label>Username login</label><input type="text" id="profilUsername" class="admin-input" minlength="3" maxlength="30" autocomplete="off" /></div>
+          <div class="profil-actions">
+            <button class="btn btn-red" id="btnSimpanUsername"><i class="fa-solid fa-check"></i> Simpan</button>
+          </div>
+        </div>
+
+        <div class="osis-panel">
+          <h3><i class="fa-solid fa-key"></i> Password</h3>
+          <div class="field"><label>Password lama</label><input type="password" id="profilPwLama" class="admin-input" autocomplete="current-password" /></div>
+          <div class="field"><label>Password baru (min. 6)</label><input type="password" id="profilPwBaru" class="admin-input" autocomplete="new-password" /></div>
+          <div class="field"><label>Konfirmasi password baru</label><input type="password" id="profilPwKonfirm" class="admin-input" autocomplete="new-password" /></div>
+          <div class="profil-actions">
+            <button class="btn btn-red" id="btnSimpanPassword"><i class="fa-solid fa-check"></i> Simpan</button>
+          </div>
+        </div>
+
+        <div class="osis-panel">
+          <h3><i class="fa-solid fa-circle-user"></i> Akun Saya</h3>
+          <div class="field"><label>Email login</label><input type="text" id="akunEmail" class="admin-input" readonly /></div>
+          <div class="field"><label>Hak kelola halaman</label><div class="hak-list" id="akunHak"></div></div>
+          <div class="profil-actions">
+            <button class="btn btn-white" id="btnLogoutProfil"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar dari akun</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <script src="../js/pwa.js?v=11" defer></script>
+  </body>
+</html>

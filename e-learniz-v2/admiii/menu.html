@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822" defer></script>
+    <script src="../js/show-popup.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .section-label {
+            font-size: 11px;
+            color: var(--accent, #00eaff);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .admin-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(0, 234, 255, 0.15);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        /* input with button suffix */
+        .input-suffix-wrap {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .input-suffix-wrap .glass-input {
+            flex: 1;
+        }
+
+        .suffix-btn {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            background: rgba(0, 234, 255, 0.08);
+            color: var(--accent, #00eaff);
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .suffix-btn:hover {
+            background: rgba(0, 234, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        /* icon preview di form */
+        .icon-form-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #iconPreviewBox {
+            width: 38px;
+            height: 38px;
+            flex-shrink: 0;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent, #00eaff);
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #iconPreviewBox:hover {
+            background: rgba(0, 234, 255, 0.18);
+            transform: scale(1.05);
+        }
+
+        /* menu list item */
+        .menu-item {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid var(--accent, #00eaff);
+            border-radius: 10px;
+            padding: 9px 12px;
+            margin-bottom: 7px;
+            transition: background 0.15s;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .menu-item.editing {
+            border-left-color: #ffd32a;
+            background: rgba(255, 211, 42, 0.05);
+        }
+
+        .menu-item.dragging {
+            opacity: 0.4;
+            cursor: grabbing;
+        }
+
+        .menu-item.drag-over {
+            border-top: 2px solid var(--accent, #00eaff);
+            background: rgba(0, 234, 255, 0.07);
+        }
+
+        .drag-handle {
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            margin-right: 10px;
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .drag-handle:hover {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .menu-icon-box {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            border-radius: 7px;
+            background: rgba(0, 234, 255, 0.08);
+            border: 1px solid rgba(0, 234, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent, #00eaff);
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .menu-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .menu-item-info h4 {
+            margin: 0 0 2px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-item-info small {
+            font-size: 11px;
+            color: #555;
+        }
+
+        .menu-item-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .btn-act {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.45);
+            cursor: pointer;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .btn-act:hover {
+            background: rgba(0, 234, 255, 0.15);
+            color: var(--accent, #00eaff);
+        }
+
+        .btn-act.del:hover {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+        }
+
+        .btn-act.btn-lock-toggle {
+            color: #555;
+        }
+
+        .btn-act.btn-lock-toggle:hover {
+            color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .btn-act.btn-lock-toggle.locked {
+            color: #ff4757;
+        }
+
+        .btn-act.btn-lock-toggle.locked:hover {
+            background: rgba(255, 71, 87, 0.12);
+        }
+
+        .order-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #444;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+
+        .badge-chip {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 5px;
+        }
+
+        .group-header {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 12px 0 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.65;
+        }
+
+        .group-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: currentColor;
+            opacity: 0.2;
+        }
+
+        /* pills */
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .pill:hover,
+        .pill.active {
+            background: rgba(0, 234, 255, 0.12);
+            border-color: rgba(0, 234, 255, 0.4);
+            color: var(--accent, #00eaff);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #444;
+        }
+
+        .empty-state i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* form mode badge */
+        .form-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        .form-mode-badge.add {
+            background: rgba(0, 234, 255, 0.1);
+            color: var(--accent, #00eaff);
+            border: 1px solid rgba(0, 234, 255, 0.25);
+        }
+
+        .form-mode-badge.edit {
+            background: rgba(255, 211, 42, 0.1);
+            color: #ffd32a;
+            border: 1px solid rgba(255, 211, 42, 0.3);
+        }
+
+        /* saving indicator */
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(0, 234, 255, 0.3);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--accent, #00eaff);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+        }
+
+        .save-indicator.show {
+            display: flex;
+        }
+
+        /* ── TOAST SHORTCUT ── */
+        .shortcut-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 30px;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 99999;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shortcut-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .shortcut-toast i {
+            color: var(--accent, #00eaff);
+            font-size: 11px;
+        }
+
+        .mm-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .mm-modal-overlay.open {
+            display: flex;
+        }
+
+        .mm-modal-box {
+            background: #111;
+            border: 1px solid rgba(0, 234, 255, 0.25);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .mm-modal-head {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .mm-modal-head h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent, #00eaff);
+            margin: 0;
+        }
+
+        .mm-modal-search {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .mm-modal-body {
+            overflow-y: auto;
+            padding: 12px 14px;
+        }
+
+        /* icon grid */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 7px;
+        }
+
+        .icon-cat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent, #00eaff);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 0 4px;
+            opacity: 0.6;
+        }
+
+        .icon-btn {
+            height: 46px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 17px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 234, 255, 0.15);
+            border-color: rgba(0, 234, 255, 0.4);
+            color: var(--accent, #00eaff);
+            transform: scale(1.1);
+        }
+
+        /* slug popup list */
+        .slug-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: all 0.15s;
+        }
+
+        .slug-list-item:hover {
+            background: rgba(0, 234, 255, 0.08);
+            border-color: rgba(0, 234, 255, 0.3);
+        }
+
+        .slug-list-item .slug-icon {
+            font-size: 14px;
+            color: var(--accent, #00eaff);
+            width: 20px;
+            text-align: center;
+        }
+
+        .slug-list-item .slug-name {
+            font-size: 13px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .slug-list-item .slug-path {
+            font-size: 11px;
+            color: #555;
+        }
+
+        @media (max-width:768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- ──────── LEFT: FORM ──────── -->
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-gears"></i> <span data-i18n="menu_manager">Menu Manager</span></h1>
+                <p style="color:#aaa; margin-top:4px; font-size:13px;">Kelola routing sidebar secara langsung.</p>
+            </div>
+
+            <div class="admin-box">
+                <div style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="section-label" style="margin:0;">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span id="formTitleText" data-i18n="add_menu">Tambah Menu</span>
+                    </div>
+                    <span class="form-mode-badge add" id="formModeBadge">
+                        <i class="fa-solid fa-plus"></i> Baru
+                    </span>
+                </div>
+                <input type="hidden" id="editId">
+                <input type="hidden" id="mOrder" value="1">
+
+                <div class="form-row">
+                    <div class="form-group" style="margin:0;">
+                        <label data-i18n="class">Kelas</label>
+                        <select id="mClassId" class="glass-input" onchange="onClassChange()">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label data-i18n="menu_group">Grup Menu</label>
+                        <select id="mGroup" class="glass-input" onchange="autoCalculateOrder()">
+                            <option value="">-- Pilih Kelas Dulu --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="menu_name">Nama Menu</label>
+                    <input type="text" id="mSubjectName" class="glass-input" placeholder="contoh: Matematika"
+                        oninput="autoSlug(this.value)">
+                </div>
+
+                <div class="form-group">
+                    <label>ID URL <span style="opacity:0.4; font-size:10px; text-transform:none;">(klik <i
+                                class="fa-solid fa-folder-open" style="font-size:9px;"></i> buat pilih
+                            file)</span></label>
+                    <div class="input-suffix-wrap">
+                        <input type="text" id="mSubjectId" class="glass-input" placeholder="contoh: matematika">
+                        <button class="suffix-btn" onclick="openSlugPicker()" title="Pilih dari file yang ada">
+                            <i class="fa-solid fa-folder-open"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Icon <span style="opacity:0.4; font-size:10px; text-transform:none;">(klik kotak untuk
+                            pilih)</span></label>
+                    <div class="icon-form-wrap">
+                        <input type="text" id="mIcon" class="glass-input" placeholder="fa-book"
+                            oninput="previewIconInput(this.value)">
+                        <div id="iconPreviewBox" onclick="openIconPicker()" title="Pilih ikon">
+                            <i class="fa-solid fa-book"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-bottom:0;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Badge Text</label>
+                        <input type="text" id="mBadge" class="glass-input" placeholder="HOT, NEW...">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Badge Style</label>
+                        <select id="mBadgeType" class="glass-input">
+                            <option value="">Polos</option>
+                            <option value="badge-new">New</option>
+                            <option value="badge-hot">Hot</option>
+                            <option value="badge-upd">Update</option>
+                            <option value="badge-beta">Beta</option>
+                            <option value="badge-info">Info</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button id="btnReset" onclick="resetForm()" class="btn-glass-cancel" style="flex:1; display:none;">
+                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i><span data-i18n="cancel">Batal</span>
+                    </button>
+                    <button type="button" onclick="saveMenu()" class="btn-glass-save" style="flex:2;">
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i><span data-i18n="save">Simpan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ──────── CARD: KELOLA GRUP ──────── -->
+            <div class="admin-box" style="margin-top:14px;">
+                <div class="section-label" style="margin-bottom:16px;">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Kelola Grup Sidebar</span>
+                </div>
+
+                <!-- Daftar grup yang sudah ada -->
+                <div id="groupListWrap">
+                    <div
+                        style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:10px;">
+                        Grup yang Ada
+                    </div>
+                    <div id="groupListEl" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+                        <div style="color:#555;font-size:12px;">— belum ada, pilih kelas dulu —</div>
+                    </div>
+                    <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:16px;"></div>
+                </div>
+
+                <!-- Form tambah/edit grup -->
+                <div
+                    style="font-size:10px;font-weight:700;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:10px;">
+                    <span data-i18n="add_edit_group">Tambah / Edit Grup</span>
+                </div>
+                <input type="hidden" id="cgEditId">
+                <div class="form-row" style="margin-bottom:10px;">
+                    <div class="form-group" style="margin:0;">
+                        <label data-i18n="class">Kelas</label>
+                        <select id="cgClassId" class="glass-input" onchange="onCgClassChange()">
+                            <option value="">-- Pilih --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Tipe</label>
+                        <select id="cgType" class="glass-input">
+                            <option value="main" data-i18n="main_menu_type">Main Menu</option>
+                            <option value="lessons">Lessons</option>
+                            <option value="custom" data-i18n="additional_menu">Menu Tambahan</option>
+                            <option value="admin" data-i18n="admin_panel_type">Admin Panel</option>
+                            <option value="teacher">Teacher Menu</option>
+                            <option value="system">System (Super Admin)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:10px;">
+                    <div class="form-group" style="margin:0;">
+                        <label>ID Grup <span style="opacity:0.4;font-size:9px;text-transform:none;">huruf kecil +
+                                _</span></label>
+                        <input type="text" id="cgKey" class="glass-input" placeholder="mis: referensi"
+                            oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); cgAutoLabel(this.value)">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Nama Tampil</label>
+                        <input type="text" id="cgLabel" class="glass-input" placeholder="mis: Referensi"
+                            oninput="this.dataset.dirty='1'">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Urutan</label>
+                    <input type="number" id="cgOrder" class="glass-input" value="0" min="0" style="width:100px;">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button id="cgBtnReset" type="button" onclick="cgResetForm()" class="btn-glass-cancel"
+                        style="flex:1;display:none;">
+                        <i class="fa-solid fa-xmark" style="margin-right:6px;"></i><span data-i18n="cancel">Batal</span>
+                    </button>
+                    <button type="button" onclick="cgSave()" class="btn-glass-save" style="flex:2;">
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:8px;"></i><span data-i18n="save_group">Simpan Grup</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ──────── RIGHT: LIST ──────── -->
+        <div class="right-section">
+            <div class="admin-box" style="margin-bottom:14px;">
+                <div class="section-label"><i class="fa-solid fa-filter"></i> Filter Tampilan</div>
+                <select id="targetClassId" class="glass-input" onchange="onFilterChange()">
+                    <option value="all" data-i18n="all_classes">Semua Kelas</option>
+                </select>
+                <div class="filter-pills">
+                    <span class="pill active" data-group="all" onclick="filterGroup(this)" data-i18n="all">Semua</span>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                <div class="section-label" style="margin:0;"><i class="fa-solid fa-list-ul"></i> <span data-i18n="menu_structure">Struktur Menu</span></div>
+                <span id="itemCount" style="font-size:11px; color:#555;"></span>
+            </div>
+            <div id="menuListContainer">
+                <div class="empty-state">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent, #00eaff); opacity:0.5;"></i>
+                    <p style="font-size:13px;" data-i18n="loading">Memuat data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ICON PICKER MODAL ── -->
+    <div class="mm-modal-overlay" id="iconPickerModal">
+        <div class="mm-modal-box">
+            <div class="mm-modal-head">
+                <h3><i class="fa-solid fa-icons" style="margin-right:8px;"></i><span data-i18n="select_icon_modal">Pilih Ikon</span></h3>
+                <button onclick="closeModal('iconPickerModal')" class="btn-act"
+                    style="background:rgba(255,71,87,0.1);color:#ff4757;width:30px;height:30px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mm-modal-search">
+                <input type="text" id="searchIconInput" class="glass-input"
+                    data-i18n-placeholder="search_icon_placeholder" placeholder="Cari ikon... (misal: book, math, code)" oninput="filterIcons(this.value)">
+            </div>
+            <div class="mm-modal-body">
+                <div id="iconGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SLUG PICKER MODAL ── -->
+    <div class="mm-modal-overlay" id="slugPickerModal">
+        <div class="mm-modal-box">
+            <div class="mm-modal-head">
+                <h3><i class="fa-solid fa-folder-open" style="margin-right:8px;"></i><span data-i18n="select_file_page_modal">Pilih File / Halaman</span></h3>
+                <button onclick="closeModal('slugPickerModal')" class="btn-act"
+                    style="background:rgba(255,71,87,0.1);color:#ff4757;width:30px;height:30px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="mm-modal-search">
+                <input type="text" id="searchSlugInput" class="glass-input" data-i18n-placeholder="search_page_placeholder" placeholder="Cari halaman..."
+                    oninput="filterSlugs(this.value)">
+            </div>
+            <div class="mm-modal-body" id="slugList"></div>
+        </div>
+    </div>
+
+    <!-- ── SAVING INDICATOR ── -->
+    <div class="save-indicator" id="saveIndicator">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> <span data-i18n="loading">Menyimpan urutan...</span>
+    </div>
+
+    <!-- ── SHORTCUT TOAST ── -->
+    <div class="shortcut-toast" id="shortcutToast">
+        <i class="fa-solid fa-keyboard"></i>
+        <span id="shortcutToastMsg"></span>
+    </div>
+
+    <script>
+        // ══════════════════════════════════════════════════
+        // DATA
+        // ══════════════════════════════════════════════════
+        let allMenuData = [];
+        let activeGroup = 'all';
+        let dragSrcItem = null;
+        let classNameMap = {}; // id → nama kelas
+        let dragSrcId = null;
+
+        // File yang diketahui ada di project — dikategorikan
+        const KNOWN_FILES = [
+            // Main pages
+            { slug: 'announcements', label: 'Announcements', icon: 'fa-bullhorn', cat: 'Main' },
+            { slug: 'tugas', label: 'Daftar Tugas', icon: 'fa-clipboard-list', cat: 'Main' },
+            { slug: 'kisi-kisi', label: 'Kisi-Kisi', icon: 'fa-file-lines', cat: 'Main' },
+            { slug: 'susulan', label: 'Materi Susulan', icon: 'fa-book-open-reader', cat: 'Main' },
+            { slug: 'quiz', label: 'Simulasi Ujian', icon: 'fa-graduation-cap', cat: 'Main' },
+            { slug: 'forum', label: 'Forum Diskusi', icon: 'fa-comments', cat: 'Main' },
+            { slug: 'search', label: 'Pencarian', icon: 'fa-magnifying-glass', cat: 'Main' },
+            { slug: 'settingacc', label: 'Setting Akun', icon: 'fa-user-gear', cat: 'Main' },
+            { slug: 'theme', label: 'Personalisasi', icon: 'fa-palette', cat: 'Main' },
+            { slug: 'nilai-psasi2526', label: 'Nilai PSASI 25/26', icon: 'fa-chart-bar', cat: 'Main' },
+            { slug: 'nilai-psts2526', label: 'Nilai PSTS 25/26', icon: 'fa-chart-bar', cat: 'Main' },
+            // ... (rest of lessons unchanged)
+            { slug: 'bahasaindonesia', label: 'Bahasa Indonesia', icon: 'fa-book-open', cat: 'Lessons' },
+            // ... (other lessons)
+            // Admin
+            { slug: 'control', label: 'User Control', icon: 'fa-users-gear', cat: 'Admin' },
+            { slug: 'visitor', label: 'Visitor Monitor', icon: 'fa-eye', cat: 'Admin' },
+            { slug: 'menu', label: 'Menu Manager', icon: 'fa-gears', cat: 'Admin' },
+            { slug: 'monitor_nilai', label: 'Monitor Nilai', icon: 'fa-chart-line', cat: 'Admin' },
+            { slug: 'monitor_simulasi', label: 'Monitor Simulasi', icon: 'fa-chart-line', cat: 'Admin' },
+            { slug: 'csv-sql', label: 'CSV → SQL', icon: 'fa-database', cat: 'Admin' },
+            { slug: 'inputsoal', label: 'Input Soal Simulasi', icon: 'fa-pen-to-square', cat: 'Admin' },
+            { slug: 'nilai-psts', label: 'Input Nilai PSTS', icon: 'fa-pen-to-square', cat: 'Admin' },
+        ];
+
+        // Icon library lengkap per kategori
+        const ICON_CATS = {
+            'Pelajaran': [
+                'fa-book', 'fa-book-open', 'fa-calculator', 'fa-language', 'fa-flask', 'fa-microscope',
+                'fa-dna', 'fa-atom', 'fa-brain', 'fa-earth-americas', 'fa-laptop-code', 'fa-code',
+                'fa-music', 'fa-palette', 'fa-pen-nib', 'fa-shapes', 'fa-ruler', 'fa-compass',
+                'fa-vial', 'fa-graduation-cap', 'fa-chalkboard', 'fa-chalkboard-user', 'fa-chip'
+            ],
+            'Navigasi': [
+                'fa-house', 'fa-bullhorn', 'fa-clipboard-list', 'fa-calendar-days', 'fa-magnifying-glass',
+                'fa-bell', 'fa-star', 'fa-fire', 'fa-bookmark', 'fa-folder-open', 'fa-link',
+                'fa-list-check', 'fa-table', 'fa-file-lines', 'fa-chart-bar', 'fa-chart-line',
+                'fa-circle-question', 'fa-info-circle', 'fa-comments', 'fa-message',
+            ],
+            'Admin & Sistem': [
+                'fa-gears', 'fa-gear', 'fa-user-gear', 'fa-users-gear', 'fa-user-shield', 'fa-shield-halved',
+                'fa-user-group', 'fa-users', 'fa-lock', 'fa-eye', 'fa-database', 'fa-server',
+                'fa-wrench', 'fa-screwdriver-wrench', 'fa-terminal', 'fa-code-branch', 'fa-sliders',
+            ],
+            'Lainnya': [
+                'fa-medal', 'fa-trophy', 'fa-crown', 'fa-certificate', 'fa-pen-to-square',
+                'fa-person-running', 'fa-heart', 'fa-flag', 'fa-tag', 'fa-hashtag',
+                'fa-cube', 'fa-layer-group', 'fa-puzzle-piece',
+            ],
+        };
+
+        // ══════════════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', async () => {
+            await setupClassDropdown();
+
+            // Default filter ke kelas user yang login
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const classId = user?.role === 'super_admin'
+                    ? (sessionStorage.getItem('class_override') || user?.class_id)
+                    : user?.class_id;
+                if (classId) {
+                    document.getElementById('targetClassId').value = classId;
+                    document.getElementById('mClassId').value = classId;
+                    document.getElementById('cgClassId').value = classId;
+                }
+            } catch (e) { }
+
+            await loadClassMenus();
+
+            // Setelah allMenuData terisi, baru load group list
+            try {
+                const classId = document.getElementById('cgClassId').value;
+                if (classId) {
+                    syncGroupDropdown(classId);
+                    loadGroupList(classId);
+                }
+            } catch (e) { }
+
+            // Tutup modal klik di luar
+            ['iconPickerModal', 'slugPickerModal'].forEach(id => {
+                document.getElementById(id).addEventListener('click', function (e) {
+                    if (e.target === this) closeModal(id);
+                });
+            });
+
+            // ── KEYBOARD SHORTCUTS ───────────────────────────────
+            document.addEventListener('keydown', (e) => {
+                const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+                const isModalOpen = document.querySelector('.mm-modal-overlay.open');
+
+                // Tutup modal pakai ESC
+                if (e.key === 'Escape') {
+                    if (isModalOpen) {
+                        document.querySelectorAll('.mm-modal-overlay.open').forEach(m => m.classList.remove('open'));
+                        return;
+                    }
+                    // Edit mode → batal
+                    if (document.getElementById('editId').value) {
+                        resetForm();
+                        showToast(t('edit_cancelled'));
+                        return;
+                    }
+                }
+
+                // Ctrl+Enter → simpan
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    saveMenu();
+                    return;
+                }
+
+                // Angka 1–9 → switch kelas (hanya kalau ga lagi ngetik & ga ada modal)
+                if (!isTyping && !isModalOpen && /^[1-9]$/.test(e.key)) {
+                    const classOpts = [...document.getElementById('targetClassId').options];
+                    const idx = parseInt(e.key); // 1 = option index 1 (skip "Semua Kelas")
+                    if (classOpts[idx]) {
+                        document.getElementById('targetClassId').value = classOpts[idx].value;
+                        onFilterChange();
+                        showToast(`Kelas: ${classOpts[idx].textContent}`);
+                    }
+                }
+
+                // 0 → semua kelas
+                if (!isTyping && !isModalOpen && e.key === '0') {
+                    document.getElementById('targetClassId').value = 'all';
+                    onFilterChange();
+                    showToast(t('all_classes'));
+                }
+            });
+        });
+
+        // ══════════════════════════════════════════════════
+        // DATA
+        // ══════════════════════════════════════════════════
+        let allMenuGroups = [];
+
+        // ── SETUP CLASS DROPDOWN ──────────────────────────
+        async function setupClassDropdown() {
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (!data) return;
+            data.forEach(cls => {
+                classNameMap[String(cls.id)] = cls.name;
+                ['targetClassId', 'mClassId', 'cgClassId'].forEach(id => {
+                    const sel = document.getElementById(id);
+                    if (!sel) return;
+                    const opt = document.createElement('option');
+                    opt.value = cls.id;
+                    opt.textContent = cls.name;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        // ── SYNC mGroup DARI menu_groups TABLE ────────────
+        function syncGroupDropdown(classId) {
+            const sel = document.getElementById('mGroup');
+            const prev = sel.value;
+            sel.innerHTML = '';
+
+            if (!classId) {
+                sel.innerHTML = '<option value="">-- Pilih Kelas Dulu --</option>';
+                return;
+            }
+
+            const TYPE_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+            const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), teacher: 'Teacher', main: t('sidebar_main'), lessons: t('sidebar_lessons') };
+
+            // Prioritas: dari menu_groups table
+            let groups = allMenuGroups
+                .filter(g => String(g.class_id) === String(classId) && g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav')
+                .sort((a, b) => a.display_order - b.display_order);
+
+            // Fallback: kalau menu_groups kosong, generate dari subjects_config
+            if (!groups.length) {
+                const seen = new Set();
+                const fallback = [];
+                allMenuData
+                    .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
+                    .forEach(m => {
+                        if (seen.has(m.menu_group)) return;
+                        seen.add(m.menu_group);
+                        fallback.push({
+                            group_key: m.menu_group,
+                            group_label: TYPE_LABEL[m.menu_group] || m.menu_group.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            group_type: TYPE_ORDER.hasOwnProperty(m.menu_group) ? m.menu_group : 'custom',
+                            display_order: TYPE_ORDER[m.menu_group] ?? 99
+                        });
+                    });
+                groups = fallback.sort((a, b) => a.display_order - b.display_order);
+            }
+
+            if (!groups.length) {
+                sel.innerHTML = '<option value="">-- Belum ada grup, buat di bawah --</option>';
+                return;
+            }
+
+            groups.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.group_key;
+                opt.textContent = g.group_label;
+                sel.appendChild(opt);
+            });
+
+            if (prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+        }
+
+        // ── CLASS CHANGE ──────────────────────────────────
+        function onClassChange() {
+            const val = document.getElementById('mClassId').value;
+            document.getElementById('targetClassId').value = val || 'all';
+            syncGroupDropdown(val);
+            autoCalculateOrder();
+            loadClassMenus();
+        }
+
+        function onFilterChange() {
+            const val = document.getElementById('targetClassId').value;
+            if (val !== 'all') {
+                document.getElementById('mClassId').value = val;
+                syncGroupDropdown(val);
+            }
+            loadClassMenus();
+        }
+
+        function onCgClassChange() {
+            loadGroupList(document.getElementById('cgClassId').value);
+        }
+
+        // ── LOAD GROUP LIST (card bawah) ──────────────────
+        async function loadGroupList(classId) {
+            const el = document.getElementById('groupListEl');
+            if (!classId) {
+                el.innerHTML = '<div style="color:#555;font-size:12px;">— ' + t('select_class_error') + ' —</div>';
+                return;
+            }
+            const { data } = await supabase.from('menu_groups')
+                .select('*').eq('class_id', classId).order('display_order');
+
+            const filtered = (data || []).filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav');
+
+            // Update allMenuGroups untuk kelas ini
+            allMenuGroups = allMenuGroups.filter(g => String(g.class_id) !== String(classId));
+            if (filtered.length) allMenuGroups.push(...filtered);
+
+            // Fallback: kalau menu_groups kosong, generate dari subjects_config
+            let displayGroups = filtered;
+            if (!displayGroups.length) {
+                const TYPE_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+                const TYPE_LABEL = { system: t('sidebar_system'), admin: t('sidebar_admin'), teacher: 'Teacher', main: t('sidebar_main'), lessons: t('sidebar_lessons') };
+                const seen = new Set();
+                displayGroups = allMenuData
+                    .filter(m => String(m.class_id) === String(classId) && m.menu_group && m.menu_group !== 'bottomnav')
+                    .reduce((acc, m) => {
+                        if (seen.has(m.menu_group)) return acc;
+                        seen.add(m.menu_group);
+                        acc.push({
+                            id: null,
+                            class_id: classId,
+                            group_key: m.menu_group,
+                            group_label: TYPE_LABEL[m.menu_group] || m.menu_group.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                            group_type: TYPE_ORDER.hasOwnProperty(m.menu_group) ? m.menu_group : 'custom',
+                            display_order: TYPE_ORDER[m.menu_group] ?? 99
+                        });
+                        return acc;
+                    }, [])
+                    .sort((a, b) => a.display_order - b.display_order);
+            }
+
+            renderGroupList(displayGroups, el);
+            syncGroupDropdown(document.getElementById('mClassId').value);
+        }
+
+        function renderGroupList(groups, el) {
+            const TYPE_COLOR = { system: '#00eaff', admin: '#ffd700', teacher: '#0be881', main: '#a0a0a0', lessons: '#0be881', custom: '#c084fc' };
+            const TYPE_LABEL = { system: 'System', admin: 'Admin', teacher: 'Teacher', main: 'Main', lessons: 'Lessons', custom: 'Custom' };
+            if (!groups.length) {
+                el.innerHTML = '<div style="color:#555;font-size:12px;">— belum ada grup —</div>';
+                return;
+            }
+            el.innerHTML = groups.map(g => `
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;
+                    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);">
+                    <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${TYPE_COLOR[g.group_type] || '#666'};"></span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:#ddd;">${g.group_label}</div>
+                        <div style="font-size:10px;color:#555;">${g.group_key} · <span style="color:${TYPE_COLOR[g.group_type] || '#666'}">${TYPE_LABEL[g.group_type] || g.group_type}</span> · urutan: ${g.display_order}</div>
+                    </div>
+                    <button onclick="cgEdit(${g.id})" style="background:none;border:none;color:#555;cursor:pointer;padding:4px;font-size:12px;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="cgDelete(${g.id},'${g.group_label}')" style="background:none;border:none;color:#ff4757;cursor:pointer;padding:4px;font-size:12px;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>`).join('');
+        }
+
+        // ── CG FORM ───────────────────────────────────────
+        function cgAutoLabel(key) {
+            const el = document.getElementById('cgLabel');
+            if (!el.dataset.dirty)
+                el.value = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+
+        function cgResetForm() {
+            document.getElementById('cgEditId').value = '';
+            document.getElementById('cgKey').value = '';
+            document.getElementById('cgKey').disabled = false;
+            document.getElementById('cgLabel').value = '';
+            document.getElementById('cgLabel').dataset.dirty = '';
+            document.getElementById('cgType').value = 'custom';
+            document.getElementById('cgOrder').value = '0';
+            document.getElementById('cgBtnReset').style.display = 'none';
+        }
+
+        function cgEdit(id) {
+            const g = allMenuGroups.find(x => x.id === id);
+            if (!g) return;
+            document.getElementById('cgEditId').value = g.id;
+            document.getElementById('cgClassId').value = g.class_id;
+            document.getElementById('cgType').value = g.group_type;
+            document.getElementById('cgKey').value = g.group_key;
+            document.getElementById('cgKey').disabled = true;
+            document.getElementById('cgLabel').value = g.group_label;
+            document.getElementById('cgLabel').dataset.dirty = '1';
+            document.getElementById('cgOrder').value = g.display_order;
+            document.getElementById('cgBtnReset').style.display = '';
+            document.querySelector('.admin-box:last-of-type').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function cgDelete(id, label) {
+            const ok = await showPopup(t('confirm_delete_group', { name: label }) + ' Item di grup ini tidak ikut terhapus.', 'confirm');
+            if (!ok) return;
+            const { error } = await supabase.from('menu_groups').delete().eq('id', id);
+            if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+            showToast(`"${label}" dihapus ✓`);
+            allMenuGroups = allMenuGroups.filter(g => g.id !== id);
+            renderGroupList(allMenuGroups.filter(g => String(g.class_id) === document.getElementById('cgClassId').value), document.getElementById('groupListEl'));
+            syncGroupDropdown(document.getElementById('mClassId').value);
+        }
+
+        async function cgSave() {
+            const editId = document.getElementById('cgEditId').value;
+            const classId = document.getElementById('cgClassId').value;
+            const type = document.getElementById('cgType').value;
+            const key = document.getElementById('cgKey').value.trim();
+            const label = document.getElementById('cgLabel').value.trim();
+            const order = parseInt(document.getElementById('cgOrder').value) || 0;
+
+            if (!classId) { showPopup(t('select_class_error'), 'error'); return; }
+            if (!key) { showPopup('ID Grup wajib diisi!', 'error'); return; }
+            if (!label) { showPopup('Nama tampil wajib diisi!', 'error'); return; }
+
+            const payload = { class_id: classId, group_key: key, group_label: label, group_type: type, display_order: order };
+            let error;
+            if (editId) {
+                ({ error } = await supabase.from('menu_groups').update(payload).eq('id', editId));
+            } else {
+                ({ error } = await supabase.from('menu_groups').insert(payload));
+            }
+            if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+
+            showToast(editId ? 'Grup diperbarui ✓' : 'Grup ditambahkan ✓');
+            cgResetForm();
+            await loadGroupList(classId);
+            // Auto-set form atas ke grup baru ini
+            document.getElementById('mClassId').value = classId;
+            syncGroupDropdown(classId);
+            document.getElementById('mGroup').value = key;
+        }
+
+        // ══════════════════════════════════════════════════
+        // LOAD & RENDER LIST
+        // ══════════════════════════════════════════════════
+        async function loadClassMenus() {
+            const container = document.getElementById('menuListContainer');
+            container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin" style="color:var(--accent,#00eaff);opacity:0.5;"></i><p style="font-size:13px;">Memuat...</p></div>`;
+
+            const classId = document.getElementById('targetClassId').value;
+
+            let itemsQ = supabase.from('subjects_config').select('*').order('class_id').order('display_order');
+            let groupsQ = supabase.from('menu_groups').select('*').order('display_order');
+            if (classId !== 'all') {
+                itemsQ = itemsQ.eq('class_id', classId);
+                groupsQ = groupsQ.eq('class_id', classId);
+            }
+
+            const [{ data: items }, { data: groups }] = await Promise.all([itemsQ, groupsQ]);
+            allMenuData = (items || []).filter(m => m.menu_group !== 'bottomnav');
+            allMenuGroups = (groups || []).filter(g => g.group_key !== 'bottomnav' && g.group_type !== 'bottomnav');
+
+            const formClass = document.getElementById('mClassId').value;
+            syncGroupDropdown(formClass);
+            updateGroupPills(allMenuGroups.filter(g => !classId || classId === 'all' || String(g.class_id) === String(classId)));
+            renderFilteredList();
+        }
+
+        function renderFilteredList() {
+            const classId = document.getElementById('targetClassId').value;
+            let data = [...allMenuData];
+            if (classId !== 'all') data = data.filter(i => String(i.class_id) === classId);
+            if (activeGroup !== 'all') data = data.filter(i => i.menu_group === activeGroup);
+            renderList(data, classId);
+        }
+
+        function updateGroupPills(groups) {
+            const pillsContainer = document.querySelector('.filter-pills');
+            pillsContainer.innerHTML = '<span class="pill active" data-group="all" onclick="filterGroup(this)" data-i18n="all">Semua</span>';
+            groups.sort((a, b) => a.display_order - b.display_order).forEach(g => {
+                const pill = document.createElement('span');
+                pill.className = 'pill';
+                pill.dataset.group = g.group_key;
+                pill.dataset.dynamic = '1';
+                pill.textContent = g.group_label;
+                pill.onclick = function () { filterGroup(this); };
+                pillsContainer.appendChild(pill);
+            });
+        }
+
+        function renderList(data, classId) {
+            const container = document.getElementById('menuListContainer');
+            document.getElementById('itemCount').textContent = data.length + ' item';
+
+            if (!data.length) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-folder-open"></i><p style="font-size:13px;">Tidak ada menu</p></div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            // Helper: ambil label & color dari allMenuGroups
+            const TYPE_COLOR = { system: 'var(--accent,#00eaff)', admin: '#ff4757', teacher: '#0be881', main: '#ffd700', lessons: '#0be881', custom: '#c084fc' };
+            const FALLBACK_ORDER = { system: 0, admin: 1, teacher: 2, main: 3, lessons: 4 };
+            const FALLBACK_LABEL = { system: 'System Menu', admin: 'Admin Panel', teacher: 'Teacher', main: 'Main Menu', lessons: 'Lessons' };
+            function groupMeta(key) {
+                const g = allMenuGroups.find(x => x.group_key === key);
+                return {
+                    label: g?.group_label ?? FALLBACK_LABEL[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    color: g ? (TYPE_COLOR[g.group_type] || '#c084fc') : (TYPE_COLOR[key] || '#aaa'),
+                    order: g?.display_order ?? FALLBACK_ORDER[key] ?? 99
+                };
+            }
+
+            // Urutkan grup berdasarkan display_order di menu_groups
+            const allGroupKeys = [...new Set(data.map(i => i.menu_group))]
+                .sort((a, b) => groupMeta(a).order - groupMeta(b).order);
+
+            const shouldGroup = (classId === 'all' && activeGroup === 'all');
+
+            if (shouldGroup) {
+                const byClass = {};
+                data.forEach(item => {
+                    const cid = String(item.class_id);
+                    if (!byClass[cid]) byClass[cid] = [];
+                    byClass[cid].push(item);
+                });
+
+                for (const [cid, items] of Object.entries(byClass)) {
+                    const className = classNameMap[cid] || `Kelas ID: ${cid}`;
+                    appendGroupHeader(container, '#ffd700', `<i class="fa-solid fa-users"></i> ${className}`);
+
+                    const byGroup = {};
+                    items.forEach(item => {
+                        if (!byGroup[item.menu_group]) byGroup[item.menu_group] = [];
+                        byGroup[item.menu_group].push(item);
+                    });
+
+                    [...new Set(items.map(i => i.menu_group))]
+                        .sort((a, b) => groupMeta(a).order - groupMeta(b).order)
+                        .forEach(group => {
+                            const { label, color } = groupMeta(group);
+                            appendGroupHeader(container, color, `<i class="fa-solid fa-layer-group"></i> ${label}`, true);
+                            byGroup[group].sort((a, b) => a.display_order - b.display_order).forEach(item => container.appendChild(createItemEl(item)));
+                        });
+                }
+            } else {
+                const byGroup = {};
+                data.forEach(item => {
+                    if (!byGroup[item.menu_group]) byGroup[item.menu_group] = [];
+                    byGroup[item.menu_group].push(item);
+                });
+                allGroupKeys.forEach(group => {
+                    if (!byGroup[group]) return;
+                    const { label, color } = groupMeta(group);
+                    appendGroupHeader(container, color, `<i class="fa-solid fa-layer-group"></i> ${label}`);
+                    byGroup[group].sort((a, b) => a.display_order - b.display_order).forEach(item => container.appendChild(createItemEl(item)));
+                });
+            }
+        }
+
+        function appendGroupHeader(container, color, html, isSubGroup = false) {
+            const h = document.createElement('div');
+            h.className = 'group-header';
+            h.style.color = color;
+            if (isSubGroup) {
+                h.style.paddingLeft = '12px';
+                h.style.fontSize = '9px';
+                h.style.opacity = '0.5';
+                h.style.paddingTop = '8px';
+            }
+            h.innerHTML = html;
+            container.appendChild(h);
+        }
+
+        function createItemEl(item) {
+            const div = document.createElement('div');
+            div.className = 'menu-item';
+            div.id = `item-${item.id}`;
+            div.draggable = true;
+            div.dataset.id = item.id;
+            div.dataset.order = item.display_order;
+
+            const badgeHtml = item.badge
+                ? `<span class="badge-chip ${item.badge_type || ''}">` + item.badge + `</span>` : '';
+
+            const isLocked = !!item.locked;
+
+            div.innerHTML = `
+            <i class="fa-solid fa-grip-vertical drag-handle"></i>
+            <div class="menu-icon-box"><i class="fa-solid ${item.icon || 'fa-question'}"></i></div>
+            <div class="menu-item-info" style="opacity:${isLocked ? '0.45' : '1'}">
+                <h4>${item.subject_name}${badgeHtml}</h4>
+                <small>/${item.subject_id} &nbsp;·&nbsp; #${item.display_order}</small>
+            </div>
+            <div class="menu-item-actions">
+                <button class="btn-act btn-lock-toggle${isLocked ? ' locked' : ''}" title="${isLocked ? 'Buka Kunci' : 'Kunci'}" id="lock-${item.id}">
+                    <i class="fa-solid ${isLocked ? 'fa-lock' : 'fa-lock-open'}"></i>
+                </button>
+                <button class="btn-act" title="Edit" id="edit-${item.id}"><i class="fa-solid fa-pen"></i></button>
+                <button class="btn-act del" title="Hapus" onclick="deleteMenu(${item.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+
+            div.querySelector(`#edit-${item.id}`).onclick = () => triggerEdit(item);
+
+            // Quick lock toggle
+            div.querySelector(`#lock-${item.id}`).onclick = async () => {
+                const newLocked = !item.locked;
+                const { error } = await supabase.from('subjects_config')
+                    .update({ locked: newLocked })
+                    .eq('id', item.id);
+                if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+                item.locked = newLocked;
+                const btn = div.querySelector(`#lock-${item.id}`);
+                const info = div.querySelector('.menu-item-info');
+                btn.classList.toggle('locked', newLocked);
+                btn.title = newLocked ? 'Buka Kunci' : 'Kunci';
+                btn.querySelector('i').className = `fa-solid ${newLocked ? 'fa-lock' : 'fa-lock-open'}`;
+                info.style.opacity = newLocked ? '0.45' : '1';
+                showToast(newLocked ? `"${item.subject_name}" dikunci 🔒` : `"${item.subject_name}" dibuka 🔓`);
+            };
+
+            // Drag & Drop events
+            div.addEventListener('dragstart', onDragStart);
+            div.addEventListener('dragover', onDragOver);
+            div.addEventListener('dragleave', onDragLeave);
+            div.addEventListener('drop', onDrop);
+            div.addEventListener('dragend', onDragEnd);
+
+            return div;
+        }
+
+        // ══════════════════════════════════════════════════
+        // DRAG & DROP
+        // ══════════════════════════════════════════════════
+        function onDragStart(e) {
+            dragSrcItem = this;
+            dragSrcId = this.dataset.id;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+        function onDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (this !== dragSrcItem) this.classList.add('drag-over');
+        }
+        function onDragLeave() { this.classList.remove('drag-over'); }
+        function onDragEnd() {
+            document.querySelectorAll('.menu-item').forEach(el => {
+                el.classList.remove('dragging', 'drag-over');
+            });
+        }
+        async function onDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            if (this === dragSrcItem) return;
+
+            const container = this.parentElement;
+            const items = [...container.querySelectorAll('.menu-item')];
+            const srcIdx = items.indexOf(dragSrcItem);
+            const destIdx = items.indexOf(this);
+            if (srcIdx < 0 || destIdx < 0) return;
+
+            // Reorder DOM
+            if (srcIdx < destIdx) {
+                container.insertBefore(dragSrcItem, this.nextSibling);
+            } else {
+                container.insertBefore(dragSrcItem, this);
+            }
+
+            // Recalculate display_order for all items in this group section
+            await saveNewOrder(container);
+        }
+
+        async function saveNewOrder(container) {
+            const ind = document.getElementById('saveIndicator');
+            ind.classList.add('show');
+
+            // Ambil semua item yang ada di container sekarang (urutan baru)
+            const allItems = [...container.querySelectorAll('.menu-item')];
+            if (!allItems.length) { ind.classList.remove('show'); return; }
+
+            // Group by menu_group supaya order hitung ulang per group
+            const groups = {};
+            allItems.forEach(el => {
+                const id = parseInt(el.dataset.id);
+                const dataItem = allMenuData.find(m => m.id === id);
+                if (!dataItem) return;
+                const g = dataItem.menu_group;
+                if (!groups[g]) groups[g] = [];
+                groups[g].push({ id, el });
+            });
+
+            const updates = [];
+            for (const [group, gItems] of Object.entries(groups)) {
+                gItems.forEach((item, idx) => {
+                    updates.push({ id: item.id, display_order: idx + 1 });
+                    item.el.dataset.order = idx + 1;
+                    // Update small label
+                    const small = item.el.querySelector('small');
+                    if (small) {
+                        const txt = small.textContent.split('·');
+                        if (txt.length > 1) small.textContent = txt[0].trim() + ` · #${idx + 1}`;
+                    }
+                });
+            }
+
+            // Batch update ke Supabase
+            let failed = false;
+            for (const upd of updates) {
+                const { error } = await supabase.from('subjects_config')
+                    .update({ display_order: upd.display_order })
+                    .eq('id', upd.id);
+                if (error) { failed = true; break; }
+            }
+
+            ind.classList.remove('show');
+            if (failed) {
+                showPopup && showPopup('Gagal simpan urutan!', 'error');
+            } else {
+                // Update allMenuData lokal
+                updates.forEach(u => {
+                    const d = allMenuData.find(m => m.id === u.id);
+                    if (d) d.display_order = u.display_order;
+                });
+            }
+        }
+
+        // ══════════════════════════════════════════════════
+        // FORM LOGIC
+        // ══════════════════════════════════════════════════
+        function getResolvedGroup() {
+            return document.getElementById('mGroup').value;
+        }
+
+
+        // ── LOCKED TOGGLE ────────────────────────────────
+        function setLocked(val) {
+            const cb = document.getElementById('mLocked');
+            const track = document.getElementById('mLockedToggle');
+            const dot = document.getElementById('mLockedDot');
+            cb.checked = val;
+            if (val) {
+                track.style.background = '#ff4757';
+                track.style.borderColor = '#ff4757';
+                dot.style.background = '#fff';
+                dot.style.left = '18px';
+            } else {
+                track.style.background = '#333';
+                track.style.borderColor = '#444';
+                dot.style.background = '#666';
+                dot.style.left = '2px';
+            }
+        }
+        async function autoCalculateOrder() {
+            const editId = document.getElementById('editId').value;
+            const classId = document.getElementById('mClassId').value;
+            const group = getResolvedGroup();
+            if (editId || !classId || !group) return;
+
+            const { data, error } = await supabase.from('subjects_config')
+                .select('display_order')
+                .eq('class_id', classId)
+                .eq('menu_group', group)
+                .order('display_order', { ascending: false })
+                .limit(1);
+
+            if (!error) {
+                document.getElementById('mOrder').value = (data && data.length > 0)
+                    ? data[0].display_order + 1 : 1;
+            }
+        }
+
+        function autoSlug(val) {
+            if (!document.getElementById('editId').value) {
+                document.getElementById('mSubjectId').value = val
+                    .toLowerCase().trim()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^\w\-?=]/g, '');
+            }
+        }
+
+        function triggerEdit(item) {
+            document.querySelectorAll('.menu-item.editing').forEach(el => el.classList.remove('editing'));
+            const el = document.getElementById(`item-${item.id}`);
+            if (el) el.classList.add('editing');
+
+            document.getElementById('formTitleText').textContent = t('edit_menu');
+            document.getElementById('formModeBadge').className = 'form-mode-badge edit';
+            document.getElementById('formModeBadge').innerHTML = '<i class="fa-solid fa-pen"></i> ' + t('edit_menu');
+            document.getElementById('btnReset').style.display = 'block';
+
+            document.getElementById('editId').value = item.id;
+            document.getElementById('mClassId').value = item.class_id;
+            document.getElementById('mSubjectName').value = item.subject_name;
+            document.getElementById('mSubjectId').value = item.subject_id;
+            document.getElementById('mIcon').value = item.icon;
+            document.getElementById('mOrder').value = item.display_order;
+
+            // Sync dropdown grup berdasarkan kelas item ini
+            syncGroupDropdown(item.class_id);
+            document.getElementById('mGroup').value = item.menu_group;
+
+            document.getElementById('mBadge').value = item.badge || '';
+            document.getElementById('mBadgeType').value = item.badge_type || '';
+            setLocked(!!item.locked);
+            document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${item.icon}"></i>`;
+
+        }
+
+        function resetForm() {
+            document.querySelectorAll('.menu-item.editing').forEach(el => el.classList.remove('editing'));
+            document.getElementById('formTitleText').textContent = t('add_menu');
+            document.getElementById('formModeBadge').className = 'form-mode-badge add';
+            document.getElementById('formModeBadge').innerHTML = '<i class="fa-solid fa-plus"></i> Baru';
+            document.getElementById('btnReset').style.display = 'none';
+
+            document.getElementById('editId').value = '';
+            document.getElementById('mSubjectName').value = '';
+            document.getElementById('mSubjectId').value = '';
+            document.getElementById('mIcon').value = 'fa-book';
+            document.getElementById('mOrder').value = '1';
+            document.getElementById('mBadge').value = '';
+            document.getElementById('mBadgeType').value = '';
+            setLocked(false);
+            document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid fa-book"></i>`;
+
+            const filterVal = document.getElementById('targetClassId').value;
+            document.getElementById('mClassId').value = (filterVal !== 'all') ? filterVal : '';
+        }
+
+        async function saveMenu() {
+            const id = document.getElementById('editId').value;
+            const classId = document.getElementById('mClassId').value;
+            const subjectName = document.getElementById('mSubjectName').value.trim();
+            const subjectId = document.getElementById('mSubjectId').value.trim();
+            const icon = document.getElementById('mIcon').value.trim() || 'fa-book';
+            const menuGroup = getResolvedGroup();
+            const locked = document.getElementById('mLocked');
+            const badge = document.getElementById('mBadge').value.trim();
+            const badgeType = document.getElementById('mBadgeType').value;
+
+            if (!classId || !subjectName) {
+                showPopup && showPopup(t('menu_name_class_required'), 'error'); return;
+            }
+            if (!menuGroup) {
+                showPopup && showPopup(t('select_group_first'), 'error'); return;
+            }
+
+            let displayOrder = parseInt(document.getElementById('mOrder').value) || 1;
+
+            // Kalau tambah baru, SELALU ambil urutan paling akhir dari DB biar ga duplikat
+            if (!id) {
+                const { data: orderData } = await supabase
+                    .from('subjects_config')
+                    .select('display_order')
+                    .eq('class_id', classId)
+                    .eq('menu_group', menuGroup)
+                    .order('display_order', { ascending: false })
+                    .limit(1);
+
+                displayOrder = (orderData && orderData.length > 0)
+                    ? orderData[0].display_order + 1 : 1;
+            }
+
+            const payload = {
+                class_id: classId,
+                subject_name: subjectName,
+                subject_id: subjectId,
+                icon,
+                display_order: displayOrder,
+                menu_group: menuGroup,
+                badge,
+                badge_type: badgeType,
+                locked,
+            };
+
+            const { error } = id
+                ? await supabase.from('subjects_config').update(payload).eq('id', id)
+                : await supabase.from('subjects_config').insert([payload]);
+
+            if (error) {
+                showPopup && showPopup('Gagal: ' + error.message, 'error');
+            } else {
+                showToast && showToast(id ? t('updated_success') : t('menu_added'), 'success');
+                resetForm();
+                loadClassMenus();
+            }
+        }
+
+        async function deleteMenu(id) {
+            const item = allMenuData.find(m => m.id === id);
+            const name = item ? item.subject_name : 'item ini';
+            const ok = await showPopup(t('confirm_delete_group', { name: '<b>' + name + '</b>' }) + '<br>', 'confirm');
+            if (!ok) return;
+
+            const { error } = await supabase.from('subjects_config').delete().eq('id', id);
+            if (error) { showPopup && showPopup('Gagal hapus: ' + error.message, 'error'); return; }
+            showToast && showToast(t('menu_deleted'), 'success');
+            loadClassMenus();
+        }
+
+        // ── PREVIEW ICON INPUT ─────────────────────────────────
+        function previewIconInput(val) {
+            const v = val.trim();
+            const box = document.getElementById('iconPreviewBox');
+            box.innerHTML = v ? `<i class="fa-solid ${v}"></i>` : `<i class="fa-solid fa-book"></i>`;
+        }
+
+        // ── TOAST ────────────────────────────────────────────────
+        let _toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('shortcutToast');
+            document.getElementById('shortcutToastMsg').textContent = msg;
+            t.classList.add('show');
+            clearTimeout(_toastTimer);
+            _toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+        }
+
+        function filterGroup(el) {
+            document.querySelectorAll('.filter-pills .pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            activeGroup = el.dataset.group;
+            renderFilteredList();
+        }
+
+        // ══════════════════════════════════════════════════
+        // MODAL HELPERS
+        // ══════════════════════════════════════════════════
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        // ── ICON PICKER ─────────────────────────────────
+        function openIconPicker() {
+            document.getElementById('iconPickerModal').classList.add('open');
+            document.getElementById('searchIconInput').value = '';
+            renderIconGrid(null);
+        }
+
+        function renderIconGrid(query) {
+            const grid = document.getElementById('iconGrid');
+            grid.innerHTML = '';
+            for (const [cat, icons] of Object.entries(ICON_CATS)) {
+                const filtered = query
+                    ? icons.filter(i => i.toLowerCase().includes(query.toLowerCase()))
+                    : icons;
+                if (!filtered.length) continue;
+
+                const label = document.createElement('div');
+                label.className = 'icon-cat-label';
+                label.textContent = cat;
+                grid.appendChild(label);
+
+                const catGrid = document.createElement('div');
+                catGrid.className = 'icon-grid';
+                filtered.forEach(icon => {
+                    const btn = document.createElement('button');
+                    btn.className = 'icon-btn';
+                    btn.title = icon;
+                    btn.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                    btn.onclick = () => {
+                        document.getElementById('mIcon').value = icon;
+                        document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                        closeModal('iconPickerModal');
+                    };
+                    catGrid.appendChild(btn);
+                });
+                grid.appendChild(catGrid);
+            }
+        }
+
+        function filterIcons(q) { renderIconGrid(q || null); }
+
+        // ── SLUG PICKER ──────────────────────────────────
+        function openSlugPicker() {
+            document.getElementById('slugPickerModal').classList.add('open');
+            document.getElementById('searchSlugInput').value = '';
+            renderSlugList('');
+        }
+
+        function renderSlugList(q) {
+            const list = document.getElementById('slugList');
+            list.innerHTML = '';
+            const filtered = q
+                ? KNOWN_FILES.filter(f =>
+                    f.label.toLowerCase().includes(q.toLowerCase()) ||
+                    f.slug.toLowerCase().includes(q.toLowerCase()))
+                : KNOWN_FILES;
+
+            // Group by cat
+            const cats = {};
+            filtered.forEach(f => {
+                if (!cats[f.cat]) cats[f.cat] = [];
+                cats[f.cat].push(f);
+            });
+
+            for (const [cat, files] of Object.entries(cats)) {
+                const h = document.createElement('div');
+                h.className = 'icon-cat-label';
+                h.textContent = cat;
+                list.appendChild(h);
+                files.forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = 'slug-list-item';
+                    div.innerHTML = `
+                    <i class="fa-solid ${f.icon} slug-icon"></i>
+                    <div>
+                        <div class="slug-name">${t(f.slug) || f.label}</div>
+                        <div class="slug-path">/${f.slug}</div>
+                    </div>`;
+                    div.onclick = () => {
+                        document.getElementById('mSubjectId').value = f.slug;
+                        if (!document.getElementById('mSubjectName').value)
+                            document.getElementById('mSubjectName').value = f.label;
+                        if (!document.getElementById('mIcon').value || document.getElementById('mIcon').value === 'fa-book') {
+                            document.getElementById('mIcon').value = f.icon;
+                            document.getElementById('iconPreviewBox').innerHTML = `<i class="fa-solid ${f.icon}"></i>`;
+                        }
+                        closeModal('slugPickerModal');
+                    };
+                    list.appendChild(div);
+                });
+            }
+
+            if (!filtered.length) {
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p style="font-size:13px;">Tidak ditemukan</p></div>`;
+            }
+        }
+
+        function filterSlugs(q) { renderSlugList(q); }
+    </script>
+</body>
+
+</html>

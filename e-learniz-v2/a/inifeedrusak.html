@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+<script src="../js/lang.js?v=20260822"></script>
+<script src="../js/basicfeat.js?v=20260822"></script>
+<script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/announcements.png" type="image/png">
+    <style>
+        .feed-wrap {
+            max-width: 470px;
+            margin: 0 auto;
+            padding: 4.2rem 0 5.5rem;
+        }
+
+        /* CARD */
+        .feed-card {
+            background: rgba(8, 10, 18, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            margin-bottom: 14px;
+            animation: fcFadeIn .3s ease;
+            overflow: hidden;
+        }
+
+        @media (min-width: 500px) {
+            .feed-card {
+                border-radius: 14px;
+                border: 1px solid rgba(255, 255, 255, 0.09);
+            }
+        }
+
+        @keyframes fcFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes fadeOutCard {
+            to {
+                opacity: 0;
+                transform: scale(.96);
+                height: 0;
+                margin: 0;
+                padding: 0
+            }
+        }
+
+        /* HEADER */
+        .fc-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            gap: 9px;
+        }
+
+        .fc-avatar-link {
+            flex-shrink: 0;
+        }
+
+        .fc-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent, #00eaff);
+            display: block;
+        }
+
+        .fc-meta {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .fc-username {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .fc-username:hover {
+            text-decoration: underline;
+        }
+
+        .fc-time {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.38);
+        }
+
+        /* 3-dot menu */
+        .fc-menu-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: color .15s, background .15s;
+            line-height: 1;
+        }
+
+        .fc-menu-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .fc-dropdown {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            min-width: 148px;
+            background: rgba(16, 18, 28, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+            z-index: 500;
+        }
+
+        .fc-dropdown.hidden {
+            display: none;
+        }
+
+        .fc-dd-item {
+            padding: 10px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: rgba(255, 255, 255, 0.82);
+            transition: background .15s;
+        }
+
+        .fc-dd-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .fc-dd-del,
+        .fc-dd-del i {
+            color: #ff4757;
+        }
+
+        /* IMAGE */
+        .fc-image-wrap {
+            position: relative;
+            width: 100%;
+            background: transparent;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* Gambar: ikut ukuran asli, max height biar ga kepanjangan */
+        .fc-image {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+            display: block;
+            background: transparent;
+        }
+
+        /* Video: sama kayak gambar, ikut natural size */
+        .fc-video {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            display: block;
+            object-fit: contain;
+        }
+
+        .fc-heart-burst {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: #ff4d7e;
+            pointer-events: none;
+            filter: drop-shadow(0 0 20px rgba(255, 77, 126, .55));
+        }
+
+        .fc-heart-burst.hidden {
+            display: none;
+        }
+
+        @keyframes burstIn {
+            0% {
+                opacity: 0;
+                transform: scale(.2)
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.15)
+            }
+
+            70% {
+                transform: scale(.9)
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+        }
+
+        @keyframes burstOut {
+            to {
+                opacity: 0;
+                transform: scale(1.1)
+            }
+        }
+
+        .fc-heart-burst.burst-in {
+            animation: burstIn .55s cubic-bezier(.175, .885, .32, 1.275) forwards;
+        }
+
+        .fc-heart-burst.burst-out {
+            animation: burstOut .45s ease forwards;
+        }
+
+        /* ACTIONS */
+        .fc-actions {
+            display: flex;
+            gap: 14px;
+            padding: 9px 12px 4px;
+        }
+
+        .fc-like-btn,
+        .fc-comment-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 25px;
+            color: rgba(255, 255, 255, 0.72);
+            padding: 0;
+            line-height: 1;
+            transition: color .15s, transform .15s;
+            position: relative;
+        }
+
+        .fc-like-btn:hover {
+            color: #ff4d7e;
+            transform: scale(1.1);
+        }
+
+        .fc-comment-btn:hover {
+            color: var(--accent, #00eaff);
+        }
+
+        .fc-like-btn.liked {
+            color: #ff4d7e;
+        }
+
+        @keyframes likePop {
+
+            0%,
+            100% {
+                transform: scale(1)
+            }
+
+            40% {
+                transform: scale(1.45)
+            }
+        }
+
+        .like-pop {
+            animation: likePop .35s ease;
+        }
+
+        /* Comment badge */
+        .fc-comment-btn {
+            position: relative;
+        }
+
+        .fc-comment-badge {
+            position: absolute;
+            top: -5px;
+            right: -7px;
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            border-radius: 9px;
+            background: var(--accent, #00eaff);
+            color: #000;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 17px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        @keyframes badgeBump {
+
+            0%,
+            100% {
+                transform: scale(1)
+            }
+
+            40% {
+                transform: scale(1.4)
+            }
+        }
+
+        .badge-bump {
+            animation: badgeBump .35s ease;
+        }
+
+        /* LIKES + CAPTION */
+        .fc-likes {
+            padding: 3px 14px 2px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        .fc-caption {
+            padding: 3px 14px 9px;
+            font-size: 13.5px;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.55;
+            word-break: break-word;
+        }
+
+        .fc-cap-name {
+            font-weight: 700;
+            color: #fff;
+            margin-right: 5px;
+            text-decoration: none;
+        }
+
+        .fc-cap-name:hover {
+            text-decoration: underline;
+        }
+
+        /* Inline edit */
+        .fc-edit-ta {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13.5px;
+            padding: 8px 10px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+            font-family: inherit;
+            caret-color: var(--accent, #00eaff);
+        }
+
+        .fc-edit-ta:focus {
+            border-color: var(--accent, #00eaff);
+        }
+
+        .fc-edit-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+
+        .fc-btn-cancel-edit,
+        .fc-btn-save-edit {
+            padding: 5px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .fc-btn-cancel-edit {
+            background: rgba(255, 255, 255, 0.08);
+            color: #aaa;
+        }
+
+        .fc-btn-save-edit {
+            background: var(--accent, #00eaff);
+            color: #000;
+            font-weight: 700;
+        }
+
+        /* COMMENTS */
+        .fc-comments {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px 12px 10px;
+        }
+
+        .fc-comments.hidden {
+            display: none;
+        }
+
+        .fc-comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .fc-no-comments {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            text-align: center;
+            padding: 6px 0;
+        }
+
+        .fc-comment-item {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .fc-comment-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .fc-comment-body {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        .fc-comment-name {
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .fc-comment-text {
+            color: rgba(255, 255, 255, 0.78);
+            word-break: break-word;
+        }
+
+        .fc-comment-time {
+            font-size: 10.5px;
+            color: rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .fc-comment-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 8px;
+        }
+
+        .fc-self-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .fc-comment-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 13px;
+            caret-color: var(--accent, #00eaff);
+        }
+
+        .fc-comment-input::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        .fc-comment-send {
+            background: none;
+            border: none;
+            color: var(--accent, #00eaff);
+            font-size: 15px;
+            cursor: pointer;
+            opacity: .7;
+            padding: 4px;
+            transition: opacity .2s;
+        }
+
+        .fc-comment-send:hover {
+            opacity: 1;
+        }
+
+        .fc-comment-send:disabled {
+            opacity: .25;
+            cursor: not-allowed;
+        }
+
+        /* Play/Pause tap overlay */
+        .fc-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 8;
+        }
+
+        .fc-play-overlay.hidden {
+            display: none;
+        }
+
+        .fc-play-overlay i {
+            font-size: 52px;
+            color: rgba(255, 255, 255, 0.92);
+            filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.55));
+            transform: scale(0.5);
+            opacity: 0;
+        }
+
+        @keyframes overlayIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes overlayOut {
+            to {
+                opacity: 0;
+                transform: scale(1.15);
+            }
+        }
+
+        .fc-play-overlay.fc-overlay-in i {
+            animation: overlayIn .35s cubic-bezier(.175, .885, .32, 1.275) forwards;
+        }
+
+        .fc-play-overlay.fc-overlay-out i {
+            animation: overlayOut .32s ease forwards;
+        }
+
+        /* MUTE TOGGLE BUTTON */
+        .fc-mute-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            transition: background .15s, transform .15s;
+        }
+
+        .fc-mute-btn:hover {
+            background: rgba(0, 0, 0, 0.78);
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <h1 id="welcomeText" style="margin: 0;"><i class="fa-solid fa-heart"></i> Feed</h1>
+        <div class="right-section" style="padding:0">
+            <div class="feed-wrap" style="margin-top: 0;">
+
+                 SKELETON (diisi SkeletonUI)
+                <div id="feedSkeleton"></div>
+
+                 POSTS
+                <div id="feedList"></div>
+
+                 EMPTY STATE 
+                <div id="feedEmpty"
+                    style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;color:rgba(255,255,255,0.3);text-align:center;gap:10px;">
+                    <i class="fa-regular fa-image" style="font-size:48px;color:rgba(255,255,255,0.1);"></i>
+                    <p style="font-size:15px;">Belum ada postingan</p>
+                    <small style="font-size:12.5px;color:rgba(255,255,255,0.2);">Posting dulu di halaman profil
+                        kamu!</small>
+                </div>
+
+                 INFINITE SCROLL TRIGGER 
+                <div id="scrollSentinel" style="height:1px"></div>
+
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => SkeletonUI.render('feedSkeleton', 'feed'));
+    </script>
+    <script src="../js/feed.js?v=20260822" defer></script>
+</body>
+
+</html>

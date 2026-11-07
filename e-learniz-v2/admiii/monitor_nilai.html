@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Nilai • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+<script src="../js/lang.js?v=20260822"></script>
+<script src="../js/basicfeat.js?v=20260822"></script>
+<script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+<script src="../js/toast.js?v=20260822"></script>
+<script src="../js/footer.js?v=20260822"></script>
+<link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* ── CONTROLS BAR ── */
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .ctrl-select {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,234,255,0.3);
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px 14px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .ctrl-select:focus { border-color: #00eaff; }
+
+        /* ── TAB ── */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(0,234,255,0.3);
+            background: transparent;
+            color: #aaa;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: rgba(0,234,255,0.15);
+            border-color: #00eaff;
+            color: #00eaff;
+        }
+
+        /* ── STAT CARDS ── */
+        .stat-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 130px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            text-align: center;
+        }
+        .stat-card .stat-val {
+            font-size: 26px;
+            font-weight: 800;
+            color: #00eaff;
+        }
+        .stat-card .stat-lbl {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        /* ── SEARCH ── */
+        .search-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #fff;
+            padding: 8px 14px;
+            font-size: 13px;
+            outline: none;
+            width: 200px;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #00eaff; }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(0,234,255,0.15);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 900px;
+        }
+        thead th {
+            background: rgba(0,234,255,0.1);
+            color: #00eaff;
+            padding: 10px 8px;
+            text-align: center;
+            font-weight: 700;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(0,234,255,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        thead th:first-child {
+            text-align: left;
+            padding-left: 14px;
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: #0d2a30;
+        }
+        thead th.sortable { cursor: pointer; user-select: none; }
+        thead th.sortable:hover { color: #fff; }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: rgba(255,255,255,0.04); }
+        tbody tr.highlight-me { background: rgba(0,234,255,0.06); }
+
+        tbody td {
+            padding: 8px;
+            text-align: center;
+            color: #ddd;
+        }
+        tbody td:first-child {
+            text-align: left;
+            padding-left: 14px;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            position: sticky;
+            left: 0;
+            background: #0d1f24;
+            z-index: 1;
+        }
+        tbody tr:hover td:first-child { background: #112830; }
+
+        /* Nilai color coding */
+        .val-above  { color: #2ed573; font-weight: 700; }
+        .val-below  { color: #ff4757; }
+        .val-null   { color: rgba(255,255,255,0.2); }
+        .val-rata   { color: #ffd32a; font-weight: 700; }
+
+        /* Rank badge */
+        .rank-badge {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 22px;
+            text-align: center;
+            margin-right: 6px;
+        }
+        .rank-1 { background: #ffd700; color: #000; }
+        .rank-2 { background: #c0c0c0; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
+        .rank-n { background: rgba(255,255,255,0.1); color: #aaa; }
+
+        /* Avg row */
+        tfoot td {
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+            color: #ffd32a;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.3);
+        }
+        tfoot td:first-child {
+            text-align: left;
+            padding-left: 14px;
+            position: sticky;
+            left: 0;
+            background: #0d1f24;
+        }
+
+        /* ── LOADING ── */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+        .loading-state i { font-size: 28px; margin-bottom: 12px; display: block; }
+
+        /* ── EMPTY ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* ── EXPORT BTN ── */
+        .btn-export {
+            background: rgba(0,234,255,0.1);
+            border: 1px solid rgba(0,234,255,0.3);
+            border-radius: 8px;
+            color: #00eaff;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-export:hover {
+            background: rgba(0,234,255,0.2);
+        }
+
+        /* ── PROGRESS BAR (lulus KKM) ── */
+        .kkm-bar-wrap {
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            height: 6px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .kkm-bar-fill {
+            height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(90deg, #2ed573, #00eaff);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h2 style="margin-bottom:6px; font-size:20px;">
+                <i class="fa-solid fa-chart-bar" style="color:#00eaff; margin-right:8px;"></i>
+                Monitoring Nilai
+            </h2>
+            <p style="color:rgba(255,255,255,0.5); font-size:13px; margin-bottom:20px;">
+                Rekap nilai seluruh kelas — PSTS / PSASI / PSAT
+            </p>
+
+            <!-- TAB -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('psts', this)">
+                    <i class="fa-solid fa-file-lines"></i> PSTS
+                </button>
+                <button class="tab-btn" onclick="switchTab('psasi', this)">
+                    <i class="fa-solid fa-file-lines"></i> PSASI
+                </button>
+                <button class="tab-btn" onclick="switchTab('psat', this)">
+                    <i class="fa-solid fa-file-lines"></i> PSAT
+                </button>
+            </div>
+
+            <!-- CONTROLS -->
+            <div class="controls-bar">
+                <select id="classSelect" class="ctrl-select" onchange="loadData()">
+                    <option value="" data-i18n="all_classes">Semua Kelas</option>
+                </select>
+
+                <select id="sortSelect" class="ctrl-select" onchange="renderTable()">
+                    <option value="rata">Urutkan: Rata-rata</option>
+                    <option value="nama">Urutkan: Nama A-Z</option>
+                </select>
+
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="&#xf002; Cari nama siswa..."
+                    data-i18n-placeholder="search_student_name"
+                    oninput="renderTable()">
+
+                <button class="btn-export" onclick="exportCSV()">
+                    <i class="fa-solid fa-download"></i> Export CSV
+                </button>
+
+                <span id="lastUpdate" style="color:rgba(255,255,255,0.3); font-size:11px; margin-left:auto;"></span>
+            </div>
+
+            <!-- STAT CARDS -->
+            <div class="stat-row" id="statRow">
+                <div class="stat-card">
+                    <div class="stat-val" id="statTotal">–</div>
+                    <div class="stat-lbl">Total Siswa</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statRata">–</div>
+                    <div class="stat-lbl" data-i18n="class_average">Rata-rata Kelas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statLulus" style="color:#2ed573">–</div>
+                    <div class="stat-lbl">Lulus KKM (≥75)</div>
+                    <div class="kkm-bar-wrap">
+                        <div class="kkm-bar-fill" id="kkmBar" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statTertinggi" style="color:#ffd700">–</div>
+                    <div class="stat-lbl">Nilai Tertinggi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="statTerendah" style="color:#ff4757">–</div>
+                    <div class="stat-lbl">Nilai Terendah</div>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div id="tableContainer">
+                <div class="loading-state" data-i18n="loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Memuat data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const KKM = 75;
+        const MAPEL_PSTS = {
+            pabp: 'PABP', pp: 'PP', bindo: 'B. Indo', bing: 'B. Inggris',
+            mtk: 'MTK', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda',
+            senibudaya: 'Senbud', informatika: 'Informatika', pjok: 'PJOK',
+            proipas: 'Proipas', dasprog1: 'Dasprog 1', dasprog2: 'Dasprog 2', dasprog3: 'Dasprog 3'
+        };
+        const MAPEL_PSAT = {
+            pabp: 'PABP', pp: 'PP', bindo: 'B. Indo', bing: 'B. Inggris',
+            mtk: 'MTK', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda',
+            senibudaya: 'Senbud', informatika: 'Informatika', pjok: 'PJOK',
+            proipas: 'Proipas', dasprog1: 'Dasprog 1', dasprog2: 'Dasprog 2', dasprog3: 'Dasprog 3'
+        };
+        const MAPEL_PSASI = {
+            pabp: 'PABP', pp: 'PP', bindo: 'B. Indo', bing: 'B. Inggris',
+            mtk: 'MTK', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda',
+            senibudaya: 'Senbud', informatika: 'Informatika', pjok: 'PJOK',
+            proipas: 'Proipas', dasprog1: 'Dasprog 1', dasprog2: 'Dasprog 2', dasprog3: 'Dasprog 3'
+        };
+
+        let currentTab   = 'psts';
+        let allData      = [];   // raw rows dari DB
+        let classMap     = {};   // { class_id: class_name }
+        let sortCol      = null;
+        let sortAsc      = true;
+
+        // ── INIT ──────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadClasses();
+            await loadData();
+        });
+
+        // ── SWITCH TAB ────────────────────────────────
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sortCol = null;
+            loadData();
+        }
+
+        // ── LOAD CLASSES (dropdown) ───────────────────
+        async function loadClasses() {
+            const { data } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (!data) return;
+            classMap = {};
+            const sel = document.getElementById('classSelect');
+            data.forEach(c => {
+                classMap[c.id] = c.name;
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+        }
+
+        // ── LOAD DATA ─────────────────────────────────
+        async function loadData() {
+            document.getElementById('tableContainer').innerHTML = `
+                <div class="loading-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    ${t('loading')}
+                </div>`;
+
+            const classId  = document.getElementById('classSelect').value;
+
+            let q = supabase.from('nilai_scores').select('*').eq('scores_type', currentTab);
+            if (classId) q = q.eq('class_id', classId);
+
+            const { data, error } = await q.order('nama_siswa');
+            if (error) {
+                document.getElementById('tableContainer').innerHTML =
+                    `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><br>${t('failed_load_data')} ${error.message}</div>`;
+                return;
+            }
+
+            allData = data || [];
+            sortCol = null;
+            document.getElementById('lastUpdate').textContent =
+                'Update: ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            renderTable();
+        }
+
+        // ── RENDER TABLE ──────────────────────────────
+        function renderTable() {
+            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
+            const mapelKeys = Object.keys(MAPEL);
+            const search   = document.getElementById('searchInput').value.toLowerCase();
+            const sortBy   = document.getElementById('sortSelect').value;
+            const classId  = document.getElementById('classSelect').value;
+
+            // Filter search
+            let rows = allData.filter(r =>
+                !search || (r.nama_siswa || '').toLowerCase().includes(search)
+            );
+
+            if (rows.length === 0) {
+                document.getElementById('tableContainer').innerHTML =
+                    `<div class="empty-state"><i class="fa-solid fa-inbox"></i><br>Tidak ada data</div>`;
+                updateStats([]);
+                return;
+            }
+
+            // Hitung rata per siswa
+            rows = rows.map(r => {
+                const vals = mapelKeys.map(k => parseFloat(r[k])).filter(v => !isNaN(v));
+                r._rata = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+                r._filled = vals.length;
+                return r;
+            });
+
+            // Sort
+            if (sortCol) {
+                rows.sort((a, b) => {
+                    const av = sortCol === '_rata' ? a._rata : parseFloat(a[sortCol]);
+                    const bv = sortCol === '_rata' ? b._rata : parseFloat(b[sortCol]);
+                    const diff = (isNaN(bv) ? -1 : bv) - (isNaN(av) ? -1 : av);
+                    return sortAsc ? -diff : diff;
+                });
+            } else if (sortBy === 'rata') {
+                rows.sort((a, b) => (b._rata || 0) - (a._rata || 0));
+            } else {
+                rows.sort((a, b) => (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            }
+
+            // Rata per kolom (footer)
+            const colAvg = {};
+            mapelKeys.forEach(k => {
+                const vals = rows.map(r => parseFloat(r[k])).filter(v => !isNaN(v));
+                colAvg[k] = vals.length ? (vals.reduce((a,b) => a+b,0) / vals.length) : null;
+            });
+            const overallAvg = rows.filter(r => r._rata !== null);
+            const classAvg   = overallAvg.length
+                ? overallAvg.reduce((s, r) => s + r._rata, 0) / overallAvg.length
+                : null;
+
+            updateStats(rows);
+
+            // ── Build HTML ──
+            // Header
+            let thMapel = mapelKeys.map((k, i) => {
+                const arrow = sortCol === k ? (sortAsc ? ' ↑' : ' ↓') : '';
+                return `<th class="sortable" onclick="sortByCol('${k}')">${MAPEL[k]}${arrow}</th>`;
+            }).join('');
+
+            const rataArrow = sortCol === '_rata' ? (sortAsc ? ' ↑' : ' ↓') : '';
+
+            // Show kelas column only when "semua kelas"
+            const showKelas = !classId;
+
+            // Rows
+            let tbodyHtml = rows.map((r, i) => {
+                const rank = i + 1;
+                const rankBadge = rank <= 3
+                    ? `<span class="rank-badge rank-${rank}">${rank}</span>`
+                    : `<span class="rank-badge rank-n">${rank}</span>`;
+
+                const kelasCol = showKelas
+                    ? `<td style="font-size:11px; color:#aaa;">${classMap[r.class_id] || r.class_id}</td>`
+                    : '';
+
+                const tdMapel = mapelKeys.map(k => {
+                    const v = parseFloat(r[k]);
+                    if (isNaN(v)) return `<td class="val-null">–</td>`;
+                    const cls = v >= KKM ? 'val-above' : 'val-below';
+                    return `<td class="${cls}">${v % 1 === 0 ? v : v.toFixed(1)}</td>`;
+                }).join('');
+
+                const rataDisplay = r._rata !== null
+                    ? `<td class="val-rata">${r._rata.toFixed(1)}</td>`
+                    : `<td class="val-null">–</td>`;
+
+                return `
+                    <tr>
+                        <td>${rankBadge}${r.nama_siswa || '–'}</td>
+                        ${kelasCol}
+                        ${tdMapel}
+                        ${rataDisplay}
+                    </tr>`;
+            }).join('');
+
+            // Footer avg row
+            const tfootMapel = mapelKeys.map(k => {
+                const v = colAvg[k];
+                return v !== null
+                    ? `<td>${v.toFixed(1)}</td>`
+                    : `<td style="color:rgba(255,255,255,0.2)">–</td>`;
+            }).join('');
+
+            const html = `
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="sortable" onclick="sortByCol('nama_siswa')">
+                                    ${t('student_name')} ${sortCol === 'nama_siswa' ? (sortAsc ? '↑' : '↓') : ''}
+                                </th>
+                                ${showKelas ? '<th>' + t('class') + '</th>' : ''}
+                                ${thMapel}
+                                <th class="sortable" onclick="sortByCol('_rata')">
+                                    ${t('class_average')}${rataArrow}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>${tbodyHtml}</tbody>
+                        <tfoot>
+                            <tr>
+                                <td>${t('class_average')}</td>
+                                ${showKelas ? '<td>–</td>' : ''}
+                                ${tfootMapel}
+                                <td>${classAvg !== null ? classAvg.toFixed(1) : '–'}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>`;
+
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        // ── SORT BY COLUMN ────────────────────────────
+        function sortByCol(col) {
+            if (sortCol === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = col;
+                sortAsc = false; // default: tertinggi dulu
+            }
+            renderTable();
+        }
+
+        // ── UPDATE STATS ──────────────────────────────
+        function updateStats(rows) {
+            const MAPEL    = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
+            const mapelKeys = Object.keys(MAPEL);
+
+            const total = rows.length;
+            const rataArr = rows.map(r => r._rata).filter(v => v !== null);
+            const avg = rataArr.length ? rataArr.reduce((a,b) => a+b, 0) / rataArr.length : null;
+            const lulus = rataArr.filter(v => v >= KKM).length;
+            const pct = total ? Math.round(lulus / total * 100) : 0;
+
+            // Semua nilai flat untuk tertinggi/terendah
+            const allVals = rows.flatMap(r =>
+                mapelKeys.map(k => parseFloat(r[k])).filter(v => !isNaN(v))
+            );
+
+            document.getElementById('statTotal').textContent    = total;
+            document.getElementById('statRata').textContent     = avg !== null ? avg.toFixed(1) : '–';
+            document.getElementById('statLulus').textContent    = `${lulus} / ${total} (${pct}%)`;
+            document.getElementById('statTertinggi').textContent = allVals.length ? Math.max(...allVals).toFixed(1) : '–';
+            document.getElementById('statTerendah').textContent  = allVals.length ? Math.min(...allVals).toFixed(1) : '–';
+            document.getElementById('kkmBar').style.width       = pct + '%';
+        }
+
+        // ── EXPORT CSV ────────────────────────────────
+        function exportCSV() {
+            if (!allData.length) return;
+            const MAPEL     = currentTab === 'psts' ? MAPEL_PSTS : currentTab === 'psat' ? MAPEL_PSAT : MAPEL_PSASI;
+            const mapelKeys = Object.keys(MAPEL);
+            const classId   = document.getElementById('classSelect').value;
+            const table     = currentTab.toUpperCase();
+
+            const header = ['No', t('student_name'), ...(classId ? [] : [t('class')]),
+                            ...Object.values(MAPEL), t('class_average')].join(',');
+
+            const rows = allData.map((r, i) => {
+                const vals = mapelKeys.map(k => parseFloat(r[k])).filter(v => !isNaN(v));
+                const rata = vals.length ? (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(2) : '';
+                const kelasCol = classId ? [] : [classMap[r.class_id] || r.class_id];
+                return [
+                    i+1,
+                    `"${r.nama_siswa || ''}"`,
+                    ...kelasCol,
+                    ...mapelKeys.map(k => r[k] !== null && r[k] !== undefined ? r[k] : ''),
+                    rata
+                ].join(',');
+            });
+
+            const csv  = [header, ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            const cls  = classId ? (classMap[classId] || classId) : 'SemuaKelas';
+            a.href     = url;
+            a.download = `Nilai_${table}_${cls}_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

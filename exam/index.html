@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ujian • E-Learning Nizam</title>
+    <meta
+      name="description"
+      content="Kisi-kisi + latihan soal ulangan. Pilih kelas, tanpa login."
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=3"></script>
+    <script src="js/db.js?v=6"></script>
+    <link rel="stylesheet" href="css/style.css?v=4" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-row">
+          <div class="brand">
+            <i class="fa-solid fa-graduation-cap"></i> MASUK
+          </div>
+        </div>
+        <div class="topbar-sub">
+          Web Kisi-Kisi, Quiz, and Nilai. Made by Nizam or nilaimu
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-text">
+          <h1>Masuk ke web <span>e-learniz</span></h1>
+          <p>
+            Selamat datang di web Kisi-Kisi, Quiz dan Nilai buatan Nizam. Sebelum
+            masuk pilih kelas sama pilih nama dulu yaa!
+          </p>
+        </div>
+      </div>
+
+      <div id="viewResume" style="display: none">
+        <div class="info-card">
+          <i id="resIcon" class="fa-solid fa-user"></i>
+          <h2 id="resName">Halo!</h2>
+          <p class="info-best" id="resClass"></p>
+          <div class="score-btns">
+            <button class="btn gold" id="resGo">
+              MASUK <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button class="btn ghost" id="resChange">Ganti</button>
+          </div>
+          <p
+            id="lockNote"
+            style="
+              display: none;
+              font-size: 0.78rem;
+              color: var(--muted);
+              margin-top: 10px;
+            "
+          >
+            <i class="fa-solid fa-rotate-left"></i> Sisa ganti akun hari ini:
+            <b>2x</b>
+          </p>
+        </div>
+      </div>
+
+      <div id="viewClass">
+        <div class="section-label">
+          <i class="fa-solid fa-users"></i> 1. Pilih Kelas
+        </div>
+        <div class="class-grid" id="classGrid">
+          <div class="pub-empty">Nyiapin daftar kelas…</div>
+        </div>
+      </div>
+
+      <div id="viewAccount" style="display: none">
+        <div style="margin-bottom: 10px">
+          <button class="btn ghost sm" id="accBack">
+            <i class="fa-solid fa-arrow-left"></i> Kelas
+          </button>
+        </div>
+        <div class="section-label">
+          <i class="fa-solid fa-user-check"></i> 2. Pilih Akun
+        </div>
+        <div class="adm-card">
+          <p
+            style="font-size: 0.82rem; color: var(--muted); margin-bottom: 10px"
+          >
+            Kelas <b id="accClass">…</b> — pilih namamu yang asli biar nilaimu
+            ketemu.
+          </p>
+          <div class="search-row" style="margin-bottom: 10px">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input
+              id="accSearch"
+              type="search"
+              placeholder="Cari namamu…"
+              autocomplete="off"
+            />
+          </div>
+          <div id="accList">
+            <div class="pub-empty">Nyiapin daftar akun…</div>
+          </div>
+          <div
+            style="display: flex; justify-content: flex-end; margin-top: 12px"
+          >
+            <button class="btn ghost sm" id="accSkip">
+              Lewati, masuk tanpa akun
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="foot">
+        Web kisi-kisi, quiz and nilai. Made by Nizam or nimi. <br />
+        &copy 2026 Web Nizam • All Right Reserved
+      </p>
+    </div>
+
+    <!-- Konfirmasi pilih akun -->
+    <div class="idpop-ov" id="accConfirm">
+      <div class="idpop-card">
+        <div class="idpop-ava" id="accAva">?</div>
+        <h2 id="accTitle">Ini bener kamu yaa?</h2>
+        <p class="idpop-sub">
+          Ganti akun cuma bisa <b>2x sehari</b>, jadi pastiin bener yaa.
+        </p>
+        <div class="idpop-btns">
+          <button class="btn gold" id="accYes">Iya, ini aku</button>
+          <button class="btn ghost" id="accNo">Bukan, ganti</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const ExamProfile = {
+        KEY: "exam_profile",
+        get() {
+          try {
+            return JSON.parse(localStorage.getItem(ExamProfile.KEY) || "null");
+          } catch (e) {
+            return null;
+          }
+        },
+        // userId diisi pas pilih akun (step 3) biar nilainya ketemu.
+        set(slug, name, userId) {
+          try {
+            localStorage.setItem(
+              ExamProfile.KEY,
+              JSON.stringify({
+                slug,
+                name: name || "",
+                user_id: userId != null ? String(userId) : null,
+                claimed: userId != null,
+              }),
+            );
+            localStorage.removeItem("exam_logged_out");
+          } catch (e) {
+            /* abaikan */
+          }
+        },
+        clear() {
+          try {
+            localStorage.removeItem(ExamProfile.KEY);
+          } catch (e) {}
+        },
+        // Catet ke exam_guests (kosong -> someone). Fire-and-forget.
+        async _log(slug) {
+          try {
+            const p =
+              (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
+              ExamProfile.get() ||
+              {};
+            const cls = await ExamDB.resolveClass(slug);
+            await supa.from("exam_guests").insert({
+              name: (p.name || "").trim() || "someone",
+              class_id: cls.id,
+            });
+          } catch (e) {
+            /* abaikan */
+          }
+        },
+      };
+
+      let chosenSlug = "";
+      let accCache = [];
+      let accClaimed = new Set();
+      let pendingUser = null;
+      const urlQ = new URLSearchParams(location.search);
+      const autoAcc = urlQ.get("akun") === "1";
+
+      // Tujuan balik abis login (mis. dari /nilai yang belum ada datanya).
+      // Cuma path relatif yang boleh, biar ga dilempar ke web lain.
+      function safeNext() {
+        const n = urlQ.get("next") || "";
+        if (!n || /^(https?:)?\/\//i.test(n) || n.includes("\\")) return "";
+        return n;
+      }
+
+      function show(id) {
+        ["viewResume", "viewClass", "viewAccount"].forEach((v) => {
+          document.getElementById(v).style.display =
+            v === id ? "block" : "none";
+        });
+      }
+
+      // Jatah ganti akun: 2x per hari (tanggal lokal).
+      function quotaDay() {
+        const d = new Date();
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
+      }
+      function logoutQuota() {
+        const today = quotaDay();
+        try {
+          const q = JSON.parse(
+            localStorage.getItem("exam_logout_quota") || "null",
+          );
+          if (q && q.date === today) return q;
+        } catch (e) {
+          /* abaikan */
+        }
+        return { date: today, n: 0 };
+      }
+      function logoutLeft() {
+        return Math.max(0, 2 - logoutQuota().n);
+      }
+      function logoutUse() {
+        const q = logoutQuota();
+        q.n += 1;
+        try {
+          localStorage.setItem("exam_logout_quota", JSON.stringify(q));
+        } catch (e) {
+          /* abaikan */
+        }
+      }
+
+      function masuk() {
+        const next = safeNext();
+        ExamProfile._log(chosenSlug).finally(() => {
+          location.href = next || "kisi?id=" + encodeURIComponent(chosenSlug);
+        });
+      }
+
+      // ---- Step 3: pilih akun (contek nimi/login: list dari tabel users + search) ----
+      async function showAccountStep() {
+        show("viewAccount");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        try {
+          const cls = await ExamDB.resolveClass(chosenSlug);
+          document.getElementById("accClass").textContent = cls.name;
+        } catch (e) {
+          document.getElementById("accClass").textContent = chosenSlug;
+        }
+        loadAccounts();
+      }
+
+      async function loadAccounts() {
+        const box = document.getElementById("accList");
+        box.innerHTML = `<div class="pub-empty">Nyiapin daftar akun…</div>`;
+        // users.class_id pake id lama (1-4), digit akhir slug (samain kayak nilai.js).
+        const m = String(chosenSlug || "").match(/(\d+)$/);
+        const legacyId = m ? m[1] : null;
+        if (!legacyId) {
+          box.innerHTML = `<div class="pub-empty">Kelas ini belum ada daftar akunnya.</div>`;
+          return;
+        }
+        try {
+          const { data, error } = await supa
+            .from("users")
+            .select("id, nickname, full_name, class_id")
+            .eq("class_id", legacyId)
+            .order("nickname");
+          if (error) throw error;
+          accCache = data || [];
+          if (!accCache.length) {
+            box.innerHTML = `<div class="pub-empty">Belum ada akun buat kelas ini.</div>`;
+            return;
+          }
+          renderAccList();
+        } catch (e) {
+          box.innerHTML = `<div class="pub-empty">Gagal nyambung ke database.<br>${ExamDB.esc(e.message || e)}</div>`;
+        }
+      }
+
+      function renderAccList() {
+        const q = (
+          document.getElementById("accSearch").value || ""
+        ).toLowerCase();
+        const box = document.getElementById("accList");
+        const mine = String((ExamProfile.get() || {}).user_id || "");
+        const list = accCache.filter(
+          (u) =>
+            !q ||
+            (u.nickname || "").toLowerCase().includes(q) ||
+            (u.full_name || "").toLowerCase().includes(q),
+        );
+        if (!list.length) {
+          box.innerHTML = `<div class="pub-empty">Ga ketemu. Coba kata lain.</div>`;
+          return;
+        }
+        box.innerHTML = list
+          .map((u) => {
+            const taken = accClaimed.has(String(u.id)) && String(u.id) !== mine;
+            const label = u.nickname || u.full_name || "User " + u.id;
+            return (
+              `<button type="button" class="list-item" data-uid="${u.id}"${taken ? " disabled" : ""} ` +
+              `style="width:100%; font-family:inherit; font-size:.9rem; color:var(--ink); text-align:left;${taken ? " opacity:.45; cursor:not-allowed;" : " cursor:pointer;"}">` +
+              `<b style="flex:1;">${ExamDB.esc(label)}</b>` +
+              (taken
+                ? `<small style="color:var(--muted);">dipake orang</small>`
+                : `<i class="fa-solid fa-chevron-right" style="color:var(--muted);"></i>`) +
+              `</button>`
+            );
+          })
+          .join("");
+        box.querySelectorAll("[data-uid]").forEach((b) => {
+          if (!b.disabled)
+            b.addEventListener("click", () => openAccConfirm(b.dataset.uid));
+        });
+      }
+
+      function openAccConfirm(uid) {
+        pendingUser =
+          accCache.find((u) => String(u.id) === String(uid)) || null;
+        if (!pendingUser) return;
+        const label =
+          pendingUser.nickname ||
+          pendingUser.full_name ||
+          "User " + pendingUser.id;
+        document.getElementById("accAva").textContent =
+          String(label).trim().charAt(0).toUpperCase() || "?";
+        document.getElementById("accTitle").innerHTML =
+          `Ini bener <span>${ExamDB.esc(label)}</span> yaa?`;
+        const m = document.getElementById("accConfirm");
+        if (m.classList.contains("open")) return;
+        m.classList.add("open");
+        try {
+          history.pushState({ acc: true }, "");
+        } catch (e) {
+          /* abaikan */
+        }
+      }
+
+      function closeAccConfirm() {
+        const m = document.getElementById("accConfirm");
+        pendingUser = null;
+        if (!m.classList.contains("open")) return;
+        // Ada cantolan history → makan 1 back biar sinkron (popstate yang nutup).
+        try {
+          if (history.state && history.state.acc) {
+            history.back();
+            return;
+          }
+        } catch (e) {
+          /* lanjut tutup manual */
+        }
+        m.classList.remove("open");
+      }
+
+      function doClaim() {
+        const u = pendingUser;
+        if (!u) return;
+        ExamProfile.set(chosenSlug, u.nickname || u.full_name || "", u.id);
+        try {
+          localStorage.setItem("exam_idok", "1");
+        } catch (e) {
+          /* abaikan */
+        }
+        closeAccConfirm();
+        masuk();
+      }
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (typeof ExamDB !== "undefined") ExamDB.watchVersion();
+        const grid = document.getElementById("classGrid");
+
+        // Profil exam ATAU sesi login app lama (key "user", domain sama).
+        const prof =
+          (typeof ExamDB !== "undefined" && ExamDB.profile()) ||
+          ExamProfile.get();
+        if (prof && prof.slug) {
+          try {
+            const cls = await ExamDB.resolveClass(prof.slug);
+            chosenSlug = cls.slug;
+            document.getElementById("resName").textContent =
+              "Halo" + (prof.name ? ", " + prof.name : "") + "!";
+            document.getElementById("resClass").textContent = cls.name;
+            show("viewResume");
+          } catch (e) {
+            ExamProfile.clear();
+          }
+        }
+
+        document.getElementById("resGo").addEventListener("click", masuk);
+        document.getElementById("resChange").addEventListener("click", () => {
+          if (logoutLeft() <= 0) {
+            const ln = document.getElementById("lockNote");
+            ln.innerHTML = `<i class="fa-solid fa-lock"></i> Jatah ganti akun hari ini habis. Besok lagi yaa.`;
+            ln.style.display = "block";
+            return;
+          }
+          logoutUse();
+          ExamProfile.clear();
+          show("viewClass");
+        });
+        // Sisa jatah ganti akun.
+        if (prof && prof.slug) {
+          const ln = document.getElementById("lockNote");
+          ln.innerHTML = `<i class="fa-solid fa-rotate-left"></i> Sisa ganti akun hari ini: <b>${logoutLeft()}x</b>`;
+          ln.style.display = "block";
+        }
+        // Deep-link dari /nilai (belum ada data) → langsung ke step 3.
+        // Tanpa return: grid + wiring step 3 di bawah tetap jalan.
+        if (autoAcc && prof && !prof.claimed && chosenSlug) {
+          showAccountStep();
+        }
+
+        // Grid kelas.
+        try {
+          const list = await ExamDB.classes();
+          if (!list.length) {
+            grid.innerHTML = `<div class="pub-empty">Belum ada kelas.</div>`;
+          } else {
+            grid.innerHTML = list
+              .map(
+                (c) =>
+                  `<button type="button" class="class-card" data-slug="${ExamDB.esc(c.slug)}">` +
+                  `<i class="fa-solid fa-users"></i><b>${ExamDB.esc(c.name)}</b>` +
+                  `<span>Klik buat lanjut</span></button>`,
+              )
+              .join("");
+            grid.querySelectorAll(".class-card").forEach((b) =>
+              b.addEventListener("click", () => {
+                chosenSlug = b.dataset.slug;
+                // Abis pilih kelas langsung ke pilih akun (step 2 nama dihapus).
+                ExamProfile.set(chosenSlug, "");
+                showAccountStep();
+              }),
+            );
+          }
+        } catch (e) {
+          grid.innerHTML = `<div class="pub-empty">Gagal nyambung ke database.<br>${ExamDB.esc(e.message || e)}</div>`;
+        }
+
+        // Step 3 wiring.
+        document
+          .getElementById("accBack")
+          .addEventListener("click", () => show("viewClass"));
+        document.getElementById("accSkip").addEventListener("click", masuk);
+        document
+          .getElementById("accSearch")
+          .addEventListener("input", renderAccList);
+        document.getElementById("accYes").addEventListener("click", doClaim);
+        document
+          .getElementById("accNo")
+          .addEventListener("click", closeAccConfirm);
+        document.getElementById("accConfirm").addEventListener("click", (e) => {
+          if (e.target.id === "accConfirm") closeAccConfirm();
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closeAccConfirm();
+        });
+        window.addEventListener("popstate", () => {
+          const m = document.getElementById("accConfirm");
+          if (m && m.classList.contains("open")) {
+            m.classList.remove("open");
+            pendingUser = null;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

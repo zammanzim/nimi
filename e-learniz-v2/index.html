@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Nizam</title>
+    <link rel="icon" href="icons/announcements.png" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/ctx-menu.js"></script>
+    <script src="js/ui-components.js" defer></script>
+    <script src="js/sidebar.js"></script>
+    <script src="js/lang.js"></script>
+    <script src="js/basicfeat.js"></script>
+    <script src="js/show-popup.js"></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/activity.js" defer></script>
+    <script src="js/visitor.js" defer></script>
+    <script src="js/subject-manager.js" defer></script>
+    <script src="js/theme.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/bottom-nav.js"></script>
+    <script src="js/system-notice.js"></script>
+    <script src="js/footer.js"></script>
+    <link rel="stylesheet" href="css/styleasli.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .guest-card {
+            background: rgba(15, 20, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            transition: .2s;
+        }
+        .guest-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+        .guest-card h3 { margin: 0 0 8px; font-size: 16px; }
+        .guest-card p { margin: 0; font-size: 13px; opacity: .7; line-height: 1.5; }
+        .guest-card .guest-meta { font-size: 11px; opacity: .4; margin-top: 10px; }
+        .guest-card.editable-mode { outline: 2px dashed var(--accent); }
+        .guest-card .editable { cursor: text; }
+        .guest-card .guest-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .guest-card .guest-actions button {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .guest-card .guest-actions .btn-del { color: #ff4757; }
+        #guestAddFab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+            color: #000;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 99;
+            box-shadow: 0 4px 20px rgba(0,234,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .guest-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .guest-modal-box {
+            background: rgba(20,25,35,0.97);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .guest-modal-box h3 { margin: 0 0 15px; }
+        .guest-modal-box input,
+        .guest-modal-box textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .guest-modal-box textarea { min-height: 80px; resize: vertical; }
+        .guest-modal-box .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .guest-modal-box .modal-actions button {
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .guest-modal-box .modal-actions .btn-primary { background: var(--accent); color: #000; }
+        .guest-modal-box .modal-actions .btn-cancel { background: rgba(255,255,255,0.08); color: #fff; }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content" style="flex-wrap: wrap;">
+        <div class="left-section">
+            <h2 id="welcomeText"></h2>
+            <div id="guestContent" style="display:none;">
+                <div class="guest-card" id="guestIntroCard">
+                    <h3><i class="fa-solid fa-graduation-cap"></i> Selamat Datang</h3>
+                    <p>Platform E-Learning Nizam — tempat belajar online, akses materi, tugas, dan jadwal pelajaran.</p>
+                    <p style="margin-top:8px;">Login untuk akses penuh, atau lihat informasi di bawah.</p>
+                </div>
+                <div id="guestAnnouncements"></div>
+            </div>
+        </div>
+        <div class="right-section">
+            <div id="announcements" style="display:none;"></div>
+            <div id="editControls"></div>
+        </div>
+    </div>
+
+    <div id="guestAddFab" style="display:none;">
+        <i class="fa-solid fa-plus"></i>
+    </div>
+
+    <script src="js/daily-card.js" defer></script>
+    <script type="module">
+        const user = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })();
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAuth = urlParams.get('password') === 'zimzim1313';
+
+        let _guestAnnouncements = [];
+
+        async function initApp() {
+            if (typeof supabase === 'undefined' || typeof SubjectApp === 'undefined') {
+                setTimeout(initApp, 100);
+                return;
+            }
+
+            if (user) {
+                document.getElementById('guestContent').style.display = 'none';
+                document.getElementById('announcements').style.display = '';
+                document.getElementById('welcomeText').innerText = 'Halo, ' + (user.nickname || user.short_name || '');
+                initDailyCard();
+                SubjectApp.init('announcements', `<h3><i class="fa-solid fa-bullhorn"></i>${t("announcements3")}</h3>`, 'Class Announcements', false);
+                return;
+            }
+
+            // ── GUEST MODE ──
+            document.getElementById('guestContent').style.display = '';
+            document.getElementById('welcomeText').innerText = t('lesson_sch');
+            initDailyCard(2);
+
+            // Pindahin daily card ke right-section
+            const dc = document.getElementById('dailyInfoCard');
+            const rs = document.querySelector('.right-section');
+            if (dc && rs) rs.appendChild(dc);
+
+            // Load guest announcements
+            await loadGuestAnnouncements();
+
+            if (isAuth) {
+                document.getElementById('guestAddFab').style.display = 'flex';
+                document.getElementById('guestAddFab').onclick = showAddModal;
+            }
+
+            // Click interceptor
+            document.addEventListener('click', async (e) => {
+                if (e.target.closest('.sidebar-menu-item')) {
+                    e.preventDefault();
+                    const ok = await showPopup('Login dulu untuk mengakses fitur ini', 'confirm');
+                    if (ok) window.location.href = 'login';
+                    return;
+                }
+                const navItem = e.target.closest('.bn-item');
+                if (navItem) {
+                    e.preventDefault();
+                    const ok = await showPopup('Login dulu untuk mengakses fitur ini', 'confirm');
+                    if (ok) window.location.href = 'login';
+                    return;
+                }
+                const link = e.target.closest('a[href]');
+                if (!link) return;
+                const href = link.getAttribute('href');
+                if (!href || href === '#' || href.startsWith('javascript:')) return;
+                if (href.includes('login')) return;
+                if (link.closest('.tl-subject-final, .dc-nav-valid')) return;
+                e.preventDefault();
+                const ok = await showPopup('Login dulu untuk mengakses fitur ini', 'confirm');
+                if (ok) window.location.href = 'login';
+            });
+        }
+
+        // ── GUEST ANNOUNCEMENTS ───────────────────────────────
+        async function loadGuestAnnouncements() {
+            const { data } = await supabase
+                .from('subject_announcements')
+                .select('*')
+                .eq('subject_id', 'guest')
+                .eq('class_id', 2)
+                .order('is_pinned', { ascending: false })
+                .order('created_at', { ascending: false });
+
+            _guestAnnouncements = data || [];
+            renderGuestAnnouncements();
+        }
+
+        function renderGuestAnnouncements() {
+            const container = document.getElementById('guestAnnouncements');
+            if (!container) return;
+            if (!_guestAnnouncements.length) {
+                container.innerHTML = '<p style="opacity:.4;font-size:13px;text-align:center;">' + t('no_info') + '</p>';
+                return;
+            }
+            container.innerHTML = _guestAnnouncements.map((item, i) => `
+                <div class="guest-card" data-id="${item.id}" data-index="${i}">
+                    <h3 class="editable" contenteditable="${isAuth}">${item.title || 'Tanpa Judul'}</h3>
+                    <div class="editable" contenteditable="${isAuth}" style="font-size:13px;opacity:.7;line-height:1.5;">${item.content || ''}</div>
+                    <div class="guest-meta">${item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : ''}</div>
+                    ${isAuth ? `
+                    <div class="guest-actions">
+                        <button class="btn-save" data-id="${item.id}" style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;font-weight:600;" data-i18n="save">Simpan</button>
+                        <button class="btn-del" data-id="${item.id}" style="background:rgba(255,71,87,0.15);color:#ff4757;border:1px solid rgba(255,71,87,0.2);border-radius:6px;padding:6px 14px;cursor:pointer;font-size:11px;" data-i18n="delete">Hapus</button>
+                    </div>` : ''}
+                </div>
+            `).join('');
+
+            if (isAuth) {
+                container.querySelectorAll('.btn-save').forEach(btn => {
+                    btn.onclick = () => saveGuestCard(btn.dataset.id);
+                });
+                container.querySelectorAll('.btn-del').forEach(btn => {
+                    btn.onclick = () => deleteGuestCard(btn.dataset.id);
+                });
+            }
+        }
+
+        async function saveGuestCard(id) {
+            const card = document.querySelector(`.guest-card[data-id="${id}"]`);
+            if (!card) return;
+            const title = card.querySelector('h3')?.innerText?.trim() || '';
+            const content = card.querySelector('div.editable')?.innerText?.trim() || '';
+            const { error } = await supabase.from('subject_announcements')
+                .update({ title, content })
+                .eq('id', id);
+            if (error) { showPopup('Gagal simpan: ' + error.message, 'error'); return; }
+            showToast('Tersimpan', 'success');
+        }
+
+        async function deleteGuestCard(id) {
+            const ok = await showPopup('Yakin hapus card ini?', 'confirm');
+            if (!ok) return;
+            await supabase.from('subject_announcements').delete().eq('id', id);
+            _guestAnnouncements = _guestAnnouncements.filter(a => String(a.id) !== String(id));
+            renderGuestAnnouncements();
+            showToast('Card dihapus', 'info');
+        }
+
+        // ── ADD MODAL ──────────────────────────────────────────
+        function showAddModal() {
+            const overlay = document.createElement('div');
+            overlay.className = 'guest-modal-overlay';
+            overlay.innerHTML = `
+                <div class="guest-modal-box">
+                    <h3 data-i18n="add_info">Tambah Informasi</h3>
+                    <input id="addTitle" placeholder="Judul" maxlength="100">
+                    <textarea id="addContent" placeholder="Isi informasi..."></textarea>
+                    <div class="modal-actions">
+                        <button class="btn-cancel" id="addCancel" data-i18n="cancel">Batal</button>
+                        <button class="btn-primary" id="addSave" data-i18n="save">Simpan</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.querySelector('#addCancel').onclick = () => overlay.remove();
+            overlay.querySelector('#addSave').onclick = async () => {
+                const title = overlay.querySelector('#addTitle').value.trim();
+                const content = overlay.querySelector('#addContent').value.trim();
+                if (!title && !content) { showPopup('Isi judul atau konten', 'error'); return; }
+                const { data, error } = await supabase.from('subject_announcements').insert({
+                    subject_id: 'guest', class_id: 2,
+                    academic_year: '2025/2026',
+                    title: title || 'Tanpa Judul', content: content || '',
+                }).select();
+                if (error) { showPopup('Gagal: ' + error.message, 'error'); return; }
+                overlay.remove();
+                if (data) _guestAnnouncements.unshift(data[0]);
+                renderGuestAnnouncements();
+                showToast('Informasi ditambahkan', 'success');
+            };
+            overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+        }
+
+        if (typeof t === 'function') initApp();
+        else {
+            const checkLang = () => {
+                if (typeof t === 'function') initApp();
+                else setTimeout(checkLang, 100);
+            };
+            checkLang();
+        }
+    </script>
+</body>
+
+</html>

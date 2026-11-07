@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cari Akun</title>
+    <script>document.title = t('search') + ' • ' + t('app_name');</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+<link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/search.png" type="image/png">
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="page-title-header glow" style="margin-bottom: 30px;">
+                <h1><i class="fa-solid fa-magnifying-glass"></i> <span data-i18n="search">Cari Akun</span></h1>
+            </div>
+
+            <div class="glass-card-effect" style="padding: 20px; border-radius: 15px; margin-bottom: 30px;">
+                <input type="text" id="searchInput" class="glass-input" placeholder="Ketik nama atau username..." data-i18n-placeholder="search_user_placeholder">
+            </div>
+
+            <div id="userResultList" class="announcements">
+                <p style="text-align: center; color: #aaa; padding: 40px;" data-i18n="loading">Loading...
+                </p>
+            </div>
+        </div>
+
+        <div class="right-section">
+        </div>
+    </div>
+
+
+    <script src="../js/search.js?v=20260822" defer></script>
+</body>
+
+</html>

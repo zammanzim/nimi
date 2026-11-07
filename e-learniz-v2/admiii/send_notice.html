@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - System Notice • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .notice-admin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 20px;
+        }
+
+        .admin-box {
+            background: rgba(15, 15, 20, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .glass-input,
+        .glass-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .glass-input:focus,
+        .glass-select:focus {
+            border-color: var(--accent, #00eaff);
+        }
+
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .type-opt {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .type-opt.active {
+            border-color: var(--accent, #00eaff);
+            background: rgba(0, 234, 255, 0.1);
+        }
+
+        .type-yellow {
+            color: #f1c40f;
+        }
+
+        .type-blue {
+            color: #00eaff;
+        }
+
+        .type-red {
+            color: #ff4757;
+        }
+
+        .type-green {
+            color: #2ecc71;
+        }
+
+        .notice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .notice-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .ni-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ni-msg {
+            font-size: 0.85rem;
+            color: #eee;
+            margin-bottom: 4px;
+        }
+
+        .ni-meta {
+            font-size: 0.7rem;
+            color: #555;
+        }
+
+        .ni-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            color: #777;
+            cursor: pointer;
+        }
+
+        .btn-toggle.active {
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+        }
+
+        .btn-del {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .notice-admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content" style="padding-top: 5rem;">
+        <div class="notice-admin-grid">
+            <!-- Form Section -->
+            <div class="admin-box">
+                <h3 id="formTitle"><i class="fa-solid fa-plus-circle"></i> Buat Notice Baru</h3>
+                <p style="font-size: 0.75rem; color: #555; margin-bottom: 20px;">Notice akan tampil secara global di semua halaman user.</p>
+
+                <input type="hidden" id="editId" value="">
+
+                <div class="form-group">
+                    <label data-i18n="select_color_type">Pilih Warna / Tipe</label>
+                    <div class="type-selector" id="typeSelector">
+                        <div class="type-opt type-yellow active" data-type="yellow">WARNING</div>
+                        <div class="type-opt type-blue" data-type="blue">INFO</div>
+                        <div class="type-opt type-red" data-type="red">DANGER</div>
+                        <div class="type-opt type-green" data-type="green">SUCCESS</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:none;">
+                    <label>Icon (FontAwesome)</label>
+                    <input type="text" id="noticeIcon" class="glass-input" value="fa-triangle-exclamation">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="notice_text_color">Warna Text Notice</label>
+                    <input type="hidden" id="noticeTextColor" value="#ffffff">
+                    <div class="color-preset-grid" id="colorPresetGrid">
+                        <div class="color-opt active" style="--c:#ffffff;" onclick="selectColor(this, '#ffffff')"><span>White</span></div>
+                        <div class="color-opt" style="--c:#00eaff;" onclick="selectColor(this, '#00eaff')"><span>Neon Blue</span></div>
+                        <div class="color-opt" style="--c:#f1c40f;" onclick="selectColor(this, '#f1c40f')"><span>Yellow</span></div>
+                        <div class="color-opt" style="--c:#ff4757;" onclick="selectColor(this, '#ff4757')"><span>Red</span></div>
+                        <div class="color-opt" style="--c:#2ecc71;" onclick="selectColor(this, '#2ecc71')"><span>Green</span></div>
+                        <div class="color-opt" style="--c:#ff9ff3;" onclick="selectColor(this, '#ff9ff3')"><span>Pink</span></div>
+                        <div class="color-opt" style="--c:#ff9f43;" onclick="selectColor(this, '#ff9f43')"><span>Orange</span></div>
+                        <div class="color-opt" style="--c:#54a0ff;" onclick="selectColor(this, '#54a0ff')"><span>Sky Blue</span></div>
+                    </div>
+                </div>
+
+                <style>
+                    .color-preset-grid {
+                        display: grid;
+                        grid-template-columns: repeat(4, 1fr);
+                        gap: 8px;
+                    }
+                    .color-opt {
+                        background: rgba(255,255,255,0.03);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 10px;
+                        padding: 10px 6px;
+                        text-align: center;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    .color-opt:before {
+                        content: '';
+                        width: 14px; height: 14px;
+                        border-radius: 50%;
+                        background: var(--c);
+                        box-shadow: 0 0 10px var(--c);
+                    }
+                    .color-opt span { font-size: 0.65rem; font-weight: 600; color: #777; }
+                    .color-opt.active {
+                        background: rgba(255,255,255,0.08);
+                        border-color: var(--c);
+                    }
+                    .color-opt.active span { color: #fff; }
+                </style>
+
+                <div class="form-group">
+                    <label data-i18n="target_class">Target Kelas</label>
+                    <select id="noticeClassId" class="glass-select">
+                        <option value="" data-i18n="all_classes_global">Semua Kelas (Global)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Pesan Notifikasi</label>
+                    <textarea id="noticeMsg" class="glass-input" rows="3"
+                        placeholder="Tulis pesan di sini..."></textarea>
+                </div>
+
+                <button class="btn-glass-save" id="btnSubmit" style="width: 100%;" onclick="submitNotice()">
+                    <i class="fa-solid fa-paper-plane"></i> <span data-i18n="send_notice">Kirim Notice</span>
+                </button>
+                <button class="btn-glass-cancel" id="btnReset" style="width: 100%; margin-top: 8px; display: none;" onclick="resetForm()">
+                    <span data-i18n="cancel_edit">Batal Edit</span>
+                </button>
+            </div>
+
+            <!-- List Section -->
+            <div class="admin-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3><i class="fa-solid fa-list"></i> Riwayat Notice</h3>
+                    <button class="btn-glass-cancel" style="font-size: 0.7rem; padding: 4px 10px;"
+                        onclick="loadNotices()">Refresh</button>
+                </div>
+
+                <div class="notice-list" id="noticeListBody">
+                    <!-- Filled by JS -->
+                    <div style="text-align: center; color: #444; padding: 20px;" data-i18n="loading">Memuat data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedType = 'yellow';
+        let allNotices = [];
+        let classesMap = {};
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const user = JSON.parse(localStorage.getItem("user"));
+            if (!user || !user.role.includes('admin')) {
+                window.location.href = "../login";
+                return;
+            }
+
+            // Sync Header
+            document.getElementById('headerName').innerText = user.short_name || 'Admin';
+            const _snPP = document.getElementById('headerPP');
+            const _snSrc = user.avatar_url || '../icons/profpicture.png';
+            if (_snPP && _snPP.getAttribute('src') !== _snSrc) _snPP.src = _snSrc;
+
+            // Type Selector
+            document.querySelectorAll('.type-opt').forEach(opt => {
+                opt.onclick = () => {
+                    document.querySelectorAll('.type-opt').forEach(x => x.classList.remove('active'));
+                    opt.classList.add('active');
+                    selectedType = opt.dataset.type;
+
+                    // Auto switch icon based on type
+                    const iconInput = document.getElementById('noticeIcon');
+                    if (selectedType === 'yellow') iconInput.value = 'fa-triangle-exclamation';
+                    if (selectedType === 'blue') iconInput.value = 'fa-circle-info';
+                    if (selectedType === 'red') iconInput.value = 'fa-circle-xmark';
+                    if (selectedType === 'green') iconInput.value = 'fa-circle-check';
+                };
+            });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                const isTyping = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+                
+                // Refresh Data (R)
+                if (!isTyping && e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    loadNotices();
+                    showToast('Data diperbarui');
+                }
+
+                // Select Target Kelas (0-9)
+                if (!isTyping && /^[0-9]$/.test(e.key)) {
+                    const select = document.getElementById('noticeClassId');
+                    const idx = parseInt(e.key);
+                    if (select.options[idx]) {
+                        select.value = select.options[idx].value;
+                        showToast(`Target: ${select.options[idx].textContent}`);
+                    }
+                }
+
+                // Submit (Ctrl+Enter)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    submitNotice();
+                }
+            });
+
+            await loadClasses();
+            await loadNotices();
+        });
+
+        async function loadClasses() {
+            const { data, error } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (!error && data) {
+                const select = document.getElementById('noticeClassId');
+                data.forEach(c => {
+                    classesMap[c.id] = c.name;
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        function selectColor(el, hex) {
+            document.querySelectorAll('.color-opt').forEach(opt => opt.classList.remove('active'));
+            if (el) el.classList.add('active');
+            document.getElementById('noticeTextColor').value = hex;
+        }
+
+        async function loadNotices() {
+            const container = document.getElementById('noticeListBody');
+            const { data, error } = await supabase
+                .from('system_notifications')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = "Gagal memuat.";
+                return;
+            }
+
+            allNotices = data || [];
+
+            if (!allNotices.length) {
+                container.innerHTML = `<div style="text-align: center; color: #444; padding: 20px;">${t('no_notice_history')}</div>`;
+                return;
+            }
+
+            container.innerHTML = allNotices.map(n => {
+                const className = n.class_id ? (classesMap[n.class_id] || `Kelas ${n.class_id}`) : t('global_label');
+                return `
+                <div class="notice-item">
+                    <div class="sn-icon type-${n.type}"><i class="fa-solid ${n.icon}"></i></div>
+                    <div class="ni-info">
+                        <div class="ni-msg" style="color:${n.text_color || '#fff'}">${n.message}</div>
+                        <div class="ni-meta">
+                            <span style="color:var(--accent,#00eaff); font-weight:700;">[${className}]</span> • 
+                            ${new Date(n.created_at).toLocaleString('id-ID')}
+                        </div>
+                    </div>
+                    <div class="ni-actions">
+                        <button class="btn-toggle" onclick="editNotice(${n.id})" title="${t('edit_notice')}">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn-toggle ${n.is_active ? 'active' : ''}" onclick="toggleNotice(${n.id}, ${n.is_active})" title="Aktif/Nonaktif">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                        <button class="btn-del" onclick="deleteNotice(${n.id})">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;}).join('');
+        }
+
+        function editNotice(id) {
+            const n = allNotices.find(x => x.id === id);
+            if (!n) return;
+
+            document.getElementById('editId').value = n.id;
+            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square"></i> ${t('edit_notice')}`;
+            document.getElementById('noticeMsg').value = n.message;
+            document.getElementById('noticeIcon').value = n.icon;
+            document.getElementById('noticeClassId').value = n.class_id || '';
+            
+            // Set Type
+            selectedType = n.type;
+            document.querySelectorAll('.type-opt').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.type === n.type);
+            });
+
+            // Set Color
+            selectColor(null, n.text_color || '#ffffff');
+            document.querySelectorAll('.color-opt').forEach(opt => {
+                const style = opt.getAttribute('style');
+                if (style && style.includes(n.text_color)) opt.classList.add('active');
+            });
+
+            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ${t('save_changes_notice')}`;
+            document.getElementById('btnReset').style.display = 'block';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('editId').value = '';
+            document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-plus-circle"></i> Buat Notice Baru`;
+            document.getElementById('noticeMsg').value = '';
+            document.getElementById('noticeClassId').value = '';
+            document.getElementById('btnSubmit').innerHTML = `<i class="fa-solid fa-paper-plane"></i> ${t('send_notice')}`;
+            document.getElementById('btnReset').style.display = 'none';
+            
+            // Reset to default Warning/White
+            document.querySelector('[data-type="yellow"]').click();
+            const whiteOpt = Array.from(document.querySelectorAll('.color-opt')).find(el => el.getAttribute('style').includes('#ffffff'));
+            if (whiteOpt) selectColor(whiteOpt, '#ffffff');
+        }
+
+        async function submitNotice() {
+            const id = document.getElementById('editId').value;
+            const msg = document.getElementById('noticeMsg').value.trim();
+            const icon = document.getElementById('noticeIcon').value.trim();
+            const color = document.getElementById('noticeTextColor').value;
+            const classId = document.getElementById('noticeClassId').value;
+
+            if (!msg) return showToast('Pesan wajib diisi!', 'info');
+
+            const payload = {
+                type: selectedType,
+                icon: icon || 'fa-circle-info',
+                message: msg,
+                text_color: color,
+                is_active: true,
+                class_id: classId || null
+            };
+
+            const { error } = id 
+                ? await supabase.from('system_notifications').update(payload).eq('id', id)
+                : await supabase.from('system_notifications').insert(payload);
+
+            if (!error) {
+                showToast(id ? 'Notice diperbarui!' : 'Notice dikirim!');
+                resetForm();
+                loadNotices();
+            } else {
+                showToast('Gagal memproses', 'error');
+            }
+        }
+
+        async function toggleNotice(id, currentStatus) {
+            const { error } = await supabase
+                .from('system_notifications')
+                .update({ is_active: !currentStatus })
+                .eq('id', id);
+
+            if (!error) {
+                showToast('Status diperbarui');
+                loadNotices();
+            }
+        }
+
+        async function deleteNotice(id) {
+            const yakin = await showPopup(t('confirm_delete_notice') + "<br><small style='color:#555'>Tindakan ini tidak bisa dibatalkan.</small>", "confirm");
+            if (!yakin) return;
+
+            const { error } = await supabase.from('system_notifications').delete().eq('id', id);
+            if (!error) {
+                showToast('Notice dihapus');
+                loadNotices();
+            }
+        }
+    </script>
+</body>
+
+</html>

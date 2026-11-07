@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin • Ujian</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=3"></script>
+    <script src="js/db.js?v=6"></script>
+    <script src="js/media.js?v=3"></script>
+    <script src="js/rich.js?v=3"></script>
+    <link rel="stylesheet" href="css/style.css?v=3" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-row">
+          <div class="brand">
+            <i class="fa-solid fa-screwdriver-wrench"></i> ADMIN UJIAN
+          </div>
+          <a class="top-link plain" href="kisi"
+            ><i class="fa-solid fa-book-open"></i> Kisi-Kisi</a
+          >
+        </div>
+        <div class="topbar-sub" id="r2state">Cek backend media…</div>
+      </div>
+    </div>
+    <div class="wrap">
+      <!-- GATE PIN -->
+      <div id="pinGate">
+        <div class="pin-card">
+          <div style="font-size: 2.4rem">🔒</div>
+          <h2>Masukin PIN</h2>
+          <p
+            style="color: var(--muted); font-size: 0.85rem; margin: 6px 0 14px"
+          >
+            PIN default <b>1234</b> — ganti manual di tabel exam_settings.
+          </p>
+          <div class="field">
+            <input
+              id="pinInput"
+              type="password"
+              inputmode="numeric"
+              placeholder="PIN"
+              autocomplete="off"
+            />
+          </div>
+          <button
+            class="btn gold"
+            id="pinBtn"
+            style="width: 100%; justify-content: center"
+          >
+            BUKA
+          </button>
+          <p
+            id="pinErr"
+            style="
+              color: var(--red);
+              font-size: 0.85rem;
+              margin-top: 10px;
+              display: none;
+            "
+          >
+            PIN salah.
+          </p>
+        </div>
+      </div>
+      <!-- PANEL -->
+      <div id="admPanel" style="display: none">
+        <div class="field" style="max-width: 280px">
+          <label>Kelas yang diedit</label>
+          <select id="admClass"></select>
+        </div>
+        <div class="tabs">
+          <button class="tab on" data-tab="jadwal">📅 Jadwal</button>
+          <button class="tab" data-tab="kisi">📖 Kisi-Kisi</button>
+          <button class="tab" data-tab="soal">✏️ Soal</button>
+          <button class="tab" data-tab="guru">👩‍🏫 Guru</button>
+          <button class="tab" data-tab="aktivitas">📡 Aktivitas</button>
+        </div>
+        <div id="tab-jadwal"></div>
+        <div id="tab-kisi" style="display: none"></div>
+        <div id="tab-soal" style="display: none"></div>
+        <div id="tab-guru" style="display: none"></div>
+        <div id="tab-aktivitas" style="display: none"></div>
+      </div>
+      <p class="foot">
+        Web kisi-kisi, quiz, and nilai. Made by Nizam or nimi. <br>
+        &copy 2026 Web Nizam • All Right Reserved
+      </p>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script src="js/admin.js?v=4"></script>
+  </body>
+</html>

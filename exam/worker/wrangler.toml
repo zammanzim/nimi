@@ -1,0 +1,14 @@
+# Worker exam-media-presign — penerbit presigned URL R2 (upload admin exam).
+# Deploy: $env:CLOUDFLARE_API_TOKEN="<token>"; wrangler deploy
+# Secrets (JANGAN taro di sini): R2_ACCESS_KEY, R2_SECRET_KEY
+#   Write-Output $s | wrangler secret put R2_ACCESS_KEY
+
+name = "exam-media-presign"
+main = "presign.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+R2_ENDPOINT = "https://3867256d31431bf04133a573895a27da.r2.cloudflarestorage.com"
+R2_BUCKET = "exam"
+R2_REGION = "auto"
+PUBLIC_BASE_URL = "https://media.e-learniz.my.id"

@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>E-Learning Nizam | Web Nizam</title>
+    <meta property="og:title" content="E-Learning Nizam (Web Nizam)">
+
+    <meta name="description"
+        content="platform pembelajaran yang isinya jadwal harian, pengumuman, tugas, nilai, dan lain lain. e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
+
+    <meta name="keywords" content="e-learning nizam, e-learniz, ilerniz, elearniz, x rpl 2, nza, nizam, nijam">
+
+    <meta property="og:title" content="e-learniz by zam">
+    <meta property="og:description"
+        content="Platform pembelajaran yang berisi jadwal harian, pengumuman, daftar tugas, nilai, dan lain lainnya">
+    <meta property="og:url" content="https://e-learniz.my.id">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script src="js/supabase-clients.js" defer></script>
+    <script src="js/lang.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* --- RESET & GLOBAL --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            position: relative;
+        }
+
+        /* Update dari h2 ke h1 agar tetap estetik tapi SEO friendly */
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 4px;
+            background: none;
+            -webkit-text-fill-color: white;
+            text-decoration: underline;
+        }
+
+        /* --- MAIN CARD --- */
+        .glass-card {
+            width: 420px;
+            max-width: 92vw;
+            max-height: 92vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* --- HEADER --- */
+        .header {
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
+            color: white;
+            padding: 28px 30px 22px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 50%;
+        }
+
+        .header-icon {
+            font-size: 38px;
+            color: #ffd700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 4px;
+            background: none;
+            -webkit-text-fill-color: white;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            position: relative;
+            z-index: 2;
+            transition: none;
+        }
+
+        /* --- BACK BUTTON --- */
+        .floating-back {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .floating-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-2px);
+        }
+
+        .floating-back.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        /* --- ERROR BOX --- */
+        .error-box {
+            background: #ffe5e7;
+            border: 1px solid #ffb3b8;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin: 12px 20px 0;
+            color: #d63031;
+            font-size: 13px;
+            text-align: center;
+            display: none;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            25% {
+                transform: translateX(-5px)
+            }
+
+            75% {
+                transform: translateX(5px)
+            }
+        }
+
+        /* --- SLIDER --- */
+        .slider-window {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            margin: 0;
+        }
+
+        .slider-content {
+            display: flex;
+            width: 400%;
+            height: 100%;
+            transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+
+        .slide-step {
+            width: 25%;
+            padding: 20px 22px 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .slider-content.step-1 {
+            transform: translateX(-25%)
+        }
+
+        .slider-content.step-2 {
+            transform: translateX(-50%)
+        }
+
+        .slider-content.step-3 {
+            transform: translateX(-75%)
+        }
+
+        /* --- WELCOME SCREEN --- */
+        .welcome-icon {
+            font-size: 54px;
+            color: #4a6ee0;
+            margin: 8px 0 12px;
+            text-align: center;
+            -webkit-text-fill-color: #4a6ee0;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .welcome-text h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.6;
+        }
+
+        .maaftext {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .maaftext p {
+            font-size: 10px;
+            color: #bbb;
+            line-height: 1.5;
+        }
+
+        /* --- DROPDOWN TRIGGERS --- */
+        .dropdown-trigger {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin: 3px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-trigger:hover {
+            border-color: #4a6ee0;
+            background: #eef1fd;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 110, 224, 0.12);
+        }
+
+        .dropdown-trigger.active {
+            border-color: #4a6ee0;
+            background: #eef1fd;
+            box-shadow: 0 4px 14px rgba(74, 110, 224, 0.15);
+        }
+
+        .trigger-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .trigger-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trigger-value i {
+            color: #4a6ee0;
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+
+        .dropdown-trigger i.fa-chevron-right,
+        .dropdown-trigger i.fa-chevron-down {
+            color: #bbb;
+            font-size: 13px;
+        }
+
+        .dropdown-trigger:hover i.fa-chevron-right {
+            transform: translateX(3px);
+        }
+
+        /* --- CLASS BADGE --- */
+        .class-badge {
+            text-align: center;
+            margin: 0 0 16px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .class-badge span {
+            background: #eef1fd;
+            border: 1.5px solid #c5d0f5;
+            color: #4a6ee0;
+            padding: 7px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* --- AUTH CONTAINER --- */
+        #authContainer {
+            margin-top: auto;
+            border-top: 1px solid #eee;
+            padding-top: 16px;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.4s ease;
+            pointer-events: none;
+        }
+
+        #authContainer.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        /* --- SECURE MODE --- */
+        .secure-login {
+            display: none;
+        }
+
+        .secure-title {
+            font-size: 13px;
+            color: #4a6ee0;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        /* --- INPUTS --- */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 11px;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 12px 15px 12px 44px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 11px;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .input-box:focus {
+            border-color: #4a6ee0;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.1);
+        }
+
+        .input-box.error {
+            border-color: #ff3b30;
+            animation: shake 0.4s ease;
+            background: #fff5f5;
+        }
+
+        .input-box::placeholder {
+            color: #bbb;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4a6ee0;
+            font-size: 14px;
+        }
+
+        /* --- DIRECT MODE --- */
+        .direct-entry {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .confirm-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 18px;
+            line-height: 1.6;
+        }
+
+        .confirm-text h3 {
+            font-size: 19px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .confirm-text b {
+            color: #4a6ee0;
+            font-weight: 700;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-neon {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
+            border: none;
+            border-radius: 11px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-neon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 110, 224, 0.3);
+        }
+
+        .btn-neon:active {
+            transform: translateY(-1px);
+        }
+
+        /* --- MODAL --- */
+        .selection-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+        }
+
+        .selection-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 72vh;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px) scale(0.95);
+            transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .selection-modal.open .modal-content {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 22px 16px;
+            background: linear-gradient(135deg, #4a6ee0 0%, #6a11cb 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .close-btn {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 18px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .modal-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .list-item {
+            padding: 13px 15px;
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .list-item:hover {
+            background: #eef1fd;
+            border-color: #c5d0f5;
+            transform: translateX(4px);
+        }
+
+        .list-item .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #4a6ee0;
+            flex-shrink: 0;
+            box-shadow: none;
+        }
+
+        .list-item span {
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .list-item.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(1);
+            pointer-events: none;
+            border-color: transparent;
+        }
+
+        .list-item.disabled .dot {
+            background: #bbb;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 35px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        /* --- MODAL DIVIDER --- */
+        .modal-divider {
+            padding: 4px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #4a6ee0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(74, 110, 224, 0.4), transparent);
+        }
+
+        /* --- SEARCH BAR --- */
+        .search-wrapper {
+            padding: 10px 14px 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 13px;
+            background: white;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            color: #333;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .search-input:focus {
+            border-color: #4a6ee0;
+            box-shadow: 0 0 0 3px rgba(74, 110, 224, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #bbb;
+        }
+
+        /* --- GUEST BUTTON --- */
+        .btn-guest {
+            width: 100%;
+            padding: 13px;
+            background: #f3f0ff;
+            border: 2px solid #d8b4fe;
+            border-radius: 11px;
+            color: #7c3aed;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .btn-guest:hover {
+            background: #ede9fe;
+            border-color: #a855f7;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        /* --- TEACHER BUTTON --- */
+        .btn-teacher {
+            width: 100%;
+            padding: 13px;
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 11px;
+            color: #16a34a;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .btn-teacher:hover {
+            background: #dcfce7;
+            border-color: #22c55e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
+        }
+        .btn-teacher.locked {
+            background: #f5f5f5;
+            border-color: #e0e0e0;
+            color: #bbb;
+            cursor: not-allowed;
+            filter: grayscale(0.8);
+            pointer-events: none;
+        }
+        .btn-teacher.locked:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- FOOTER --- */
+        .footer-link {
+            text-align: center;
+            padding: 13px 20px;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            flex-shrink: 0;
+        }
+
+        .footer-link a {
+            color: #4a6ee0;
+            font-weight: 500;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media(max-width:480px) {
+            .glass-card {
+                max-width: 93vw;
+                max-height: 92vh;
+                border-radius: 16px;
+            }
+
+            .header {
+                padding: 22px 18px 18px;
+            }
+
+            .header h2 {
+                font-size: 22px;
+            }
+
+            .slide-step {
+                padding: 16px 16px 8px;
+            }
+        }
+
+        @keyframes fa-spin {
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .fa-spin {
+            animation: fa-spin 1s infinite linear;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="glass-card">
+        <div class="header">
+            <div id="globalBackBtn" class="floating-back" onclick="goBack()">
+                <i class="fa-solid fa-arrow-left"></i>
+            </div>
+            <div class="header-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <h1>E-Learning Nizam</h1>
+            <p id="headerSubtitle">Web Nizam - Platform pembelajaran by nza</p>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+
+        <div class="slider-window">
+            <div class="slider-content" id="mainSlider">
+                <div class="slide-step">
+                    <div class="welcome-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="welcome-text">
+                        <h3>Selamat Datang!</h3>
+                        <p>Website e-learning ga resmi (unofficial) yang berisi jadwal harian, pengumuman, daftar tugas,
+                            dan lain lainnya.</p>
+                    </div>
+                    <button class="btn-neon" onclick="goToStep1()">
+                        <span>MASUK</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                    <div class="maaftext">
+                        <p>Dibuat oleh seorang siswa yang gabut, tanpa bantuan siapapun. Jadi maaf
+                            kalo ada bug, jelek, ataupun ngebingungin.
+                        </p>
+                    </div>
+                </div>
+                <!-- STEP 1: Pilih Kelas -->
+                <div class="slide-step">
+                    <div style="margin-top: 10px;"></div>
+                    <div class="dropdown-trigger" onclick="openClassModal()">
+                        <div>
+                            <span class="trigger-label">PILIH KELAS</span>
+                            <div class="trigger-value" id="dispClassSelected">
+                                <i class="fa-solid fa-graduation-cap"></i>
+                                <span data-i18n="select_class">Pilih Kelas</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin:18px 0 8px;">
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                        <span style="font-size:11px; color:#bbb; white-space:nowrap;">atau</span>
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                    </div>
+
+                    <!-- Teacher Login Button (locked, buka via ?password=ticermod) -->
+                    <button class="btn-teacher locked" id="btnTeacherLogin" onclick="goToTeacherStep()">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <span>Masuk sebagai Guru</span>
+                        <i class="fa-solid fa-lock" id="teacherLockIcon" style="font-size:11px; opacity:0.6;"></i>
+                    </button>
+
+                    <div style="display:flex; align-items:center; gap:10px; margin:12px 0 12px;">
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                        <span style="font-size:11px; color:#bbb; white-space:nowrap;">atau</span>
+                        <div style="flex:1; height:1px; background:#eee;"></div>
+                    </div>
+
+                    <button class="btn-guest" onclick="goToGuestStep()">
+                        <i class="fa-solid fa-user-secret"></i>
+                        <span>Masuk sebagai Tamu</span>
+                    </button>
+                </div>
+
+                <!-- STEP 2: Pilih Nama & Login -->
+                <div class="slide-step">
+                    <div class="class-badge" id="classBadge">
+                        <span id="displayClass">...</span>
+                    </div>
+
+                    <div class="dropdown-trigger" id="btnName" onclick="openModal()">
+                        <div>
+                            <span class="trigger-label">PILIH IDENTITAS</span>
+                            <div class="trigger-value" id="valName">
+                                <i class="fa-solid fa-user"></i>
+                                <span data-i18n="select_name">Pilih Nama Kamu</span>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+
+                    <div id="authContainer">
+                        <!-- Secure Mode -->
+                        <div id="secureMode" class="secure-login">
+                            <div class="secure-title">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Masukkan Password</span>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input id="loginUsn" class="input-box" placeholder="Username" readonly
+                                    style="cursor:not-allowed; background:#f0f0f0; color:#999;">
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-key"></i>
+                                <input id="loginPw" type="password" class="input-box" placeholder="Masukkan Password"
+                                    oninput="this.classList.remove('error')">
+                            </div>
+                            <div style="text-align:right; margin: -4px 0 10px;">
+                                <a onclick="showLupaPopup()"
+                                    style="font-size:12px; color:#4a6ee0; cursor:pointer; text-decoration:none; font-weight:500; opacity:0.8; transition:opacity 0.2s;"
+                                    onmouseover="this.style.opacity='1'; this.style.textDecoration='underline'"
+                                    onmouseout="this.style.opacity='0.8'; this.style.textDecoration='none'">
+                                    Lupa kata sandi?
+                                </a>
+                            </div>
+                            <button class="btn-neon" onclick="loginSecure()">
+                                <i class="fa-solid fa-right-to-bracketj"></i>
+                                <span>LOGIN SEKARANG</span>
+                            </button>
+                        </div>
+
+                        <!-- Direct Mode -->
+                        <div id="directMode" class="direct-entry">
+                            <div class="confirm-text">
+                                <h3>Haii, <b><span id="directName">User</span></b>!</h3>
+                                <p>Ini bener kamu? Jika iya, ayo masuk!</p>
+                            </div>
+                            <button class="btn-neon" onclick="loginDirect()">
+                                <i class="fa-solid fa-door-open"></i>
+                                <span>MASUK SEKARANG</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Guest -->
+                <div class="slide-step">
+
+                    <!-- State A: Returning guest (hidden by default, shown via JS) -->
+                    <div id="guestReturning" style="display:none; text-align:center; animation: fadeIn 0.5s ease;">
+                        <div style="font-size: 50px; margin: 10px 0 14px;">
+                            <i class="fa-solid fa-hand-wave" style="color:#7c3aed;"></i>
+                        </div>
+                        <h3 style="font-size:22px; margin-bottom:6px; color:#333;">Haii, <b id="returningGuestName"
+                                style="color:#7c3aed;">Tamu</b>!</h3>
+                        <p style="font-size:13px; color:#888; margin-bottom:24px; line-height:1.6;">
+                            Kamu udah pernah masuk sebagai tamu sebelumnya.
+                        </p>
+                        <button class="btn-neon" onclick="loginAsGuest(true)"
+                            style="background:linear-gradient(135deg,#7c3aed,#6a11cb); margin-bottom:12px;">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>MASUK LAGI</span>
+                        </button>
+                        <button onclick="showNewGuestForm()"
+                            style="width:100%; padding:12px; background:#f8f9fa; border:2px solid #e0e0e0; border-radius:11px; color:#999; font-size:13px; cursor:pointer; font-family:'Segoe UI',sans-serif; transition:all 0.3s;">
+                            Ganti nama / masuk baru
+                        </button>
+                    </div>
+
+                    <!-- State B: New guest form -->
+                    <div id="guestNew">
+                        <div style="text-align:center; margin: 10px 0 25px;">
+                            <div style="font-size: 50px; margin-bottom: 12px;">
+                                <i class="fa-solid fa-user-secret" style="color:#7c3aed;"></i>
+                            </div>
+                            <h3 style="font-size:20px; margin-bottom:8px; color:#333; font-weight:700;">Masuk sebagai
+                                Tamu</h3>
+                            <p style="font-size: 13px; color: rgba(0, 0, 0, 0.5); line-height: 1.6;">
+                                Kamu akan masuk ke kelas <b style="color:#a78bfa;">X - RPL 2</b> sebagai tamu.
+                            </p>
+                        </div>
+                        <div class="input-wrapper" style="margin-bottom: 8px;">
+                            <i class="fa-solid fa-signature" style="color:#7c3aed;"></i>
+                            <input id="guestNameInput" class="input-box" placeholder="Nama kamu (opsional)"
+                                maxlength="30" style="border-color:rgba(167,139,250,0.5);"
+                                onfocus="this.style.borderColor='#7c3aed'; this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.12)'"
+                                onblur="this.style.borderColor='rgba(167,139,250,0.5)'; this.style.boxShadow='none'"
+                                onkeydown="if(event.key==='Enter') loginAsGuest()">
+                        </div>
+                        <p style="font-size:11px; color:#bbb; margin-bottom:18px; padding-left:4px;">
+                            <i class="fa-solid fa-clock" style="margin-right:4px;"></i> <span data-i18n="guest_expiry">Data tamu otomatis hilang</span>
+                            setelah 3 hari tidak aktif.
+                        </p>
+                        <button class="btn-neon" onclick="loginAsGuest()"
+                            style="background:linear-gradient(135deg,#7c3aed,#6a11cb);">
+                            <i class="fa-solid fa-door-open"></i>
+                            <span>MASUK SEKARANG</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-link">
+            <p style="margin-bottom: 8px; font-size: 10px; color: #ccc; line-height: 1.4;">
+                E-Learniz (atau biasa disebut elearniz/ilerniz) dikembangkan untuk mendukung kegiatan belajar mengajar
+                secara efisien.
+            </p>
+            Ada masalah? <a href="https://wa.me/6283851088843?text=min%20ada%20kendala%20login" target="_blank">Hubungi
+                Developer</a>
+        </div>
+
+        <!-- POPUP LUPA SANDI -->
+        <div id="lupaPopup" style="
+            display:none;
+            position:fixed; inset:0;
+            background:rgba(0,0,0,0.85);
+            z-index:2000;
+            align-items:center;
+            justify-content:center;
+            animation: fadeIn 0.25s ease;
+        " onclick="if(event.target===this) hideLupaPopup()">
+            <div style="
+                background:white;
+                border-radius:18px;
+                width:320px;
+                max-width:88vw;
+                padding:28px 24px 22px;
+                box-shadow:0 25px 50px rgba(0,0,0,0.18);
+                text-align:center;
+                transform:translateY(0);
+                animation: fadeInUp 0.3s ease;
+            ">
+                <div style="font-size:40px; margin-bottom:12px;">
+                    <i class="fa-solid fa-lock-open" style="color:#4a6ee0;"></i>
+                </div>
+                <h3 style="font-size:17px; font-weight:700; color:#333; margin-bottom:8px;">Lupa Kata Sandi?</h3>
+                <p style="font-size:13px; color:#888; line-height:1.7; margin-bottom:20px;">
+                    anjeun nu ngatur password, anjeunna poho<br>
+                    Hubungi admin lewat WhatsApp untuk minta sandi.
+                </p>
+                <a href="https://wa.me/6283851088843?text=min%20lupa%20password%20nih%20bisa%20minta%20reset%3F"
+                    target="_blank" style="
+                    display:flex; align-items:center; justify-content:center; gap:10px;
+                    background:linear-gradient(135deg,#25d366,#128c7e);
+                    color:white; font-weight:700; font-size:14px;
+                    padding:13px 20px; border-radius:11px;
+                    text-decoration:none;
+                    transition:all 0.3s ease;
+                    margin-bottom:10px;
+                   "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(37,211,102,0.35)'"
+                    onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                    <i class="fa-brands fa-whatsapp" style="font-size:18px;"></i>
+                    <span>Chat Admin di WhatsApp</span>
+                </a>
+                <button onclick="hideLupaPopup()" style="
+                    width:100%; padding:11px;
+                    background:none; border:none;
+                    font-size:13px; color:#bbb;
+                    cursor:pointer; font-family:'Segoe UI',sans-serif;
+                    transition:color 0.2s;
+                    " onmouseover="this.style.color='#999'" onmouseout="this.style.color='#bbb'" data-i18n="close">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="selection-modal" id="modalOverlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title" id="modalTitle">PILIH OPSI</span>
+                    <i class="fa-solid fa-xmark close-btn" onclick="closeModal()"></i>
+                </div>
+
+                <div class="search-wrapper" id="searchWrapper" style="display:none;">
+                    <input type="text" class="search-input" id="nameSearch" placeholder="Cari nama kamu..." data-i18n-placeholder="search_name_placeholder"
+                        oninput="filterNames()">
+                </div>
+
+                <div class="modal-list" id="modalList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLupaPopup() {
+            const popup = document.getElementById('lupaPopup');
+            popup.style.display = 'flex';
+        }
+
+        function hideLupaPopup() {
+            const popup = document.getElementById('lupaPopup');
+            popup.style.display = 'none';
+        }
+
+        // Data kelas dimuat dinamis dari Supabase
+        let DAFTAR_KELAS_ARRAY = [];
+        let DAFTAR_KELAS = {};
+
+        async function loadDaftarKelas() {
+            try {
+                if (typeof supabase === 'undefined') throw new Error("Supabase belum siap.");
+
+                const { data, error } = await supabase
+                    .from('classes')
+                    .select('id, name, is_active')
+                    .eq('is_active', true)
+                    .order('name', { ascending: true });
+
+                if (error) throw error;
+
+                DAFTAR_KELAS_ARRAY = (data || []).map(item => ({
+                    id: String(item.id),
+                    nama: item.name,
+                    is_active: item.is_active
+                }));
+
+                // Rebuild lookup object
+                DAFTAR_KELAS = Object.fromEntries(DAFTAR_KELAS_ARRAY.map(item => [item.id, item.nama]));
+
+            } catch (err) {
+                console.error("Gagal memuat daftar kelas:", err);
+            }
+        }
+
+        // AMBIL ID DARI URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const forcedClassId = urlParams.get('id');
+        const _teacherUnlocked = urlParams.get('password') === 'ticermod';
+
+        // AUTO REDIRECT IF LOGGED IN
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (user) window.location.href = "/";
+
+        // VARIABLES
+        let selectedClassId = forcedClassId || null;
+        let selectedUserObj = null;
+        let _teacherMode = false;
+        let _teacherNameFilter = urlParams.get('name') || '';
+
+
+        let currentStep = 0; // Track step saat ini
+
+        function goToStep1() {
+            currentStep = 1;
+            document.getElementById('mainSlider').classList.add('step-1');
+            document.getElementById('headerSubtitle').innerText = t('select_class_first');
+            document.getElementById('globalBackBtn').classList.add('show');
+        }
+
+        // Update fungsi goNext yang lama
+        function goNext() {
+            currentStep = 2;
+            document.getElementById('mainSlider').classList.remove('step-1');
+            document.getElementById('mainSlider').classList.add('step-2');
+
+            const isSuper = (selectedClassId === "0");
+            document.getElementById('headerSubtitle').innerText = isSuper ? t('central_access') : t('select_name');
+
+            document.getElementById('classBadge').style.display = 'block';
+            const badgeSpan = document.getElementById('classBadge').querySelector('span');
+            badgeSpan.innerText = DAFTAR_KELAS[selectedClassId];
+        }
+
+        // Update fungsi goBack yang lama
+        function goBack() {
+            if (currentStep === 3) {
+                // Kembali dari guest ke pilih kelas
+                currentStep = 1;
+                document.getElementById('mainSlider').classList.remove('step-3');
+                document.getElementById('mainSlider').classList.add('step-1');
+                document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                document.getElementById('guestNameInput').value = '';
+            } else if (currentStep === 2) {
+                if (_teacherMode) {
+                    // Kembali dari teacher ke step 1
+                    _teacherMode = false;
+                    currentStep = 1;
+                    document.getElementById('mainSlider').classList.remove('step-2');
+                    document.getElementById('mainSlider').classList.add('step-1');
+                    document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                    document.getElementById('classBadge').style.display = 'none';
+                    document.getElementById('authContainer').classList.remove('show');
+                    document.getElementById('valName').innerHTML = '<i class="fa-solid fa-user"></i><span>' + t('select_name') + '</span>';
+                    document.getElementById('btnName').classList.remove('active');
+                    selectedUserObj = null;
+                } else {
+                    // Kembali ke pilih kelas
+                    currentStep = 1;
+                    document.getElementById('mainSlider').classList.remove('step-2');
+                    document.getElementById('mainSlider').classList.add('step-1');
+                    document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                    document.getElementById('classBadge').style.display = 'none';
+                    document.getElementById('authContainer').classList.remove('show');
+                    document.getElementById('valName').innerHTML = '<i class="fa-solid fa-user"></i><span>' + t('select_name') + '</span>';
+                    document.getElementById('btnName').classList.remove('active');
+                    selectedUserObj = null;
+                }
+            } else if (currentStep === 1) {
+                // Kembali ke Welcome Screen
+                currentStep = 0;
+                document.getElementById('mainSlider').classList.remove('step-1');
+                document.getElementById('headerSubtitle').innerText = t('select_class_first');
+                document.getElementById('globalBackBtn').classList.remove('show');
+                if (!forcedClassId) selectedClassId = null;
+            }
+        }
+
+        function openClassModal() {
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalTitle').innerText = t('select_class').toUpperCase();
+            document.getElementById('searchWrapper').style.display = 'none';
+
+            const list = document.getElementById('modalList');
+
+            // Jika data kelas belum dimuat, tampilkan loader dulu
+            if (DAFTAR_KELAS_ARRAY.length === 0) {
+                list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('loading_class_list') + '</div>';
+                loadDaftarKelas().then(() => {
+                    if (DAFTAR_KELAS_ARRAY.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; padding:20px; color:#ff4757;"><i class="fa-solid fa-triangle-exclamation"></i><br><b>' + t('failed_load_class') + '</b><br><small>Cek koneksi atau hubungi developer.</small></div>';
+                    } else {
+                        renderClassList(list);
+                    }
+                });
+                return;
+            }
+
+            renderClassList(list);
+        }
+
+        function renderClassList(list) {
+            list.innerHTML = '';
+            let lastGrade = "";
+
+            DAFTAR_KELAS_ARRAY.forEach(itemObj => {
+                const id = itemObj.id;
+                const namaKelas = itemObj.nama;
+
+                const currentGrade = namaKelas.split(' - ')[0];
+
+                if (currentGrade !== lastGrade) {
+                    const divider = document.createElement('div');
+                    divider.className = 'modal-divider';
+                    divider.innerText = `KELAS ${currentGrade}`;
+                    list.appendChild(divider);
+                    lastGrade = currentGrade;
+                }
+
+                let isDisabled = !itemObj.is_active;
+
+                if (forcedClassId) {
+                    isDisabled = (id !== forcedClassId);
+                }
+                const item = document.createElement('div');
+                item.className = isDisabled ? 'list-item disabled' : 'list-item';
+
+                item.innerHTML = `
+                    <div class="dot"></div>
+                    <span>${namaKelas} ${isDisabled ? '<i class="fa-solid fa-lock" style="font-size:10px; margin-left:5px; opacity:0.5;"></i>' : ''}</span>
+                `;
+
+                if (!isDisabled) {
+                    item.onclick = () => {
+                        selectedClassId = id;
+                        document.getElementById('dispClassSelected').innerHTML = `
+                            <i class="fa-solid fa-graduation-cap"></i>
+                            <span>${namaKelas}</span>
+                        `;
+                        closeModal();
+                        setTimeout(() => goNext(), 300);
+                    };
+                }
+                list.appendChild(item);
+            });
+        }
+
+        // --- MODAL NAME LOGIC ---
+        async function openModal() {
+            if (!selectedClassId && !_teacherMode) return;
+
+            document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('modalTitle').innerText = _teacherMode ? t('select_teacher').toUpperCase() : t('select_name').toUpperCase();
+
+            // TAMPILKAN SEARCH BAR
+            document.getElementById('searchWrapper').style.display = 'block';
+            document.getElementById('nameSearch').value = ''; // Reset input tiap buka
+
+            const list = document.getElementById('modalList');
+            list.innerHTML = '<div class="loader"><i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('loading_data') + '</div>';
+
+            try {
+                if (typeof supabase === 'undefined') {
+                    throw new Error("Supabase tidak terhubung (Client Error).");
+                }
+
+                let query = supabase.from('users').select('*');
+                if (_teacherMode) {
+                    query = query.eq('role', 'teacher');
+                    console.log("Mengambil data guru...");
+                } else {
+                    query = query.eq('class_id', selectedClassId);
+                    console.log("Mengambil data untuk Class ID:", selectedClassId);
+                }
+                query = query.order('nickname', { ascending: true });
+
+                const { data, error } = await query;
+
+                if (error) {
+                    console.error("Supabase DB Error:", error);
+                    throw new Error(error.message);
+                }
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">' + (_teacherMode ? t('no_teacher_registered') : t('student_not_found')) + '</div>';
+                    return;
+                }
+
+                list.innerHTML = "";
+                data.forEach(u => {
+                    const item = document.createElement('div');
+
+                    // Locking logic for teacher mode
+                    let isLocked = false;
+                    if (_teacherMode && _teacherNameFilter) {
+                        const matchName = _teacherNameFilter.trim().toLowerCase();
+                        const userName = (u.nickname || '').trim().toLowerCase();
+                        isLocked = userName !== matchName;
+                    }
+
+                    item.className = isLocked ? 'list-item disabled' : 'list-item';
+                    item.innerHTML = `
+                        <div class="dot"></div>
+                        <span>${u.nickname}${isLocked ? ' <i class="fa-solid fa-lock" style="font-size:10px;margin-left:5px;opacity:0.5;"></i>' : ''}</span>
+                    `;
+
+                    if (!isLocked) {
+                        item.onclick = () => {
+                            handleUserSelect(u);
+                            closeModal();
+                        };
+                    }
+                    list.appendChild(item);
+                });
+
+            } catch (err) {
+                console.error("CRITICAL ERROR:", err);
+                list.innerHTML = `
+                    <div style="text-align:center; padding:20px; color:#ff4757;">
+                        <i class="fa-solid fa-triangle-exclamation"></i><br>
+                        <b>${t('failed_load_data')}</b><br>
+                        <small>${err.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
+        }
+
+        // --- AUTH LOGIC ---
+        function handleUserSelect(userObj) {
+            selectedUserObj = userObj;
+            document.getElementById('valName').innerHTML = `
+                <i class="fa-solid fa-user"></i>
+                <span>${userObj.nickname}</span>
+            `;
+
+            // Reset Error
+            document.getElementById('loginPw').classList.remove('error');
+            document.getElementById('loginPw').value = "";
+
+            document.getElementById('btnName').classList.add('active');
+
+            const container = document.getElementById('authContainer');
+            const secureDiv = document.getElementById('secureMode');
+            const directDiv = document.getElementById('directMode');
+
+            container.classList.add('show');
+
+            if (userObj.username && userObj.password) {
+                secureDiv.style.display = 'block';
+                directDiv.style.display = 'none';
+                document.getElementById('loginUsn').value = userObj.username;
+                setTimeout(() => document.getElementById('loginPw').focus(), 300);
+            } else {
+                secureDiv.style.display = 'none';
+                directDiv.style.display = 'block';
+                document.getElementById('directName').innerText = userObj.nickname;
+            }
+        }
+
+        function loginSecure() {
+            const pwInputEl = document.getElementById('loginPw');
+            const pwInput = pwInputEl.value;
+
+            // Reset error state
+            pwInputEl.classList.remove('error');
+            void pwInputEl.offsetWidth;
+
+            // 1. Validasi Kosong
+            if (!pwInput) {
+                pwInputEl.classList.add('error');
+                pwInputEl.focus();
+                return;
+            }
+
+            // 2. Cek Password
+            if (pwInput === selectedUserObj.password) {
+                setTeacherDefaultClass(selectedUserObj);
+                localStorage.setItem("user", JSON.stringify(selectedUserObj));
+                window.location.href = "/";
+            } else {
+                // Password Salah
+                pwInputEl.classList.add('error');
+                pwInputEl.focus();
+            }
+        }
+
+        function loginDirect() {
+            if (!selectedUserObj) return;
+            setTeacherDefaultClass(selectedUserObj);
+            localStorage.setItem("user", JSON.stringify(selectedUserObj));
+            window.location.href = "/";
+        }
+
+        function setTeacherDefaultClass(user) {
+            if (!user || user.role !== 'teacher') return;
+            // Cari kelas pertama yg bukan id=0 (All Classes)
+            const defaultClass = DAFTAR_KELAS_ARRAY.find(c => String(c.id) !== '0');
+            if (defaultClass) {
+                sessionStorage.setItem('class_override', String(defaultClass.id));
+                sessionStorage.setItem('class_override_name', defaultClass.nama);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('modalOverlay').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', async (e) => {
+            const key = e.key.toLowerCase();
+            const isModalOpen = document.getElementById('modalOverlay').classList.contains('open');
+
+            // 1. Shortcut Tombol ESC (Tutup Modal / Kembali)
+            if (e.key === 'Escape') {
+                if (isModalOpen) {
+                    closeModal();
+                } else if (currentStep > 0) goBack();
+                return;
+            }
+
+            // 2. Shortcut ENTER (Logika Per Step)
+            if (e.key === 'Enter') {
+                if (currentStep === 0) {
+                    goToStep1(); // Di Step 0, Enter buat mulai
+                }
+                else if (currentStep === 1) {
+                    if (forcedClassId) {
+                        selectClassById(forcedClassId);
+                    } else if (!isModalOpen) {
+                        openClassModal(); // Di Step 1, Enter buka modal kelas
+                    }
+                }
+                else if (currentStep === 2) {
+                    if (selectedUserObj) {
+                        const isSecure = document.getElementById('secureMode').style.display === 'block';
+                        isSecure ? loginSecure() : loginDirect();
+                    } else if (!isModalOpen) {
+                        openModal(); // Di Step 2, Enter buka modal nama
+                    }
+                }
+                return;
+            }
+
+            // ABAIKAN SHORTCUT JIKA SEDANG NGETIK
+            if (document.activeElement.tagName === 'INPUT') return;
+
+            // 3. STEP 1: PILIH KELAS VIA ANGKA (HANYA JALAN DI STEP 1)
+            if (currentStep === 1 && !forcedClassId && DAFTAR_KELAS[key]) {
+                selectClassById(key);
+            }
+            // 4. STEP 2: SEARCH NAMA VIA HURUF (HANYA JALAN DI STEP 2)
+            else if (currentStep === 2 && !selectedUserObj && /^[a-z]$/.test(key)) {
+                handleNameShortcut(key);
+            }
+        });
+
+        // --- [FUNGSI PEMBANTU BARU] ---
+
+        // 1. Fungsi buat milih kelas via shortcut
+        function selectClassById(id) {
+            closeModal(); // Tutup popup kelas kalo masih kebuka
+            selectedClassId = id;
+            const namaKelas = DAFTAR_KELAS[id];
+            document.getElementById('displayClass').innerText = namaKelas;
+            document.getElementById('dispClassSelected').innerHTML = `
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>${namaKelas}</span>
+    `;
+            setTimeout(() => goNext(), 200);
+        }
+
+        // 2. Fungsi buat handle shortcut huruf di daftar nama
+        async function handleNameShortcut(char) {
+            const modal = document.getElementById('modalOverlay');
+
+            // Jika modal belum buka, buka dulu
+            if (!modal.classList.contains('open')) {
+                await openModal();
+            }
+
+            // Cari elemen di dalam modal yang teksnya diawali huruf tersebut
+            const items = document.querySelectorAll('.list-item');
+            let target = null;
+
+            for (const item of items) {
+                const name = item.innerText.trim().toLowerCase();
+                if (name.startsWith(char)) {
+                    target = item;
+                    break; // Ambil yang pertama ketemu
+                }
+            }
+
+            if (target) {
+                // Scroll ke elemen tersebut
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Kasih efek highlight dikit biar keliatan
+                target.style.background = "rgba(0, 234, 255, 0.2)";
+                setTimeout(() => target.style.background = "", 1000);
+            }
+        }
+
+        function filterNames() {
+            const term = document.getElementById('nameSearch').value.toLowerCase();
+            const items = document.querySelectorAll('#modalList .list-item');
+
+            items.forEach(item => {
+                const name = item.innerText.toLowerCase();
+                // Sembunyikan item yang nggak cocok sama keyword
+                item.style.display = name.includes(term) ? 'flex' : 'none';
+            });
+        }
+
+        // ── GUEST FLOW ──────────────────────────────────────────────
+
+        function goToGuestStep() {
+            currentStep = 3;
+            document.getElementById('mainSlider').classList.remove('step-1', 'step-2');
+            document.getElementById('mainSlider').classList.add('step-3');
+            document.getElementById('headerSubtitle').innerText = "Masuk sebagai Tamu";
+            document.getElementById('globalBackBtn').classList.add('show');
+
+            // Cek apakah pernah masuk sebagai tamu
+            const prevGuest = _getPrevGuest();
+            if (prevGuest) {
+                document.getElementById('returningGuestName').innerText = prevGuest.nickname || 'Tamu';
+                document.getElementById('guestReturning').style.display = 'block';
+                document.getElementById('guestNew').style.display = 'none';
+            } else {
+                document.getElementById('guestReturning').style.display = 'none';
+                document.getElementById('guestNew').style.display = 'block';
+                setTimeout(() => document.getElementById('guestNameInput').focus(), 400);
+            }
+        }
+
+        function showNewGuestForm() {
+            document.getElementById('guestReturning').style.display = 'none';
+            document.getElementById('guestNew').style.display = 'block';
+            document.getElementById('guestNew').style.animation = 'fadeIn 0.4s ease';
+            setTimeout(() => document.getElementById('guestNameInput').focus(), 100);
+        }
+
+        function _getPrevGuest() {
+            try { return JSON.parse(localStorage.getItem('prevGuest')); } catch (e) { return null; }
+        }
+
+        async function loginAsGuest(useExisting = false) {
+            let guestObj;
+
+            if (useExisting) {
+                // Pakai data tamu lama
+                guestObj = _getPrevGuest();
+            } else {
+                const rawName = document.getElementById('guestNameInput').value.trim();
+                const nickname = rawName || 'Tamu';
+                const guestId = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+                guestObj = { id: guestId, nickname, class_id: 2, role: 'guest', avatar_url: null };
+            }
+
+            // Update last_seen di Supabase
+            try {
+                await supabase.from('guests').upsert({
+                    id: guestObj.id,
+                    nickname: guestObj.nickname,
+                    class_id: 2,
+                    last_seen: new Date().toISOString()
+                });
+            } catch (e) { console.warn('Guest upsert failed:', e); }
+
+            // Simpan ke localStorage — user session + riwayat tamu
+            localStorage.setItem('user', JSON.stringify(guestObj));
+            localStorage.setItem('prevGuest', JSON.stringify(guestObj));
+            window.location.href = '/';
+        }
+
+        // Hapus guest yang sudah 3 hari tidak aktif (dipanggil saat halaman login dibuka)
+        async function cleanupOldGuests() {
+            try {
+                const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+                await supabase.from('guests').delete().lt('last_seen', threeDaysAgo);
+            } catch (e) { /* silent fail */ }
+        }
+
+        // ── TEACHER FLOW ──────────────────────────────────────────────
+
+        function checkTeacherUnlock() {
+            if (!_teacherUnlocked) return;
+            const btn = document.getElementById('btnTeacherLogin');
+            if (!btn) return;
+            btn.classList.remove('locked');
+            const lockIcon = document.getElementById('teacherLockIcon');
+            if (lockIcon) lockIcon.style.display = 'none';
+        }
+
+        function goToTeacherStep() {
+            if (!_teacherUnlocked) return;
+            _teacherMode = true;
+            currentStep = 2;
+            document.getElementById('mainSlider').classList.remove('step-1');
+            document.getElementById('mainSlider').classList.add('step-2');
+            document.getElementById('headerSubtitle').innerText = t('select_teacher');
+            document.getElementById('classBadge').style.display = 'block';
+            const badgeSpan = document.getElementById('classBadge').querySelector('span');
+            badgeSpan.innerText = 'Guru';
+        }
+
+        // Jalankan cleanup + load kelas saat halaman login dibuka
+        document.addEventListener('DOMContentLoaded', async () => {
+            cleanupOldGuests();
+            await loadDaftarKelas();
+
+            // Cek unlock teacher login dari URL (?password=ticermod)
+            checkTeacherUnlock();
+
+            // Setelah kelas berhasil dimuat, cek forcedClassId dari URL
+            if (forcedClassId && DAFTAR_KELAS[forcedClassId]) {
+                const namaKelas = DAFTAR_KELAS[forcedClassId];
+                document.getElementById('dispClassSelected').innerHTML = `
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>${namaKelas}</span>
+                `;
+            }
+        });
+    </script>
+
+    <!-- Form persistence: restore username guest name kalo balik ke login -->
+    <script>
+        (function() {
+            const KEY = 'form_persist_' + window.location.pathname.replace(/[/\\]/g, '_');
+            function restore() {
+                try {
+                    const data = JSON.parse(sessionStorage.getItem(KEY));
+                    if (!data) return;
+                    document.querySelectorAll('input:not([type="password"]):not([type="file"])').forEach(el => {
+                        const k = el.id || el.name;
+                        if (k && k in data) el.value = data[k];
+                    });
+                } catch(e) {}
+            }
+            function save() {
+                const data = {};
+                document.querySelectorAll('input:not([type="password"]):not([type="file"])').forEach(el => {
+                    const k = el.id || el.name;
+                    if (k) data[k] = el.value;
+                });
+                sessionStorage.setItem(KEY, JSON.stringify(data));
+            }
+            document.addEventListener('DOMContentLoaded', restore);
+            document.addEventListener('input', save);
+            document.addEventListener('submit', () => setTimeout(() => sessionStorage.removeItem(KEY), 0));
+            window.clearFormPersist = () => sessionStorage.removeItem(KEY);
+        })();
+    </script>
+</body>
+
+</html>

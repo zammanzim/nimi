@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan Soal • E-Learning Nizam</title>
+    <meta name="description" content="Latihan soal ulangan per kelas dengan nilai otomatis. Tanpa login.">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js"></script>
+    <script src="../js/pub-exam.js"></script>
+    <script src="../js/pub-media.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+    <style>
+        /* ===== QUIZ PUBLIK — tema kertas ujian (standalone, tanpa login) ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --paper: #f4f1ea; --card: #fffdf8; --ink: #23272f; --muted: #8a8578;
+            --navy: #1e2a4a; --gold: #d9a521; --line: #e4ddcd;
+            --green: #198754; --red: #dc3545;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--paper); color: var(--ink); min-height: 100vh;
+            background-image: radial-gradient(#d8d2c0 1px, transparent 1px);
+            background-size: 22px 22px;
+        }
+        .topbar {
+            position: sticky; top: 0; z-index: 50;
+            background: var(--navy); color: #fff;
+            border-bottom: 4px solid var(--gold); padding: 12px 16px;
+        }
+        .topbar-inner { max-width: 860px; margin: 0 auto; }
+        .topbar-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .back-btn {
+            width: 38px; height: 38px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,.35);
+            background: transparent; color: #fff; cursor: pointer; font-size: 1rem;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1rem; }
+        .brand i { color: var(--gold); }
+        .kisi-link {
+            margin-left: auto; background: #fff; color: var(--navy);
+            font-weight: 800; font-size: .85rem; padding: 9px 16px; border-radius: 999px;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .topbar-sub { font-size: .8rem; opacity: .7; margin-top: 2px; }
+        .chips { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 4px; }
+        .chip {
+            flex-shrink: 0; color: #fff; text-decoration: none; font-size: .8rem; font-weight: 700;
+            border: 1.5px solid rgba(255,255,255,.35); padding: 7px 14px; border-radius: 999px;
+        }
+        .chip.on { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+        .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px 60px; }
+        .hero { margin: 8px 0 6px; }
+        .hero h1 { font-size: 1.7rem; letter-spacing: -.5px; }
+        .hero h1 span { color: #8a6d00; }
+        .hero p { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+        .section-label {
+            display: flex; align-items: center; gap: 10px; margin: 26px 0 12px;
+            font-weight: 900; letter-spacing: 1.5px; font-size: .8rem; text-transform: uppercase;
+        }
+        .section-label::after { content: ""; flex: 1; height: 2px; background: var(--line); border-radius: 2px; }
+        /* Strip jadwal */
+        #jadwalStrip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+        .strip-day {
+            flex-shrink: 0; min-width: 150px; background: var(--card);
+            border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;
+        }
+        .strip-day.is-today { border-color: var(--gold); box-shadow: 0 0 0 2px #ffe9a8; }
+        .strip-day b { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px; }
+        .strip-day ul { list-style: none; margin-top: 6px; font-size: .8rem; color: #555; }
+        .strip-day li { padding: 2px 0; border-top: 1px dashed var(--line); }
+        .strip-empty { color: var(--muted); font-size: .85rem; font-style: italic; }
+        /* Hari + grid mapel */
+        .hari { margin-bottom: 18px; }
+        .hari-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .hari-head h2 {
+            font-size: 1.05rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+            background: var(--navy); color: #fff; padding: 6px 16px; border-radius: 10px;
+        }
+        .hari.is-today .hari-head h2 { background: var(--gold); color: var(--navy); }
+        .hari-other .hari-head h2 { background: #6b6250; }
+        .today-badge {
+            font-size: .65rem; font-weight: 900; letter-spacing: 1px;
+            background: #ffe9a8; border: 1.5px solid var(--gold); color: #7a5f00;
+            padding: 3px 10px; border-radius: 999px;
+        }
+        .mapel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .mapel-card {
+            background: var(--card); border: 1.5px solid var(--line); border-radius: 16px;
+            padding: 18px 12px; cursor: pointer; font-family: inherit;
+            display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+            transition: transform .15s;
+        }
+        .mapel-card:active { transform: scale(.96); }
+        .mapel-card i { font-size: 1.8rem; color: var(--navy); }
+        .mapel-card b { font-size: .92rem; color: var(--ink); }
+        .mapel-card .count { font-size: .75rem; color: var(--muted); }
+        .best { font-size: .7rem; font-weight: 800; background: #d1e7dd; color: #0f5132; padding: 3px 10px; border-radius: 999px; }
+        .best.none { background: #f0ece0; color: var(--muted); font-weight: 400; }
+        /* Info */
+        .info-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 30px 22px; text-align: center; }
+        .info-card i#infoIcon { font-size: 3rem; color: var(--navy); }
+        .info-card h2 { margin: 10px 0 2px; font-size: 1.4rem; }
+        .info-count { font-size: 2.2rem; font-weight: 900; color: #8a6d00; margin-top: 12px; }
+        .info-cap { font-size: .75rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+        .info-best { margin-top: 10px; font-size: .85rem; color: #555; }
+        /* Tombol */
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px; font-family: inherit;
+            background: var(--navy); color: #fff; border: none; font-weight: 800; font-size: .9rem;
+            padding: 13px 26px; border-radius: 999px; cursor: pointer; text-decoration: none;
+        }
+        .btn.gold { background: var(--gold); color: var(--navy); }
+        .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+        .btn[disabled] { opacity: .4; cursor: not-allowed; }
+        .btn.big { font-size: 1.05rem; padding: 15px 44px; margin-top: 18px; }
+        /* Runner */
+        .q-top { display: flex; justify-content: space-between; font-size: .75rem; font-weight: 900; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+        .pbar { height: 8px; background: var(--line); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+        .pbar div { height: 100%; background: linear-gradient(90deg, var(--navy), var(--gold)); border-radius: 999px; transition: width .3s; }
+        .q-card { background: var(--card); border: 1.5px solid var(--line); border-radius: 18px; padding: 20px; }
+        .q-text { font-size: 1.05rem; line-height: 1.6; font-weight: 600; margin-bottom: 16px; }
+        .opts { display: flex; flex-direction: column; gap: 9px; }
+        .opt {
+            display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit;
+            background: #f8f5ec; border: 1.5px solid var(--line); border-radius: 12px;
+            padding: 12px 14px; font-size: .92rem; cursor: pointer; color: var(--ink);
+        }
+        .opt-pre {
+            flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+            background: var(--navy); color: #fff; font-weight: 800; font-size: .8rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .opt.correct { background: #d1e7dd; border-color: var(--green); font-weight: 700; }
+        .opt.correct .opt-pre { background: var(--green); }
+        .opt.wrong { background: #f8d7da; border-color: var(--red); }
+        .opt.wrong .opt-pre { background: var(--red); }
+        .opt.dim { opacity: .55; }
+        .opt[disabled] { cursor: default; }
+        .exp { margin-top: 14px; background: #fff8e1; border-left: 5px solid var(--gold); border-radius: 0 12px 12px 0; padding: 12px 14px; font-size: .88rem; line-height: 1.6; }
+        .q-nav-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; }
+        .q-nav { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 16px; justify-content: center; }
+        .nav-n {
+            width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--line);
+            background: var(--card); font-weight: 800; cursor: pointer; font-family: inherit; color: var(--ink);
+        }
+        .nav-n.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+        .nav-n.ok { background: #d1e7dd; border-color: var(--green); color: #0f5132; }
+        .nav-n.bad { background: #f8d7da; border-color: var(--red); color: #842029; }
+        #quizFlash {
+            position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px);
+            background: var(--navy); color: #fff; font-size: .85rem; font-weight: 700;
+            padding: 11px 22px; border-radius: 999px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 99;
+        }
+        #quizFlash.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        /* Result */
+        .score-card { background: var(--card); border: 2px solid var(--gold); border-radius: 20px; padding: 30px 22px; text-align: center; }
+        .score-emoji { font-size: 3rem; }
+        .score-num { font-size: 4rem; font-weight: 900; color: var(--navy); line-height: 1; }
+        .score-sub { color: var(--muted); font-size: .9rem; margin-top: 6px; }
+        .score-msg { font-weight: 700; margin-top: 8px; }
+        .score-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+        .rev-title { margin: 26px 0 10px; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; }
+        .rev { background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+        .rev summary { padding: 12px 14px; cursor: pointer; font-size: .88rem; list-style: none; }
+        .rev.ok summary { border-left: 6px solid var(--green); }
+        .rev.bad summary { border-left: 6px solid var(--red); }
+        .rev-ic { float: right; }
+        .rev p { padding: 0 14px 12px 20px; font-size: .85rem; }
+        .rev-exp { color: #555; }
+        .pub-empty {
+            text-align: center; color: var(--muted); padding: 40px 20px; font-size: .95rem; line-height: 1.7;
+            background: var(--card); border: 1.5px dashed var(--line); border-radius: 16px;
+        }
+        .foot { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 30px; }
+        .foot a { color: var(--navy); font-weight: 700; }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-inner">
+            <div class="topbar-row">
+                <button class="back-btn" id="backBtn" title="Kembali"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="brand"><i class="fa-solid fa-graduation-cap"></i> LATIHAN SOAL</div>
+                <a class="kisi-link" id="topKisiLink" href="kisi-kisi"><i class="fa-solid fa-book-open"></i> Kisi-Kisi</a>
+            </div>
+            <div class="topbar-sub">Tanpa login — nilai otomatis, terbaik kesimpen di HP ini.</div>
+            <div class="chips" id="kelasChips"></div>
+        </div>
+    </div>
+
+    <div class="wrap" id="quizRoot">
+        <div class="hero">
+            <h1>Kelas <span id="kelasTitle">…</span></h1>
+            <p>Pilih mapel di bawah buat mulai. Jawaban dikunci sekali pilih — kayak ujian beneran.</p>
+        </div>
+
+        <!-- HUB -->
+        <div id="viewHub">
+            <div class="section-label"><i class="fa-solid fa-calendar-days"></i> Jadwal Ujian</div>
+            <div id="jadwalStrip"><div class="strip-empty">Nyiapin jadwal…</div></div>
+            <div class="section-label"><i class="fa-solid fa-grid-2"></i> Pilih Mapel</div>
+            <div id="mapelBox"><div class="pub-empty">Nyiapin soal…</div></div>
+        </div>
+
+        <!-- INFO -->
+        <div id="viewInfo" style="display:none;">
+            <div class="info-card">
+                <i id="infoIcon" class="fa-solid fa-book"></i>
+                <h2 id="infoName">Mapel</h2>
+                <div class="info-count" id="infoCount">0</div>
+                <div class="info-cap">Total Soal</div>
+                <p class="info-best" id="infoBest"></p>
+                <p style="margin-top:12px; font-size:.82rem; color:var(--muted);">Soal bikinan AI dari kisi-kisi yang ada. Satu soal satu jawaban — pilih yang paling yakin.</p>
+                <button class="btn gold big" id="startBtn">MULAI <i class="fa-solid fa-play"></i></button>
+            </div>
+        </div>
+
+        <!-- RUNNER -->
+        <div id="viewQuiz" style="display:none;">
+            <div id="quizPlay"></div>
+        </div>
+
+        <!-- RESULT -->
+        <div id="viewResult" style="display:none;">
+            <div id="quizResult"></div>
+        </div>
+
+        <p class="foot">E-Learning Nizam • Input soal: admin buka <a href="../admiii/inputsoal.html">inputsoal</a>.</p>
+    </div>
+
+    <div id="quizFlash"></div>
+
+    <script src="../js/quiz-publik.js"></script>
+
+</body>
+
+</html>

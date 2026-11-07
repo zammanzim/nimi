@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Masuk • Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="../js/supabase-clients.js?v=20260822"></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822" defer></script>
+    <script src="../js/show-popup.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822" defer></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+    <style>
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar h2 i {
+            color: var(--accent, #00eaff);
+        }
+
+        .badge-count {
+            font-size: .72rem;
+            font-weight: 700;
+            background: rgba(0, 234, 255, 0.1);
+            color: #00eaff;
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 234, 255, 0.2);
+        }
+
+        .btn-refresh {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+            font-size: .8rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .btn-refresh:hover {
+            color: #ddd;
+            border-color: rgba(255, 255, 255, .2);
+        }
+
+        /* ── Group list ── */
+        .group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* ── Person Group Card ── */
+        .person-group {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: border-color .2s;
+        }
+
+        .person-group:hover {
+            border-color: rgba(255, 255, 255, .11);
+        }
+
+        /* ── File rows ── */
+        .file-list-inner {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fi {
+            padding: 11px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background .15s;
+        }
+
+        .fi:hover {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .fi-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            background: rgba(0, 234, 255, 0.06);
+            border: 1px solid rgba(0, 234, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00eaff;
+            font-size: .82rem;
+        }
+
+        .fi-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fi-name {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #e8e8e8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fi-meta {
+            font-size: .69rem;
+            color: #777;
+            margin-top: 2px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .fi-meta .dot {
+            color: #444;
+        }
+
+        .fi-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-dl-single {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: rgba(0, 234, 255, 0.07);
+            border: 1px solid rgba(0, 234, 255, 0.15);
+            color: #00eaff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .78rem;
+            transition: all .2s;
+        }
+
+        .btn-dl-single:hover:not(:disabled) {
+            background: rgba(0, 234, 255, 0.14);
+        }
+
+        .btn-dl-single:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
+        .btn-del-single {
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            background: none;
+            border: 1px solid rgba(255, 71, 87, 0.18);
+            color: #ff4757;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .72rem;
+            transition: all .2s;
+        }
+
+        .btn-del-single:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        /* ── Footer: sender info + actions ── */
+        .person-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .person-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 234, 255, 0.09);
+            border: 1px solid rgba(0, 234, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00eaff;
+            font-size: .65rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            overflow: hidden;
+            letter-spacing: -.5px;
+        }
+
+        .person-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .person-name {
+            font-size: .84rem;
+            font-weight: 700;
+            color: #eaeaea;
+        }
+
+        .person-sub {
+            font-size: .7rem;
+            color: #999;
+            margin-top: 1px;
+        }
+
+        .person-msg {
+            font-size: .72rem;
+            color: #999;
+            margin-top: 4px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.025);
+            border-radius: 5px;
+            border-left: 2px solid rgba(0, 234, 255, 0.18);
+            line-height: 1.5;
+        }
+
+        .person-actions {
+            display: flex;
+            gap: 7px;
+            flex-shrink: 0;
+            align-items: center;
+        }
+
+        .btn-dl-all {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: var(--accent, #00eaff);
+            color: #0a0a0c;
+            border: none;
+            border-radius: 8px;
+            font-size: .79rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .btn-dl-all:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-dl-all:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-del-group {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: none;
+            border: 1px solid rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .btn-del-group:hover {
+            background: rgba(255, 71, 87, 0.1);
+        }
+
+        /* ── Skeleton ── */
+        .skel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            height: 80px;
+            animation: skPulse 1.2s ease infinite;
+        }
+
+        @keyframes skPulse {
+
+            0%,
+            100% {
+                opacity: .4
+            }
+
+            50% {
+                opacity: .8
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #444;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+            opacity: .25;
+        }
+
+        @media (max-width: 600px) {
+            .btn-dl-all span {
+                display: none;
+            }
+
+            .person-footer {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-inbox" style="font-size:26px;"></i> <span data-i18n="all_files">File Masuk</span></h1>
+            </div>
+        </div>
+        <div class="right-section">
+            <div class="toolbar">
+                <h2>
+                    <i class="fa-solid fa-inbox"></i>
+                    <span data-i18n="all_files">Semua File</span>
+                    <span class="badge-count" id="countBadge">—</span>
+                </h2>
+                <button class="btn-refresh" onclick="loadFiles()">
+                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="refresh">Refresh</span>
+                </button>
+            </div>
+
+            <div class="group-list" id="groupList">
+                <div class="skel"></div>
+                <div class="skel" style="height:70px;opacity:.6;"></div>
+                <div class="skel" style="height:60px;opacity:.35;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ─── Helpers ─── */
+        function getFileIcon(type, name) {
+            const ext = (name || '').split('.').pop().toLowerCase();
+            type = type || '';
+            if (type.startsWith('image/')) return 'fa-image';
+            if (type.startsWith('video/')) return 'fa-film';
+            if (type.startsWith('audio/')) return 'fa-music';
+            if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'fa-file-zipper';
+            if (ext === 'pdf') return 'fa-file-pdf';
+            if (['doc', 'docx'].includes(ext)) return 'fa-file-word';
+            if (['xls', 'xlsx'].includes(ext)) return 'fa-file-excel';
+            if (['ppt', 'pptx'].includes(ext)) return 'fa-file-powerpoint';
+            if (['js', 'ts', 'py', 'html', 'css', 'php', 'java', 'cpp', 'c', 'json'].includes(ext)) return 'fa-file-code';
+            return 'fa-file';
+        }
+        function fmtSize(b) {
+            if (!b) return '—';
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+        function fmtTime(iso) {
+            return new Date(iso).toLocaleString('id-ID', {
+                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+        function initials(name) {
+            return (name || '?').split(' ').map(w => w[0]).join('').toUpperCase();
+        }
+
+        /* ─── Group by person ─── */
+        function groupByPerson(files, classMap = {}) {
+            const map = new Map();
+            for (const f of files) {
+                const key = (f.uploader_name || '—') + '||' + (f.uploader_class || '—');
+                if (!map.has(key)) {
+                    map.set(key, {
+                        name: f.uploader_name || '—',
+                        kelas: classMap[f.uploader_class] || f.uploader_class || '—',
+                        message: '',
+                        files: []
+                    });
+                }
+                const entry = map.get(key);
+                if (f.message && !entry.message) entry.message = f.message;
+                entry.files.push(f);
+            }
+            return [...map.values()];
+        }
+
+        /* ─── Load & render ─── */
+        async function loadFiles() {
+            const list = document.getElementById('groupList');
+            list.innerHTML = `
+                <div class="skel"></div>
+                <div class="skel" style="height:70px;opacity:.6;"></div>
+                <div class="skel" style="height:60px;opacity:.35;"></div>`;
+
+            const [{ data, error }, { data: clsData }] = await Promise.all([
+                supabase.from('file_transfers').select('*').order('uploaded_at', { ascending: false }),
+                supabase.from('classes').select('id, name').eq('is_active', true)
+            ]);
+            const classMap = Object.fromEntries((clsData || []).map(c => [String(c.id), c.name]));
+
+            if (error) {
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>${t('failed_generic')}.</div>`;
+                return;
+            }
+
+            renderGroups(data, classMap);
+        }
+
+        function renderGroups(data, classMap = {}) {
+            const list = document.getElementById('groupList');
+            document.getElementById('countBadge').textContent = data.length || '0';
+
+            if (!data.length) {
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i>${t('no_files')}</div>`;
+                return;
+            }
+
+            const groups = groupByPerson(data, classMap);
+
+            list.innerHTML = groups.map((g, gi) => `
+                <div class="person-group" id="group-${gi}">
+
+                    <!-- FILES -->
+                    <div class="file-list-inner">
+                        ${g.files.map(f => `
+                            <div class="fi" id="fi-${f.id}">
+                                <div class="fi-icon">
+                                    <i class="fa-solid ${getFileIcon(f.file_type, f.file_name)}"></i>
+                                </div>
+                                <div class="fi-info">
+                                    <div class="fi-name" title="${f.file_name}">${f.file_name}</div>
+                                    <div class="fi-meta">
+                                        <span>${fmtSize(f.file_size)}</span>
+                                        <span class="dot">·</span>
+                                        <span>${fmtTime(f.uploaded_at)}</span>
+                                    </div>
+                                </div>
+                                <div class="fi-actions">
+                                    <button class="btn-dl-single" title="${t('download_file')}"
+                                        onclick="downloadSingle(${f.id}, '${f.file_path}', '${f.file_name}', this)">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                    <button class="btn-del-single" title="${t('delete')}"
+                                        onclick="deleteSingle(${f.id}, '${f.file_path}')">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>`).join('')}
+                    </div>
+
+                    <!-- PENGIRIM FOOTER -->
+                    <div class="person-footer">
+                        <div class="person-avatar">${initials(g.name)}</div>
+                        <div class="person-info">
+                            <div class="person-name">${g.name}</div>
+                            <div class="person-sub">${g.kelas} &middot; ${g.files.length} file</div>
+                            ${g.message ? `<div class="person-msg">${g.message}</div>` : ''}
+                        </div>
+                        <div class="person-actions">
+                            <button class="btn-dl-all" id="dlall-${gi}"
+                                onclick="downloadAllFromGroup(${gi})">
+                                <i class="fa-solid fa-download"></i>
+                                <span>${t('download_all')}</span>
+                            </button>
+                            <button class="btn-del-group" title="${t('delete_all')}"
+                                onclick="deleteGroupOnly(${gi})">
+                                <i class="fa-solid fa-trash" style="font-size:.72rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>`).join('');
+
+            groups.forEach((g, gi) => {
+                document.getElementById(`group-${gi}`).__groupData = g;
+            });
+        }
+
+        /* ─── Animasi hapus ─── */
+        function removeFileRow(id, cb) {
+            const el = document.getElementById(`fi-${id}`);
+            if (!el) { cb && cb(); return; }
+            el.style.transition = 'all .25s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(12px)';
+            setTimeout(() => { el.remove(); cb && cb(); }, 260);
+        }
+
+        function removeGroupRow(gi) {
+            const el = document.getElementById(`group-${gi}`);
+            if (!el) return;
+            el.style.transition = 'all .3s ease';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(-6px)';
+            setTimeout(() => { el.remove(); checkEmpty(); }, 310);
+        }
+
+        function checkEmpty() {
+            const remaining = document.querySelectorAll('.fi').length;
+            document.getElementById('countBadge').textContent = remaining;
+            if (!remaining) {
+                document.getElementById('groupList').innerHTML =
+                    `<div class="empty-state"><i class="fa-solid fa-inbox"></i>${t('no_files')}</div>`;
+            }
+        }
+
+        /* ─── Download semua dari group → ZIP ─── */
+        async function downloadAllFromGroup(gi) {
+            const groupEl = document.getElementById(`group-${gi}`);
+            const g = groupEl.__groupData;
+            if (!g) return;
+
+            const shouldDelete = await showPopup(
+                t('confirm_download_group', {n: g.files.length, name: g.name}) + '<br><br>Setelah diunduh, hapus file dari server?',
+                'confirm'
+            );
+
+            const btn = document.getElementById(`dlall-${gi}`);
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>${t('loading')}</span>`;
+
+            const zip = new JSZip();
+            let successCount = 0;
+
+            for (const f of g.files) {
+                try {
+                    const { data: blob, error } = await supabase.storage.from('transfers').download(f.file_path);
+                    if (error) throw error;
+                    zip.file(f.file_name, blob);
+                    successCount++;
+
+                    if (shouldDelete) {
+                        await supabase.storage.from('transfers').remove([f.file_path]);
+                        await supabase.from('file_transfers').delete().eq('id', f.id);
+                    }
+                } catch (err) {
+                    showToast(t('failed_generic') + `: ${f.file_name} — ${err.message || err}`, 'error');
+                }
+            }
+
+            if (successCount) {
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `files_from_${g.name}.zip`; a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            if (shouldDelete) {
+                removeGroupRow(gi);
+                showToast(`${successCount} file diunduh & dihapus ✓`);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-download"></i><span>${t('download_all')}</span>`;
+                showToast(`${successCount} file diunduh ✓`);
+            }
+        }
+
+        /* ─── Download satu file ─── */
+        async function downloadSingle(id, filePath, fileName, btnEl) {
+            const shouldDelete = await showPopup(
+                t('confirm_download_file', {name: fileName}) + '<br><br>Setelah diunduh, hapus file dari server?',
+                'confirm'
+            );
+
+            btnEl.disabled = true;
+            btnEl.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i>`;
+
+            try {
+                const { data: blob, error } = await supabase.storage.from('transfers').download(filePath);
+                if (error) throw error;
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = fileName; a.click();
+                URL.revokeObjectURL(url);
+
+                if (shouldDelete) {
+                    await supabase.storage.from('transfers').remove([filePath]);
+                    await supabase.from('file_transfers').delete().eq('id', id);
+                    removeFileRow(id, () => checkEmpty());
+                    showToast(`"${fileName}" diunduh & dihapus ✓`);
+                } else {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = `<i class="fa-solid fa-download"></i>`;
+                    showToast(`"${fileName}" diunduh ✓`);
+                }
+            } catch (err) {
+                showToast(t('failed_generic') + ': ' + (err.message || err), 'error');
+                btnEl.disabled = false;
+                btnEl.innerHTML = `<i class="fa-solid fa-download"></i>`;
+            }
+        }
+
+        /* ─── Hapus group tanpa download ─── */
+        async function deleteGroupOnly(gi) {
+            const groupEl = document.getElementById(`group-${gi}`);
+            const g = groupEl.__groupData;
+            if (!g) return;
+
+            const ok = await showPopup(
+                t('confirm_delete_file_group', {n: g.files.length, name: g.name}),
+                'confirm'
+            );
+            if (!ok) return;
+
+            for (const f of g.files) {
+                await supabase.storage.from('transfers').remove([f.file_path]);
+                await supabase.from('file_transfers').delete().eq('id', f.id);
+            }
+
+            removeGroupRow(gi);
+            showToast(`${g.files.length} file dari ${g.name} dihapus ✓`);
+        }
+
+        /* ─── Hapus satu file tanpa download ─── */
+        async function deleteSingle(id, filePath) {
+            const ok = await showPopup(t('confirm_delete_file_single'), 'confirm');
+            if (!ok) return;
+            await supabase.storage.from('transfers').remove([filePath]);
+            await supabase.from('file_transfers').delete().eq('id', id);
+            removeFileRow(id, () => checkEmpty());
+            showToast('File dihapus ✓');
+        }
+
+        /* ─── Init ─── */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.title = t('all_files');
+            loadFiles();
+            supabase.channel('ft_realtime')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'file_transfers' }, () => {
+                    showToast('📥 File baru masuk!');
+                    loadFiles();
+                })
+                .subscribe();
+        });
+    </script>
+</body>
+
+</html>

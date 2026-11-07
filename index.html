@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Nizam Fhamer Arafli — Fullstack Web Developer, Tinkerer & Musician</title>
+  <meta name="description" content="Personal portfolio and project archive of Nizam Fhamer Arafli (Zim / zammanzim). Web developer, hardware tinkerer, and self-taught pianist from SMK Taruna Harapan 1 Cipatat." />
+  <meta name="theme-color" content="#07080c" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Static, Zero-Lag Ambient Background -->
+  <div class="bg-ambient"></div>
+  <div class="bg-grid"></div>
+
+  <!-- ===================================================================
+       NAVBAR
+       =================================================================== -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#hero" class="nav-logo">
+        <span class="pulse-dot"></span>
+        &lt;/<span>nizam</span>&gt;
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#about" class="nav-link">Tentang</a></li>
+        <li><a href="#personality" class="nav-link">Kepribadian</a></li>
+        <li><a href="#projects" class="nav-link">Project</a></li>
+        <li><a href="#terminal" class="nav-link">Terminal</a></li>
+        <li><a href="#skills" class="nav-link">Skills & Piano</a></li>
+        <li><a href="#gallery" class="nav-link">Galeri</a></li>
+        <li><a href="#contact" class="nav-link">Kontak</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="#terminal" class="btn-terminal-nav">
+          <i class="fa-solid fa-terminal"></i> CLI
+        </a>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle Navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================================================================
+       HERO SECTION
+       =================================================================== -->
+  <section class="hero-section" id="hero">
+    <div class="container">
+      <div class="hero-grid">
+        
+        <!-- Left: Intro & Bio -->
+        <div class="hero-left">
+          <div class="hero-badge-wrap">
+            <span class="pulse-dot"></span>
+            <span>SMK TARUNA HARAPAN 1 CIPATAT // XI RPL</span>
+          </div>
+
+          <h1 class="hero-title">
+            Haii, Saya<br>
+            <span class="gradient-text">Nizam F. Arafli</span>
+          </h1>
+
+          <div class="role-typewriter-wrap">
+            <span style="color:var(--text-dim);">&gt;</span>
+            <span id="typedRoleText"></span>
+            <span class="role-cursor"></span>
+          </div>
+
+          <p class="hero-desc">
+            Santai, to the point, dan suka membongkar hal rumit sampai paham cara kerjanya. 
+            Dari ngeracik <strong>Cloudflare Workers & Supabase</strong>, benerin jalur sirkuit hardware & laptop, 
+            membangun web resmi <strong>OSIS & sistem belajar sekolah</strong>, sampai mainin tuts piano di sela waktu luang.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#projects" class="btn-primary">
+              <i class="fa-solid fa-rocket"></i> Jelajahi Project
+            </a>
+            <a href="#terminal" class="btn-secondary">
+              <i class="fa-solid fa-terminal"></i> Buka Terminal
+            </a>
+            <a href="https://wa.me/6283851088843" target="_blank" class="btn-secondary">
+              <i class="fa-brands fa-whatsapp"></i> Chat Langsung
+            </a>
+          </div>
+
+          <div class="hero-quick-stats">
+            <div class="stat-item">
+              <div class="stat-num">30<span>+</span></div>
+              <div class="stat-lbl">Web Teman Dihosting</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">3<span>.0</span></div>
+              <div class="stat-lbl">Versi E-Learniz LMS</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-num">100<span>%</span></div>
+              <div class="stat-lbl">Otodidak & Solutif</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Profile Card -->
+        <div class="hero-right profile-card-wrap">
+          <div class="profile-card">
+            <div class="photo-box">
+              <div class="photo-corner pc-tl"></div>
+              <div class="photo-corner pc-tr"></div>
+              <div class="photo-corner pc-bl"></div>
+              <div class="photo-corner pc-br"></div>
+              
+              <img src="img/a1.jpg" alt="Nizam Fhamer Arafli" loading="eager" decoding="async" onerror="this.src='img/random4.jpg'" />
+
+              <div class="card-badge-status">
+                <span class="pulse-dot"></span> Online & Tinkering
+              </div>
+            </div>
+
+            <div class="card-identity">
+              <div class="card-name">Nizam Fhamer Arafli</div>
+              <div class="card-handle">@zammanzim • Bandung Barat</div>
+            </div>
+
+            <div class="card-pills">
+              <span class="card-pill">⚡ Fullstack Dev</span>
+              <span class="card-pill">🔧 Hardware Geek</span>
+              <span class="card-pill">🎹 Pianist</span>
+              <span class="card-pill">☁️ Cloudflare Workers</span>
+              <span class="card-pill">🤖 Baileys Bot</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: KEPRIBADIAN / "GW KAYAK GIMANA ORANGNYA?"
+       =================================================================== -->
+  <section class="section" id="personality">
+    <div class="container">
+      <div class="section-tag">
+        <i class="fa-solid fa-dna"></i> Personality & Identity
+      </div>
+      <h2 class="section-title">"Gw Kayak Gimana Orangnya?"</h2>
+      <p class="section-desc">
+        Berdasarkan jejak baris kode, komit git malam hari, dan deretan sistem yang dibangun di folder ini, 
+        berikut potret otentik kepribadian dan cara pandang seorang Nizam:
+      </p>
+
+      <div class="personality-grid">
+        
+        <!-- Trait 1: The Heavy-Builder -->
+        <div class="trait-card">
+          <div class="trait-icon icon-emerald">
+            <i class="fa-solid fa-cubes-stacked"></i>
+          </div>
+          <div class="trait-tag">01 // The Practical Builder</div>
+          <h3 class="trait-title">Bukan Teori, Tapi Solusi Nyata</h3>
+          <p class="trait-desc">
+            Bukan tipe yang cuma puas bikin kalkulator atau todo-list tutorial. 
+            Kamu membangun ekosistem fungsional yang benar-benar dipakai orang lain: 
+            mulai dari <strong>OSIS TARPAN ONE</strong> untuk sekolah, platform belajar <strong>E-Learniz v3</strong>, 
+            hingga sistem kasir & monitor dapur <strong>Teras Mbun</strong>.
+          </p>
+          <div class="trait-quote">
+            // Commit style: "asliasliasliasli", "swipe", "ctxmenu" — cepat, pragmatis, jalan.
+          </div>
+        </div>
+
+        <!-- Trait 2: Hardware & Teardown -->
+        <div class="trait-card">
+          <div class="trait-icon icon-cyan">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+          <div class="trait-tag">02 // The Hardware Tinkerer</div>
+          <h3 class="trait-title">Merusak untuk Mengerti</h3>
+          <p class="trait-desc">
+            Rasa ingin tahu yang menembus batas layar kaca. 
+            Kamu suka membongkar laptop, flashing smartphone mode EDL, merakit smart room ESP32, 
+            hingga menyolder modul power supply dan speaker. Bagimu, memahami perangkat keras adalah seni tersendiri.
+          </p>
+          <div class="trait-quote">
+            "Sesekali merusak hardware untuk mengerti cara kerjanya." — Bio Nizam
+          </div>
+        </div>
+
+        <!-- Trait 3: The Silent Carry -->
+        <div class="trait-card">
+          <div class="trait-icon icon-purple">
+            <i class="fa-solid fa-shield-heart"></i>
+          </div>
+          <div class="trait-tag">03 // The Community Pillar</div>
+          <h3 class="trait-title">Teman Pendiam yang Selalu Jadi Andalan</h3>
+          <p class="trait-desc">
+            Persona yang kamu tulis di bot AI-mu sendiri menggambarkannya secara akurat: 
+            <em>"Santai, to the point, kaya temen kelas yang pendiem tapi pinter."</em> 
+            Buktinya nyata: kamu memfasilitasi hosting portofolio untuk <strong>30+ teman sekelas di StudentsWeb</strong> 
+            dan membuat portal kisi-kisi ujian untuk membantu mereka.
+          </p>
+          <div class="trait-quote">
+            // Mengayomi tanpa pamrih, mengutamakan aksi daripada omong kosong.
+          </div>
+        </div>
+
+        <!-- Trait 4: The Musical Mind -->
+        <div class="trait-card">
+          <div class="trait-icon icon-amber">
+            <i class="fa-solid fa-music"></i>
+          </div>
+          <div class="trait-tag">04 // The Musical Mind</div>
+          <h3 class="trait-title">Harmoni Logika & Rasa</h3>
+          <p class="trait-desc">
+            Nekat membeli piano 1 jutaan secara mandiri, lalu berlatih disiplin setiap hari 
+            sampai tangan kiri dan kanan tersinkronisasi serta menghafal beragam progresi chord. 
+            Koding adalah melatih logika algoritma; musik adalah mengasah kepekaan rasa. 
+            Kamu memiliki keseimbangan langka antara keduanya.
+          </p>
+          <div class="trait-quote">
+            "Musik adalah bahasa keduaku. Keduanya sama-sama merangkai nada dan logika."
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: PROJECTS SHOWCASE (CLICK TO OPEN PROJECT)
+       =================================================================== -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="section-tag">
+        <i class="fa-solid fa-layer-group"></i> Project Universe
+      </div>
+      <h2 class="section-title">Karya & Ekosistem Nyata</h2>
+      <p class="section-desc">
+        Klik langsung pada kartu project mana pun untuk membukanya secara instan, atau klik <em>Detail Arsitektur</em> untuk melihat penjelasan teknologinya:
+      </p>
+
+      <!-- Category Filter -->
+      <div class="project-filters">
+        <button class="filter-btn active" data-filter="all">Semua Project</button>
+        <button class="filter-btn" data-filter="flagship">Flagship LMS</button>
+        <button class="filter-btn" data-filter="school">Sekolah & OSIS</button>
+        <button class="filter-btn" data-filter="automation">Bot & AI</button>
+        <button class="filter-btn" data-filter="business">F&B & UMKM</button>
+      </div>
+
+      <!-- Grid Cards -->
+      <div class="projects-grid">
+
+        <!-- 1. E-Learniz v3 -->
+        <div class="project-card" data-category="flagship school" data-href="../e-learniz-v3/index.html" title="Klik untuk membuka E-Learniz v3">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge badge-featured">v3.0 Flagship</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">E-Learniz v3.0</h3>
+            <p class="project-desc">
+              Portal belajar modern berbasis edge network. Diperkuat Cloudflare Workers dan database SQLite/D1, 
+              dilengkapi pengalih kelas dinamis, materi, kuis, dan akun tamu read-only.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Cloudflare Workers</span>
+              <span class="tech-tag">SQLite / D1</span>
+              <span class="tech-tag">Vanilla JS</span>
+              <span class="tech-tag">PWA</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Active LMS</span>
+              <button class="project-btn-detail" data-project="elearniz">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. OSIS Tarpan One -->
+        <div class="project-card" data-category="school" data-href="../osistarpanone/index.html" title="Klik untuk membuka OSIS TARPAN ONE">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">PWA Official</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">OSIS TARPAN ONE</h3>
+            <p class="project-desc">
+              Web portal resmi OSIS SMK Taruna Harapan 1 Cipatat. 
+              Menghadirkan swipe drawer, bottom sheet modal, seksi bidang, prestasi, dan kotak aspirasi online siswa.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Progressive Web App</span>
+              <span class="tech-tag">Swipe API</span>
+              <span class="tech-tag">Custom CSS</span>
+              <span class="tech-tag">Context Menu</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Live Production</span>
+              <button class="project-btn-detail" data-project="osistarpanone">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Teras Mbun -->
+        <div class="project-card" data-category="business" data-href="../terasmbun/index.html" title="Klik untuk membuka Teras Mbun POS">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">F&B Real-World</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">Teras Mbun POS & Ordering</h3>
+            <p class="project-desc">
+              Sistem pesan makan tanpa ribet untuk kedai makan "Teras Mbun". 
+              Dilengkapi pemesanan mandiri oleh tamu, live monitor antrean pesanan di dapur, dan dasbor admin kasir.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Kitchen Display</span>
+              <span class="tech-tag">PWA</span>
+              <span class="tech-tag">Live State</span>
+              <span class="tech-tag">Editorial UI</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Production POS</span>
+              <button class="project-btn-detail" data-project="terasmbun">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Class WA-Bot & Assistant -->
+        <div class="project-card" data-category="automation school" data-href="action:nizamai" title="Klik untuk mengobrol dengan @nizamai">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">Bot & AI Engine</span>
+              <span class="project-open-pill"><i class="fa-solid fa-comments"></i> Chat @nizamai</span>
+            </div>
+            <h3 class="project-name">Class WA-Bot & @nizamai</h3>
+            <p class="project-desc">
+              Bot WhatsApp cerdas multi-device dengan Baileys. 
+              Mengintegrasikan asisten AI personal '@nizamai', pengingat jadwal kelas, pembuat stiker Brat, dan sinkronisasi Supabase.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Node.js</span>
+              <span class="tech-tag">Baileys MD</span>
+              <span class="tech-tag">Custom AI Persona</span>
+              <span class="tech-tag">Supabase</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Deployed Active</span>
+              <button class="project-btn-detail" data-project="wabot">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Exam & Ujian Platform -->
+        <div class="project-card" data-category="school flagship" data-href="../exam/index.html" title="Klik untuk membuka Portal Ujian">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">EdTech Assessment</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">Ujian • Kisi-Kisi & Nilai</h3>
+            <p class="project-desc">
+              Platform latihan soal ulangan dan rekapitulasi nilai instan. 
+              Siswa tinggal memilih kelas dan nama tanpa perlu login rumit; nilai otomatis tersimpan ke Supabase cloud.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Supabase DB</span>
+              <span class="tech-tag">Quiz Engine</span>
+              <span class="tech-tag">Instant Scoring</span>
+              <span class="tech-tag">PDF Schedule</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Deployed</span>
+              <button class="project-btn-detail" data-project="exam">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. StudentsWeb Class Ecosystem -->
+        <div class="project-card" data-category="school" data-href="../studentsweb/zim/index.html" title="Klik untuk membuka StudentsWeb (Zim)">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">Community Platform</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">StudentsWeb Class Portfolios</h3>
+            <p class="project-desc">
+              Inisiatif hosting dan pembuatan web portofolio bagi 30+ teman sekelas di jurusan RPL. 
+              Dilengkapi floating navigation 'Magic Pill' untuk menjelajah profil teman satu angkatan.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">30+ Profiles</span>
+              <span class="tech-tag">Magic Pill Router</span>
+              <span class="tech-tag">Static Ecosystem</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: 30+ Live Profiles</span>
+              <button class="project-btn-detail" data-project="studentsweb">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. WA Clone -->
+        <div class="project-card" data-category="automation" data-href="../waclone/index.html" title="Klik untuk membuka WhatsApp Web Clone">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">UI/UX Re-engineering</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">WhatsApp Web UI Clone</h3>
+            <p class="project-desc">
+              Rekayasa ulang antarmuka WhatsApp Web secara pixel-perfect murni dengan Vanilla JavaScript. 
+              Menangani state obrolan, chat renderer, filter kontak, dan tema gelap presisi.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">Vanilla JS</span>
+              <span class="tech-tag">Chat Renderer</span>
+              <span class="tech-tag">Modular CSS</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Completed</span>
+              <button class="project-btn-detail" data-project="waclone">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. Tournament Scoreboard -->
+        <div class="project-card" data-category="school" data-href="../scoreboard/index.html" title="Klik untuk membuka Scoreboard">
+          <div>
+            <div class="project-card-top">
+              <span class="project-badge">Interactive Utility</span>
+              <span class="project-open-pill"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Project</span>
+            </div>
+            <h3 class="project-name">Digital Match Scoreboard</h3>
+            <p class="project-desc">
+              Papan skor digital interaktif kontras tinggi untuk pertandingan class-meeting sekolah 
+              dengan kontrol sentuh responsif dan pembaruan babak dinamis.
+            </p>
+          </div>
+          <div>
+            <div class="project-tech">
+              <span class="tech-tag">HTML5</span>
+              <span class="tech-tag">CSS3</span>
+              <span class="tech-tag">High-Contrast UI</span>
+            </div>
+            <div class="project-footer">
+              <span>Status: Completed</span>
+              <button class="project-btn-detail" data-project="scoreboard">
+                <i class="fa-solid fa-circle-info"></i> Detail Arsitektur
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: INTERACTIVE TERMINAL EMULATOR
+       =================================================================== -->
+  <section class="terminal-section" id="terminal">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:2.5rem;">
+        <div class="section-tag"><i class="fa-solid fa-terminal"></i> Nizam Shell v2.4</div>
+        <h2 class="section-title">Terminal Interaktif</h2>
+        <p class="section-desc" style="margin:0 auto;">
+          Ketik perintah langsung di terminal ini untuk menelusuri data sistem, catatan oprek, atau rahasia komit git:
+        </p>
+      </div>
+
+      <div class="terminal-wrap">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="t-dot t-red"></span>
+            <span class="t-dot t-yellow"></span>
+            <span class="t-dot t-green"></span>
+          </div>
+          <span class="terminal-title">nizam@tarpan-workstation: ~/portfolio</span>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--emerald);">BASH</span>
+        </div>
+
+        <div class="terminal-body" id="terminalBody">
+          <div class="terminal-output-line">
+            <span style="color:var(--emerald);">[SYSTEM BOOT SUCCESSFUL]</span> Selamat datang di Terminal Interaktif Nizam Fhamer Arafli.
+          </div>
+          <div class="terminal-output-line" style="color:var(--text-dim);">
+            Ketik <span style="color:var(--cyan);font-weight:700;">help</span> untuk melihat daftar perintah, atau coba <span style="color:var(--cyan);font-weight:700;">whoami</span>, <span style="color:var(--cyan);font-weight:700;">hardware</span>, <span style="color:var(--cyan);font-weight:700;">easteregg</span>.
+          </div>
+        </div>
+
+        <div style="padding:0.75rem 1.25rem;background:#080a10;border-top:1px solid rgba(255,255,255,0.05);">
+          <div class="terminal-input-row">
+            <span class="t-prompt">nizam@tarpan:~$</span>
+            <input type="text" class="terminal-input" id="terminalInput" placeholder="Ketik perintah di sini (contoh: whoami)..." autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="terminal-hint">
+            💡 Tips: Gunakan panah atas/bawah untuk riwayat perintah, atau ketik 'clear' untuk membersihkan layar.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: SKILLS MATRIX & INTERACTIVE PIANO
+       =================================================================== -->
+  <section class="section" id="skills">
+    <div class="container">
+      <div class="section-tag">
+        <i class="fa-solid fa-sliders"></i> Capabilities & Craft
+      </div>
+      <h2 class="section-title">Keahlian & Multitalenta</h2>
+      <p class="section-desc">
+        Kombinasi antara keahlian rekayasa perangkat lunak modern, penguasaan perangkat keras elektro, 
+        dan kepekaan musikal piano otodidak:
+      </p>
+
+      <div class="skills-container">
+
+        <!-- Column 1: Software & Web -->
+        <div class="skill-cat-card">
+          <div class="skill-cat-header">
+            <div class="skill-cat-icon icon-emerald">
+              <i class="fa-solid fa-code"></i>
+            </div>
+            <div class="skill-cat-title">Web & Cloud Systems</div>
+          </div>
+          <div class="skill-list">
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">HTML5 / Semantic CSS</span><span class="skill-pct">95%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:95%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Modern JavaScript (ESNext)</span><span class="skill-pct">90%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:90%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Cloudflare Workers & D1</span><span class="skill-pct">88%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:88%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Supabase & Database SQL</span><span class="skill-pct">82%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:82%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">PWA & Offline Service Workers</span><span class="skill-pct">85%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:85%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Hardware & Electronics -->
+        <div class="skill-cat-card">
+          <div class="skill-cat-header">
+            <div class="skill-cat-icon icon-cyan">
+              <i class="fa-solid fa-wrench"></i>
+            </div>
+            <div class="skill-cat-title">Hardware & Teknisi</div>
+          </div>
+          <div class="skill-list">
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Bongkar / Reparasi Laptop & HP</span><span class="skill-pct">90%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:90%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Elektronik & Soldering Modul</span><span class="skill-pct">88%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:88%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Mikrokontroler ESP32 / Arduino C++</span><span class="skill-pct">78%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:78%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Flashing ROM & EDL Mode Smartphone</span><span class="skill-pct">85%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:85%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Analisis Sirkuit Power Supply & Audio</span><span class="skill-pct">82%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:82%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Tools & Audio -->
+        <div class="skill-cat-card">
+          <div class="skill-cat-header">
+            <div class="skill-cat-icon icon-purple">
+              <i class="fa-solid fa-headphones"></i>
+            </div>
+            <div class="skill-cat-title">Tools & Musikalitas</div>
+          </div>
+          <div class="skill-list">
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Piano & Sinkronisasi 2 Tangan</span><span class="skill-pct">88%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:88%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Harmoni Chord & Ear Training</span><span class="skill-pct">85%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:85%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Git & Version Control Workflow</span><span class="skill-pct">85%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:85%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Baileys WA Bot Multi-Device</span><span class="skill-pct">92%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:92%;"></div></div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-info"><span class="skill-name">Rapid UI Prototyping</span><span class="skill-pct">86%</span></div>
+              <div class="skill-track"><div class="skill-bar" style="width:86%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Interactive Piano Widget -->
+      <div class="music-interactive-card">
+        <div class="music-info">
+          <div class="trait-tag" style="color:var(--emerald);">Interactive Sound Sandbox</div>
+          <h3><i class="fa-solid fa-keyboard"></i> Mainkan Tuts Piano Nizam</h3>
+          <p>
+            Diciptakan menggunakan <strong>Web Audio API</strong> bawaan browser tanpa file audio luar. 
+            Klik tuts di sebelah kanan untuk mendengarkan nada harmonik piano elektrik!
+          </p>
+          <div style="font-size:0.8rem;font-family:var(--font-mono);color:var(--text-dim);">
+            Progresi: Do (C) - Re (D) - Mi (E) - Fa (F) - Sol (G) - La (A) - Si (B) - Do tinggi (C5)
+          </div>
+        </div>
+
+        <div class="piano-keys-wrapper">
+          <div class="piano-key" data-note="C4">C4</div>
+          <div class="piano-key" data-note="D4">D4</div>
+          <div class="piano-key" data-note="E4">E4</div>
+          <div class="piano-key" data-note="F4">F4</div>
+          <div class="piano-key" data-note="G4">G4</div>
+          <div class="piano-key" data-note="A4">A4</div>
+          <div class="piano-key" data-note="B4">B4</div>
+          <div class="piano-key" data-note="C5">C5</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: PHOTO GALLERY / BEHIND THE SCENES
+       =================================================================== -->
+  <section class="section" id="gallery">
+    <div class="container">
+      <div class="section-tag">
+        <i class="fa-solid fa-camera"></i> Behind The Scenes
+      </div>
+      <h2 class="section-title">Momen, Koding & Hardware</h2>
+      <p class="section-desc">
+        Potongan dokumentasi asli dari balik meja kerja, tuts piano, dan eksperimen perangkat keras (sudah dioptimasi ringan):
+      </p>
+
+      <div class="gallery-grid">
+        <div class="gallery-card">
+          <img src="img/random4.jpg" alt="aku, vscode, dan firefox" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">aku, vscode, dan firefox</span>
+            <span class="gallery-tag">// Setup Ngoding Utama</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/music.jpeg" alt="Sesi Piano" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Melodi Tuts Piano</span>
+            <span class="gallery-tag">// Otodidak Piano Sejak Dini</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/tech1.jpg" alt="Oprek Hardware" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Laboratorium Elektronik</span>
+            <span class="gallery-tag">// Bongkar & Ulik Sirkuit</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/code2.jpg" alt="Baris Kode & Debugging" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Sesi Malam E-Learniz</span>
+            <span class="gallery-tag">// Iterasi Fitur Tanp Henti</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/music2.jpeg" alt="Piano Chord Exploration" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Eksplorasi Progresi Chord</span>
+            <span class="gallery-tag">// Sinkronisasi 2 Tangan</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/tech3.jpg" alt="ESP32 & IoT" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Smart Room & Mikrokontroler</span>
+            <span class="gallery-tag">// ESP32 Otomasi C++</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/random1.jpeg" alt="Ngulik Project" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Sprint Deadline Bug</span>
+            <span class="gallery-tag">// "asliasliasliasli"</span>
+          </div>
+        </div>
+
+        <div class="gallery-card">
+          <img src="img/tech4.jpg" alt="Soldering & Power Supply" loading="lazy" decoding="async" />
+          <div class="gallery-overlay">
+            <span class="gallery-title">Solder & Modul Elektronika</span>
+            <span class="gallery-tag">// Menghidupkan Komponen Mati</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: CONTACT & SOCIAL HUB
+       =================================================================== -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="section-tag">
+        <i class="fa-solid fa-paper-plane"></i> Get in Touch
+      </div>
+      <h2 class="section-title">Mari Terhubung & Kolaborasi</h2>
+      <p class="section-desc">
+        Punya ide project web, butuh bantuan sistem koding, ingin konsultasi hardware, atau sekadar ingin saling sapa:
+      </p>
+
+      <div class="contact-grid">
+
+        <!-- Left: Direct Channels -->
+        <div class="contact-card">
+          <h3 style="font-family:var(--font-display);font-size:1.35rem;margin-bottom:0.5rem;">Saluran Komunikasi Langsung</h3>
+          <p style="color:var(--text-muted);font-size:0.9rem;">Klik salah satu untuk langsung menghubungi atau menyalin kontak:</p>
+
+          <div class="contact-channels">
+            <a href="https://wa.me/6283851088843" target="_blank" class="contact-link-row">
+              <div class="clr-icon" style="background:rgba(16,185,129,0.15);color:var(--emerald);">
+                <i class="fa-brands fa-whatsapp"></i>
+              </div>
+              <div class="clr-text">
+                <span class="clr-label">WhatsApp Utama</span>
+                <span class="clr-value">+62 838-5108-8843</span>
+              </div>
+            </a>
+
+            <a href="mailto:nizzcuy@gmail.com" class="contact-link-row">
+              <div class="clr-icon" style="background:rgba(6,182,212,0.15);color:var(--cyan);">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="clr-text">
+                <span class="clr-label">Email</span>
+                <span class="clr-value">nizzcuy@gmail.com</span>
+              </div>
+            </a>
+
+            <a href="https://github.com/zammanzim" target="_blank" class="contact-link-row">
+              <div class="clr-icon" style="background:rgba(255,255,255,0.1);color:#fff;">
+                <i class="fa-brands fa-github"></i>
+              </div>
+              <div class="clr-text">
+                <span class="clr-label">GitHub Repository</span>
+                <span class="clr-value">github.com/zammanzim</span>
+              </div>
+            </a>
+
+            <a href="https://instagram.com/zammanzim" target="_blank" class="contact-link-row">
+              <div class="clr-icon" style="background:rgba(244,63,94,0.15);color:var(--rose);">
+                <i class="fa-brands fa-instagram"></i>
+              </div>
+              <div class="clr-text">
+                <span class="clr-label">Instagram</span>
+                <span class="clr-value">@zammanzim</span>
+              </div>
+            </a>
+
+            <div class="contact-link-row" style="cursor:default;">
+              <div class="clr-icon" style="background:rgba(245,158,11,0.15);color:var(--amber);">
+                <i class="fa-solid fa-location-dot"></i>
+              </div>
+              <div class="clr-text">
+                <span class="clr-label">Lokasi Domisili</span>
+                <span class="clr-value">Kampung Sekip, Cipatat, Bandung Barat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Fast Form to WhatsApp -->
+        <div class="contact-card">
+          <h3 style="font-family:var(--font-display);font-size:1.35rem;margin-bottom:0.5rem;">Kirim Pesan Cepat</h3>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem;">Pesan ini akan langsung diteruskan ke WhatsApp pribadi Nizam:</p>
+
+          <form id="quickContactForm">
+            <div class="form-group">
+              <label class="form-label" for="senderName">Nama Lengkap / Panggilan *</label>
+              <input type="text" id="senderName" class="form-input" placeholder="Contoh: Budi / Teman Kelas" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="senderMsg">Pesan atau Diskusi Project *</label>
+              <textarea id="senderMsg" class="form-textarea" placeholder="Tulis pesanmu di sini..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+              <i class="fa-brands fa-whatsapp"></i> Teruskan ke WhatsApp Nizam
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       FOOTER
+       =================================================================== -->
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-brand">
+        &lt;/<span>nizam</span>&gt; — 2026 Nizam Fhamer Arafli.
+      </div>
+      <div class="footer-quote">
+        "Koding melatih logika, piano mengasah rasa, solder menghidupkan mesin."
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================================
+       PROJECT DETAIL MODAL
+       =================================================================== -->
+  <div class="modal-backdrop" id="projectModalBackdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="project-badge badge-featured" id="modalBadge">Detail Project</span>
+          <h3 class="modal-title" id="modalTitle">Judul Project</h3>
+        </div>
+        <button class="modal-close" id="modalCloseBtn" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--cyan);font-weight:600;margin-bottom:0.75rem;" id="modalTagline"></p>
+        <p id="modalOverview"></p>
+
+        <h4>Fitur & Kemampuan Utama:</h4>
+        <ul id="modalFeatures" style="padding-left:1.25rem;color:var(--text-muted);margin-bottom:1.25rem;"></ul>
+
+        <h4>Teknologi & Stack:</h4>
+        <div id="modalTech" class="project-tech" style="margin-bottom:1.25rem;"></div>
+
+        <div style="padding-top:1rem;border-top:1px solid var(--border-color);font-size:0.85rem;font-family:var(--font-mono);display:flex;justify-content:space-between;align-items:center;">
+          <span>Status: <strong style="color:var(--emerald);" id="modalStatus"></strong></span>
+          <a id="modalOpenBtn" href="#" target="_blank" class="btn-primary" style="padding:0.4rem 0.9rem;font-size:0.8rem;">
+            Buka Sekarang <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       FLOATING NIZAM-AI ASSISTANT WIDGET
+       =================================================================== -->
+  <button class="nizamai-widget-btn" id="nizamaiWidgetBtn" aria-label="Tanya @nizamai AI">
+    <i class="fa-solid fa-robot"></i> Tanya @nizamai
+  </button>
+
+  <div class="nizamai-chat-window" id="nizamaiChatWindow">
+    <div class="chat-header">
+      <div class="chat-header-user">
+        <div class="chat-header-avatar">
+          <img src="img/a1.jpg" alt="Nizam AI" loading="lazy" decoding="async" onerror="this.src='img/random4.jpg'" />
+        </div>
+        <div>
+          <div class="chat-header-title">
+            @nizamai <span class="pulse-dot"></span>
+          </div>
+          <div class="chat-header-status">Asisten Pintar Santai</div>
+        </div>
+      </div>
+      <button class="chat-close-btn" id="chatCloseBtn" aria-label="Tutup chat">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-bubble bubble-ai">
+        Halo! Gw <strong>@nizamai</strong>. Santai, to the point, gak suka basa-basi. 
+        Ada yang mau lu tanyain seputar kodingan Nizam, project di folder ini, atau hardware?
+      </div>
+    </div>
+
+    <!-- Quick question pills -->
+    <div class="chat-quick-replies">
+      <span class="quick-chip" data-query="Nizam orangnya kayak gimana?">Lu orangnya gimana?</span>
+      <span class="quick-chip" data-query="Projek paling keren apa aja?">Projek unggulan?</span>
+      <span class="quick-chip" data-query="Bisa bantuin bikin web gak?">Bisa bikin web?</span>
+      <span class="quick-chip" data-query="Kenapa suka piano & solder?">Piano & solder?</span>
+      <span class="quick-chip" data-query="Minta kontak WhatsApp dong">Minta kontak WA</span>
+    </div>
+
+    <div class="chat-input-bar">
+      <input type="text" id="chatInput" class="chat-input" placeholder="Tulis pertanyaan..." autocomplete="off" />
+      <button id="chatSendBtn" class="chat-send-btn" aria-label="Kirim">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notice" id="toastNotice">Notifikasi</div>
+
+  <!-- Scripts -->
+  <script src="js/main.js"></script>
+  <script src="js/terminal.js"></script>
+  <script src="js/nizamai-widget.js"></script>
+</body>
+</html>

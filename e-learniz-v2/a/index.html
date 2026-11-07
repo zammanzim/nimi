@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Nizam | Web Nizam</title>
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "E-Learning Nizam",
+  "alternateName": ["Web Nizam", "Nizam Web"],
+  "url": "https://e-learniz.my.id"
+}
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+<script src="../js/lang.js?v=20260822"></script>
+<script src="../js/basicfeat.js?v=20260822"></script>
+<script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .glass-card {
+            background: rgba(15, 20, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .subject-header-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .subject-left-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .subject-icon-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .subject-icon-box i {
+            font-size: 30px;
+            color: var(--accent);
+        }
+
+        #subjectName {
+            font-size: 16px;
+            margin: 0;
+            font-weight: 800;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .teacher-info-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .teacher-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .teacher-row:last-child { margin-bottom: 0; }
+        .teacher-row span { opacity: 0.5; font-size: 12px; letter-spacing: 0.5px; }
+        .teacher-row b { font-weight: 500; color: #fff; font-size: 16px; }
+        
+        .wa-link {
+            color: #2ecc71;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .stat-item .label {
+            display: block;
+            font-size: 10px;
+            opacity: 0.4;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .stat-item .value {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--accent);
+        }
+
+        .progress-section {
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #00d2d3);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 768px) {
+            #announcements { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+            #announcements > :first-child { grid-column: 1 / -1; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content" style="flex-wrap: wrap;">
+        <div class="glass-card" id="subjectInfoCard" style="flex:0 0 100%; margin-bottom:20px;">
+            <div class="subject-header-grid">
+                <div class="subject-left-info">
+                    <div class="subject-icon-box">
+                        <i id="subjectIcon" class="fa-solid fa-book"></i>
+                    </div>
+                    <h2 id="subjectName" data-i18n="loading">Memuat...</h2>
+                </div>
+                <div class="teacher-info-box">
+                    <div class="teacher-row">
+                        <span>Nama Pengajar:</span>
+                        <b id="teacherName" data-i18n="not_set">Belum diatur</b>
+                    </div>
+                    <div class="teacher-row">
+                        <span>Contact Guru:</span>
+                        <div id="teacherContact"><span style="opacity:0.3;">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <span class="label" data-i18n="total_material">Total Materi</span>
+                    <span class="value" id="totalMateri">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label" data-i18n="done">Selesai</span>
+                    <span class="value" id="doneMateri">-</span>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-container">
+                    <div id="subjectProgressBar" class="progress-bar"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div id="subjectStatusBadge" style="padding:2px 8px; border-radius:8px; font-size:9px; font-weight:bold; text-transform:uppercase;"></div>
+                    <div id="progressText" style="font-size:11px; font-weight:900; color:var(--accent);">0% Selesai</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="announcements" style="flex:0 0 100%;"></div>
+        <div id="editControls" style="flex:0 0 100%;"></div>
+    </div>
+
+    <script type="module">
+        function getSubjectId() {
+            return new URLSearchParams(window.location.search).get('id');
+        }
+
+        async function loadSubjectData() {
+            const subjectId = getSubjectId();
+            if (!subjectId) return loadSubjectError();
+
+            if (typeof supabase === 'undefined') {
+                setTimeout(loadSubjectData, 100);
+                return;
+            }
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) return;
+
+            const classId = typeof getEffectiveClassId === 'function'
+                ? getEffectiveClassId()
+                : user.class_id;
+
+            const academicYear = await getAcademicYear(classId);
+
+            const [configRes, teacherRes, countRes] = await Promise.all([
+                supabase.from('subjects_config').select('*').eq('subject_id', subjectId).limit(1),
+                supabase.from('subject_teachers').select('*').eq('subject_id', subjectId).maybeSingle(),
+                supabase.from('subject_announcements').select('id', { count: 'exact', head: true }).eq('subject_id', subjectId).eq('class_id', classId).eq('academic_year', academicYear)
+            ]);
+
+            if (configRes.error) {
+                console.error("Supabase Error:", configRes.error.message);
+                document.getElementById('subjectName').innerText = t('failed_load_data');
+                return;
+            }
+
+            const config = configRes.data[0];
+            if (!config) {
+                document.getElementById('subjectName').innerText = t('material_not_found');
+                return;
+            }
+
+            // ── Isi info card ──
+            document.getElementById('subjectIcon').className = `fa-solid ${config.icon}`;
+            document.getElementById('subjectName').innerText = config.subject_name;
+
+            // Status badge
+            const badge = document.getElementById('subjectStatusBadge');
+            if (config.locked) {
+                badge.innerHTML = 'LOCKED';
+                badge.style.background = 'rgba(231,76,60,0.15)';
+                badge.style.color = '#e74c3c';
+            } else {
+                badge.innerHTML = 'ACTIVE';
+                badge.style.background = 'rgba(46,204,113,0.15)';
+                badge.style.color = '#2ecc71';
+            }
+
+            // Guru
+            const teacher = teacherRes.data;
+            if (teacher) {
+                document.getElementById('teacherName').innerText = teacher.teacher_name;
+                if (teacher.teacher_contact) {
+                    const cleanPhone = teacher.teacher_contact.replace(/\D/g, '');
+                    const waLink = `https://wa.me/${cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone}`;
+                    document.getElementById('teacherContact').innerHTML = `<a href="${waLink}" target="_blank" class="wa-link"><i class="fa-brands fa-whatsapp"></i> ${teacher.teacher_contact}</a>`;
+                } else {
+                    document.getElementById('teacherContact').innerHTML = `<span style="opacity:0.3;">-</span>`;
+                }
+            } else {
+                document.getElementById('teacherName').innerText = t('not_set');
+                document.getElementById('teacherContact').innerHTML = `<span style="opacity:0.3;">-</span>`;
+            }
+
+            const total = countRes.count || 0;
+            document.getElementById('totalMateri').innerText = total;
+
+            // Hitung berapa yg udah selesai (is_done + user_progress)
+            let doneCount = 0;
+            if (total > 0) {
+                const { data: anns } = await supabase
+                    .from('subject_announcements')
+                    .select('id, is_done')
+                    .eq('subject_id', subjectId)
+                    .eq('class_id', classId)
+                    .eq('academic_year', academicYear);
+
+                if (anns && anns.length) {
+                    const annIds = anns.map(a => a.id);
+                    const doneIds = new Set(anns.filter(a => a.is_done).map(a => a.id));
+
+                    const { data: progress } = await supabase
+                        .from('user_progress')
+                        .select('announcement_id')
+                        .eq('user_id', user.id)
+                        .in('announcement_id', annIds);
+
+                    if (progress) progress.forEach(p => doneIds.add(p.announcement_id));
+                    doneCount = doneIds.size;
+                }
+            }
+            document.getElementById('doneMateri').innerText = doneCount;
+
+            // Update Progress Bar
+            const percentage = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+            const pb = document.getElementById('subjectProgressBar');
+            const pt = document.getElementById('progressText');
+            if (pb) pb.style.width = `${percentage}%`;
+            if (pt) pt.innerText = `${percentage}% ` + t('done');
+
+            const fullTitleHtml = `<h3><i class="fa-solid ${config.icon}"></i> ${config.subject_name}</h3>`;
+            const isLesson = config.menu_group === 'lessons' &&
+                config.menu_group !== 'tesmenubaru';
+
+            SubjectApp.init(config.subject_id, fullTitleHtml, config.subject_name, isLesson);
+
+            if (typeof logVisitor === 'function') {
+                logVisitor();
+            }
+
+            if (typeof updateActiveSidebar === 'function') {
+                updateActiveSidebar();
+            }
+        }
+
+        function loadSubjectError() {
+            document.getElementById('subjectName').innerText = t('material_not_found');
+        }
+
+        // ── INFO CARD EDITING (teacher name & contact only) ───
+        function toggleSubjectInfoEdit(editMode) {
+            if (editMode) {
+                const tName = document.getElementById('teacherName');
+                tName.contentEditable = true;
+                tName.style.outline = '1px dashed var(--accent)';
+                tName.style.borderRadius = '4px';
+                tName.style.padding = '2px 6px';
+                tName.style.cursor = 'text';
+
+                const contactEl = document.getElementById('teacherContact');
+                const currentPhone = contactEl?.querySelector('a')?.innerText || '';
+                contactEl.innerHTML = `<input type="text" id="teacherContactInput" value="${currentPhone}" placeholder="Nomor WhatsApp" style="background:rgba(255,255,255,0.05);border:1px dashed var(--accent);border-radius:6px;padding:4px 8px;color:#fff;width:100%;font-size:14px;outline:none;">`;
+            } else {
+                const tName = document.getElementById('teacherName');
+                const contactInput = document.getElementById('teacherContactInput');
+
+                const newTeacher = tName.innerText.trim();
+                const newContact = contactInput?.value?.trim() || '';
+
+                tName.contentEditable = false;
+                tName.style.outline = '';
+                tName.style.borderRadius = '';
+                tName.style.padding = '';
+                tName.style.cursor = '';
+
+                saveSubjectTeacher(newTeacher, newContact);
+            }
+        }
+
+        async function saveSubjectTeacher(teacherName, teacherContact) {
+            const subjectId = getSubjectId();
+            if (!subjectId) return;
+
+            try {
+                const { data: existing } = await supabase.from('subject_teachers')
+                    .select('id').eq('subject_id', subjectId).maybeSingle();
+
+                if (existing) {
+                    await supabase.from('subject_teachers').update({
+                        teacher_name: teacherName,
+                        teacher_contact: teacherContact || null,
+                    }).eq('subject_id', subjectId);
+                } else {
+                    await supabase.from('subject_teachers').insert({
+                        subject_id: subjectId,
+                        teacher_name: teacherName,
+                        teacher_contact: teacherContact || null,
+                    });
+                }
+
+                // Re-render contact display
+                const contactEl = document.getElementById('teacherContact');
+                if (teacherContact) {
+                    const clean = teacherContact.replace(/\D/g, '');
+                    const wa = `https://wa.me/${clean.startsWith('0') ? '62' + clean.slice(1) : clean}`;
+                    contactEl.innerHTML = `<a href="${wa}" target="_blank" class="wa-link"><i class="fa-brands fa-whatsapp"></i> ${teacherContact}</a>`;
+                } else {
+                    contactEl.innerHTML = `<span style="opacity:0.3;">-</span>`;
+                }
+
+                showToast(t('teacher_data_saved'), 'success');
+            } catch (e) {
+                console.error('Save teacher error:', e);
+                showPopup('Gagal menyimpan data guru', 'error');
+            }
+        }
+
+        window.addEventListener('editmodetoggle', (e) => {
+            toggleSubjectInfoEdit(e.detail.editMode);
+        });
+
+        function closeMobileSidebar() {
+            if (window.innerWidth < 1024) {
+                const sb = document.getElementById('sidebar');
+                if (sb?.classList.contains('open')) {
+                    sb.classList.remove('open');
+                    document.getElementById('hamburger')?.classList.remove('active');
+                    document.getElementById('sidebarOverlay')?.classList.remove('show');
+                    document.body.style.overflow = '';
+                    if (typeof unlockScroll === 'function') unlockScroll();
+                }
+            }
+        }
+
+        // ── SPA NAVIGATION: intercept klik link ke halaman yang sama (index) dengan ?id= ──
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href*="?id="]');
+            if (!link) return;
+            const url = new URL(link.href);
+            if (url.pathname !== window.location.pathname) return;
+            e.preventDefault();
+            const newId = url.searchParams.get('id');
+            if (!newId || newId === getSubjectId()) return;
+            closeMobileSidebar();
+            history.pushState({ subjectId: newId }, '', link.href);
+            loadSubjectData();
+        });
+
+        window.addEventListener('popstate', () => {
+            loadSubjectData();
+        });
+
+        loadSubjectData();
+    </script>
+</body>
+
+</html>

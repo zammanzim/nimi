@@ -1,0 +1,883 @@
+// =========================================================================
+// AGENDA — admin per sekbid (folder /osis)
+// Dipakai di osis/agenda — kelola agenda per sekbid
+// Public view di #sekbid juga render agenda via getAgendaBySekbid
+// Foto: drag & drop kayak prestasi/galeri/kegiatan (klik atau drop banyak file)
+// =========================================================================
+
+const AgendaAdmin = {
+    filterSekbid: null, // sekbid yang sedang ditampilkan (satu aja, bisa diganti)
+    filterNama: null,   // filter pengunggah (nama dari osis_users), null = semua
+    editingId: null,
+    detailId: null,
+    detailIdx: 0,
+    cache: [],
+    // Paging hemat egress: 15/halaman + sentinel (akumulasi di cache,
+    // grup hari/sekbid dihitung ulang tiap render). Cache persisten
+    // "agenda_all" HANYA ditulis pas habis (lengkap) — dipakai juga
+    // keuangan.js buat lookup, jangan keracunan data parsial.
+    offset: 0,
+    habis: false,
+    loading: false,
+    ulang: false, // ada muat() yang ketahan pas loading -> ulang sekali lagi
+    perPage: 15,
+    ringkas: null, // angka statistik dari server (benar walau belum scroll habis)
+    sekbidList: [],
+    namaList: [],       // daftar pengurus [{nama, sekbid_id}] buat filter nama
+    pendingFiles: [],   // File[] baru yang belum di-upload (buat preview lokal)
+    existingFotos: [],  // {path,caption}[] foto yang udah kesimpen (pas edit)
+    _previewUrls: [],   // buat revoke objectURL biar ga leak
+
+    async init() {
+        const u = OsisAuth.getUser && OsisAuth.getUser();
+        if (!u || u.mode !== "osis") {
+            location.replace("../login");
+            return;
+        }
+        // Segarkan hak kendali (biar perubahan akses langsung berlaku)
+        try { await OsisAuth.refreshAkses(); } catch {}
+        // Muat daftar sekbid + pasang filter (satu sekbid aja, bisa diganti).
+        // Default: super → semua sekbid; lainnya sekbid sendiri (fallback ketua/BPH).
+        // Offline: pakai cache sekbid biar filter tetap jalan.
+        let list = null;
+        try {
+            list = await getSekbid();
+            if (list) Cache.set("sekbid", list);
+        } catch (err) {
+            console.error(err);
+            list = Cache.get("sekbid");
+            if (!list) showToast("Offline dan daftar sekbid belum tersimpan.", "error");
+        }
+        if (list) {
+            AgendaAdmin.sekbidList = list || [];
+            const sel = document.getElementById("pilihSekbid");
+            if (sel) {
+                sel.innerHTML = `<option value="">Semua sekbid</option>` + AgendaAdmin.sekbidList.map(s => `<option value="${s.id}">${escapeHtml(s.nama)} (${s.kategori})</option>`).join("");
+                // Default: pengurus biasa → sekbid sendiri; super → semua sekbid.
+                sel.value = AgendaAdmin.superSaya() ? "" : String(AgendaAdmin.defaultFilter() || "");
+                AgendaAdmin.filterSekbid = sel.value ? parseInt(sel.value, 10) : null;
+                sel.addEventListener("change", () => {
+                    const v = sel.value;
+                    AgendaAdmin.filterSekbid = v ? parseInt(v, 10) : null;
+                    // Aturan: ganti sekbid (termasuk "Semua sekbid") → nama jadi "Semua nama".
+                    AgendaAdmin.filterNama = null;
+                    const selNamaEl = document.getElementById("pilihNama");
+                    if (selNamaEl) selNamaEl.value = "";
+                    AgendaAdmin.segarkanDropdown();
+                    // Paging di-scope per filter → ganti filter = mulai dari halaman 1
+                    AgendaAdmin.muat(true);
+                });
+            }
+            AgendaAdmin.isiOpsiSekbidForm(null);
+        }
+
+        // Filter NAMA: opsi dari osis_users (nama + sekbid-nya), best-effort.
+        try {
+            AgendaAdmin.namaList = (await getNamaPengurus()) || [];
+        } catch (err) {
+            console.error(err);
+        }
+        const selNama = document.getElementById("pilihNama");
+        if (selNama) {
+            // Opsi dikelompokin per angkatan (dari namaList yang udah urut A-Z):
+            // JILID terbaru di atas, grup non-jilid terakhir.
+            const grup = {};
+            (AgendaAdmin.namaList || []).forEach(x => {
+                const g = String(x.angkatan || "").trim() || "Lainnya";
+                (grup[g] = grup[g] || []).push(x.nama);
+            });
+            const grupUrut = Object.keys(grup).sort((a, b) => {
+                const na = /(\d+)\s*$/.exec(a), nb = /(\d+)\s*$/.exec(b);
+                if (na && nb) return parseInt(nb[1], 10) - parseInt(na[1], 10);
+                if (na) return -1;
+                if (nb) return 1;
+                return a.localeCompare(b);
+            });
+            selNama.innerHTML = `<option value="">Semua nama</option>` + grupUrut.map(g =>
+                `<optgroup label="${escapeHtml(g)}">` + grup[g].map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join("") + `</optgroup>`
+            ).join("");
+            // Default: pengurus biasa → nama sendiri; super → "Semua nama".
+            const saya = (!AgendaAdmin.superSaya() && u.nama) ? String(u.nama).trim() : "";
+            if (saya && AgendaAdmin.namaList.some(x => x.nama === saya)) {
+                AgendaAdmin.filterNama = saya;
+                selNama.value = saya;
+            }
+            selNama.addEventListener("change", () => {
+                const v = selNama.value || null;
+                AgendaAdmin.filterNama = v;
+                // Aturan: "Semua nama" → semua sekbid; pilih orang → sekbid orang itu.
+                const selSb = document.getElementById("pilihSekbid");
+                if (!v) {
+                    AgendaAdmin.filterSekbid = null;
+                    if (selSb) selSb.value = "";
+                } else {
+                    const row = (AgendaAdmin.namaList || []).find(x => x.nama === v);
+                    const sb = row && row.sekbid_id ? parseInt(row.sekbid_id, 10) : null;
+                    if (sb) {
+                        AgendaAdmin.filterSekbid = sb;
+                        if (selSb) selSb.value = String(sb);
+                    }
+                }
+                AgendaAdmin.segarkanDropdown();
+                AgendaAdmin.muat(true);
+            });
+        }
+
+        document.getElementById("btnTambahAgenda")?.addEventListener("click", () => AgendaAdmin.bukaForm());
+        document.getElementById("btnBatalAgenda")?.addEventListener("click", () => AgendaAdmin.tutupForm());
+        document.getElementById("btnSimpanAgenda")?.addEventListener("click", () => AgendaAdmin.simpan());
+
+        // popup: klik backdrop & ESC untuk tutup (kayak prestasi)
+        const agendaFormEl = document.getElementById("agendaForm");
+        if (agendaFormEl) {
+            agendaFormEl.addEventListener("click", (e) => {
+                if (e.target === agendaFormEl) AgendaAdmin.tutupForm();
+            });
+        }
+        const agendaDetailEl = document.getElementById("agendaDetail");
+        if (agendaDetailEl) {
+            agendaDetailEl.addEventListener("click", (e) => {
+                if (e.target === agendaDetailEl) AgendaAdmin.tutupDetail();
+            });
+        }
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") AgendaAdmin.tutupMenu();
+            if (e.key === "Escape" && document.getElementById("agendaForm")?.classList.contains("open")) {
+                AgendaAdmin.tutupForm();
+            }
+            if (document.getElementById("agendaDetail")?.classList.contains("open")) {
+                if (e.key === "Escape") AgendaAdmin.tutupDetail();
+                else if (e.key === "ArrowRight") AgendaAdmin.fotoGeser(1);
+                else if (e.key === "ArrowLeft") AgendaAdmin.fotoGeser(-1);
+            }
+        });
+        // Klik di luar menu titik-tiga → tutup.
+        document.addEventListener("click", () => AgendaAdmin.tutupMenu());
+
+        // ——— drag & drop foto agenda (kayak prestasi/galeri) ———
+        const drop = document.getElementById("agendaDrop");
+        const fileInput = document.getElementById("agendaFotos");
+        if (drop && fileInput) {
+            drop.addEventListener("click", () => fileInput.click());
+            fileInput.addEventListener("change", (e) => {
+                AgendaAdmin.handleFiles(e.target.files);
+                e.target.value = "";
+            });
+            ["dragenter", "dragover"].forEach(ev => {
+                drop.addEventListener(ev, (e) => {
+                    e.preventDefault();
+                    drop.classList.add("dragover");
+                });
+            });
+            ["dragleave", "drop"].forEach(ev => {
+                drop.addEventListener(ev, (e) => {
+                    e.preventDefault();
+                    drop.classList.remove("dragover");
+                });
+            });
+            drop.addEventListener("drop", (e) => {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length) AgendaAdmin.handleFiles(files);
+            });
+        } else {
+            // fallback lama — kalo drop ga ada (jaga2)
+            document.getElementById("agendaFotos")?.addEventListener("change", (e) => AgendaAdmin.preview(e.target));
+        }
+
+        AgendaAdmin.muat();
+        AgendaAdmin.terapkanAkses();
+    },
+
+    // Pengendali agenda global (super / mapping eksplisit 'agenda').
+    bisaGlobal() {
+        const u = (typeof OsisAuth !== "undefined" && OsisAuth.getUser) ? OsisAuth.getUser() : null;
+        const a = (typeof OsisAuth !== "undefined" && OsisAuth.getAkses) ? OsisAuth.getAkses() : null;
+        if (!u || u.mode !== "osis" || !a) return false;
+        if (a.super) return true;
+        const list = Array.isArray(a.halaman) ? a.halaman : [];
+        return list.includes("agenda") || list.includes("*");
+    },
+
+    // Super admin? Buat default filter: super mulai dari semua sekbid & semua nama.
+    superSaya() {
+        const a = (typeof OsisAuth !== "undefined" && OsisAuth.getAkses) ? OsisAuth.getAkses() : null;
+        return !!(a && a.super);
+    },
+
+    // Segarkan label dropdown custom (dropdown.js) setelah value diubah dari kode.
+    segarkanDropdown() {
+        try { if (window.Dropdown && Dropdown.segarkanSemua) Dropdown.segarkanSemua(); } catch {}
+    },
+
+    // Boleh kendali agenda sekbid ini? (cermin aturan server osis_bisa_agenda)
+    bisaKendali(sekbidId) {
+        if (AgendaAdmin.bisaGlobal()) return true;
+        const a = (typeof OsisAuth !== "undefined" && OsisAuth.getAkses) ? OsisAuth.getAkses() : null;
+        if (!a || !a.sekbid_id || !sekbidId) return false;
+        return String(a.sekbid_id) === String(sekbidId);
+    },
+
+    // Sekbid milik user yang login (null = jabatan tak cocok sekbid / global).
+    sekbidSaya() {
+        const a = (typeof OsisAuth !== "undefined" && OsisAuth.getAkses) ? OsisAuth.getAkses() : null;
+        if (!a || !a.sekbid_id) return null;
+        return parseInt(a.sekbid_id, 10) || null;
+    },
+
+    // Default filter: sekbid sendiri; yang belum diset fallback ke ketua/BPH.
+    defaultFilter() {
+        const saya = AgendaAdmin.sekbidSaya();
+        if (saya) return saya;
+        const list = AgendaAdmin.sekbidList || [];
+        const ketua = list.find(s => /ketua/i.test(s.nama || "") || /bph/i.test(s.kategori || ""));
+        if (ketua) return ketua.id;
+        return list[0] ? list[0].id : null;
+    },
+
+    // Tombol tambah tampil kalau bisa isi: global ATAU punya sekbid sendiri.
+    // Filter boleh diganti siapa aja (cuma tampilan); isi tetap ikut sekbid masing-masing.
+    terapkanAkses() {
+        const bolehIsi = AgendaAdmin.bisaGlobal() || !!AgendaAdmin.sekbidSaya();
+        const btn = document.getElementById("btnTambahAgenda");
+        if (btn) btn.style.display = bolehIsi ? "" : "none";
+        const sel = document.getElementById("pilihSekbid");
+        if (sel && AgendaAdmin.filterSekbid) sel.value = String(AgendaAdmin.filterSekbid);
+        const selNama = document.getElementById("pilihNama");
+        if (selNama && AgendaAdmin.filterNama) selNama.value = AgendaAdmin.filterNama;
+        AgendaAdmin.segarkanDropdown();
+        AgendaAdmin.render();
+    },
+
+    // muat() tanpa argumen = refresh penuh (dipakai outbox + pasca simpan/hapus)
+    async muat(awal = true) {
+        const listEl = document.getElementById("agendaList");
+        if (AgendaAdmin.loading) { AgendaAdmin.ulang = true; return; }
+        if (!awal && AgendaAdmin.habis) return;
+        AgendaAdmin.loading = true;
+        try {
+            if (awal) {
+                AgendaAdmin.offset = 0;
+                AgendaAdmin.cache = [];
+                AgendaAdmin.habis = false;
+                AgendaAdmin.ringkas = null;
+                // Render cache persisten DULU biar offline langsung tampil.
+                // Cache disaring client-side mengikuti filter aktif.
+                const cached = Cache.get("agenda_all");
+                if (cached) {
+                    const sbr = AgendaAdmin.filterSekbid;
+                    const nmr = AgendaAdmin.filterNama;
+                    AgendaAdmin.cache = (cached || []).filter(a =>
+                        (!sbr || String(a.sekbid_id) === String(sbr)) &&
+                        (!nmr || String(a.pengunggah || "").trim().toLowerCase() === nmr.toLowerCase()));
+                    try { AgendaAdmin.render(); } catch {}
+                } else if (listEl) {
+                    listEl.innerHTML = `<div class="loading-block"><div class="spinner"></div>Memuat agenda...</div>`;
+                }
+            }
+            const sid = AgendaAdmin.filterSekbid || null;
+            const nmr = AgendaAdmin.filterNama || null;
+            const uidS = (() => { try { const u = OsisAuth.getUser && OsisAuth.getUser(); if (u && u.mode === "osis" && u.id) return u.id; } catch {} return null; })();
+            // Filter sekbid/nama aktif = fetch di-scope itu (biar halaman 1
+            // langsung isinya, bukan 15 global yang kesaring jadi 0).
+            const [ringkas, rows] = await Promise.all([
+                (awal && typeof sekbidAgendaRingkas === "function" ? sekbidAgendaRingkas(uidS, sid, nmr) : Promise.resolve(null)).catch(() => null),
+                sid
+                    ? getAgendaBySekbid(sid, AgendaAdmin.perPage, AgendaAdmin.offset, nmr)
+                    : getAllAgenda(AgendaAdmin.perPage, AgendaAdmin.offset, nmr),
+            ]);
+            if (ringkas) AgendaAdmin.ringkas = ringkas;
+            if (awal) {
+                AgendaAdmin.cache = rows || [];
+            } else {
+                const ada = new Set((AgendaAdmin.cache || []).map(a => String(a.id)));
+                (rows || []).forEach(a => { if (!ada.has(String(a.id))) { ada.add(String(a.id)); AgendaAdmin.cache.push(a); } });
+            }
+            AgendaAdmin.offset = (AgendaAdmin.cache || []).length;
+            AgendaAdmin.habis = (rows || []).length < AgendaAdmin.perPage;
+            // Tulis cache persisten hanya kalau lengkap DAN tanpa filter
+            // (lihat catatan di state).
+            if (AgendaAdmin.habis && !sid && !nmr) {
+                try { Cache.set("agenda_all", AgendaAdmin.cache); } catch {}
+            }
+            AgendaAdmin.render();
+        } catch (err) {
+            console.error(err);
+            if (awal && !(AgendaAdmin.cache || []).length && listEl) listEl.innerHTML = `<div class="pesan-empty"><i class="fa-solid fa-cloud"></i> Offline dan belum ada data tersimpan. Buka halaman ini sekali saat online.</div>`;
+            else if (typeof showToast === "function") showToast("Gagal muat lanjutan agenda.", "error");
+        } finally {
+            AgendaAdmin.loading = false;
+            // Aksi user (ganti filter) yang ketahan pas loading -> ulangi sekali.
+            if (AgendaAdmin.ulang) {
+                AgendaAdmin.ulang = false;
+                AgendaAdmin.muat(true);
+            }
+        }
+    },
+
+    // Dropdown sekbid di form CUMA untuk pengendali global (super/mapping).
+    // User biasa tidak memilih: otomatis sekbid miliknya (field disembunyikan).
+    isiOpsiSekbidForm(terpilih) {
+        const sel = document.getElementById("agendaSekbid");
+        if (!sel) return;
+        const global = AgendaAdmin.bisaGlobal();
+        const saya = AgendaAdmin.sekbidSaya();
+        const field = sel.closest ? sel.closest(".field") : null;
+        if (field) field.style.display = global ? "" : "none";
+        sel.disabled = !global;
+        if (!global && saya) {
+            sel.innerHTML = `<option value="${saya}">${escapeHtml(AgendaAdmin.namaSekbid(saya))}</option>`;
+            sel.value = String(saya);
+            return;
+        }
+        const list = AgendaAdmin.sekbidList || [];
+        sel.innerHTML = list.map(s => `<option value="${s.id}">${escapeHtml(s.nama)} (${s.kategori})</option>`).join("");
+        if (terpilih) sel.value = String(terpilih);
+        else if (AgendaAdmin.filterSekbid) sel.value = String(AgendaAdmin.filterSekbid);
+        else if (list[0]) sel.value = String(list[0].id);
+    },
+
+    namaSekbid(id) {
+        const s = (AgendaAdmin.sekbidList || []).find(x => String(x.id) === String(id));
+        return s ? s.nama : "Sekbid";
+    },
+
+    // Urutan kartu: tanggal terbaru dulu (newest -> oldest),
+    // tie-break created_at terbaru. Tanpa display_order.
+    urutkan(list) {
+        return [...(list || [])].sort((a, b) => {
+            const ta = a.tanggal ? new Date(a.tanggal).getTime() : 0;
+            const tb = b.tanggal ? new Date(b.tanggal).getTime() : 0;
+            if (tb !== ta) return tb - ta;
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+        });
+    },
+
+    // Kunci grup per hari: "YYYY-MM-DD" atau "" kalau tanpa tanggal
+    kunciTanggal(a) {
+        const t = String(a.tanggal || "").slice(0, 10);
+        return /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : "";
+    },
+
+    labelTanggal(key) {
+        if (!key) return "Tanpa tanggal";
+        const d = new Date(key + "T00:00:00");
+        if (isNaN(d.getTime())) return key;
+        return d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    },
+
+    kartu(a, tampilSekbid) {
+        const fotos = Array.isArray(a.fotos) ? a.fotos : [];
+        const fotosHtml = fotos.length ? `<div class="agenda-fotos">${fotos.map((f, fi) => {
+            const p = typeof f === "string" ? f : f.path;
+            return `<span class="media-muat mini" style="width:90px;height:90px;flex-shrink:0"><img src="${getFoto(p)}" alt="" loading="lazy" class="bisa-klik" style="width:90px;height:90px" title="Klik untuk lihat detail" onload="this.closest('.media-muat').classList.add('sudah-muat')" onerror="this.closest('.media-muat').classList.add('sudah-muat')" onclick="event.stopPropagation(); AgendaAdmin.detail(${a.id}, ${fi})"><span class="media-muat-loading" aria-hidden="true" style="border-radius:10px"><span class="spinner"></span></span></span>`;
+        }).join("")}</div>` : "";
+        const tgl = a.tanggal ? new Date(a.tanggal).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }) : "-";
+        const pel = String(a.pengunggah || "").trim();
+        return `
+            <div class="agenda-card" style="cursor:pointer" onclick="AgendaAdmin.detail(${a.id}, 0)" title="Klik untuk lihat detail">
+                ${tampilSekbid ? `<span class="agenda-sekbid-tag"><i class="fa-solid fa-folder-open"></i> ${escapeHtml(AgendaAdmin.namaSekbid(a.sekbid_id))}</span>` : ""}
+                <h4>${escapeHtml(a.judul)}</h4>
+                <div class="agenda-oleh"><i class="fa-solid fa-user"></i> ${escapeHtml(pel || "Tanpa pengunggah")}</div>
+                <div class="agenda-meta">
+                    <span class="a-chip"><i class="fa-solid fa-calendar"></i> ${tgl}</span>
+                    ${a.lokasi ? `<span class="a-chip lok"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(a.lokasi)}</span>` : ""}
+                </div>
+                ${a.deskripsi ? `<p class="agenda-desk">${escapeHtml(a.deskripsi)}</p>` : ""}
+                ${fotosHtml}
+                ${AgendaAdmin.bisaKendali(a.sekbid_id) ? `<div class="agenda-kebab" onclick="event.stopPropagation()">
+                    <button class="kb-btn" onclick="AgendaAdmin.toggleMenu(this)" title="Aksi" aria-label="Aksi"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="kb-menu">
+                        <button class="kb-item" onclick="AgendaAdmin.edit(${a.id})"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button class="kb-item hapus" onclick="AgendaAdmin.hapus(${a.id})"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                    </div>
+                </div>` : ""}
+            </div>`;
+    },
+
+    render() {
+        const listEl = document.getElementById("agendaList");
+        if (!listEl) return;
+        const semua = AgendaAdmin.cache || [];
+        // Tampil satu sekbid aja sesuai filter (bisa diganti siapa aja).
+        const basis = AgendaAdmin.filterSekbid
+            ? semua.filter(a => String(a.sekbid_id) === String(AgendaAdmin.filterSekbid))
+            : semua;
+        // Statistik: HANYA dari RPC ringkas. Belum ada (loading / migrasi
+        // belum di-run / offline) -> tampil "…", jangan hitung dari cache
+        // parsial biar angkanya nggak ngaco/kedip.
+        const R = AgendaAdmin.ringkas;
+        const ang = (v) => (R ? (parseInt(v, 10) || 0) : "…");
+        const nBulan = ang(R && R.bulan_ini);
+        const nSekbid = ang(R && R.n_sekbid);
+        const nOrang = ang(R && R.n_orang);
+        const nTotal = ang(R && R.total);
+        const statsEl = document.getElementById("agendaStats");
+        if (statsEl) {
+            statsEl.innerHTML = `
+                <div class="astat total"><b>${nTotal}</b><span>Total</span></div>
+                <div class="astat bulan"><b>${nBulan}</b><span>Bulan ini</span></div>
+                <div class="astat sekbid"><b>${nSekbid}</b><span>Sekbid</span></div>
+                <div class="astat orang"><b>${nOrang}</b><span>Orang</span></div>`;
+        }
+        // Kalau lagi edit, sembunyikan card yang sedang diedit biar ga keliatan duplikat
+        const isEditing = !!(AgendaAdmin.editingId && document.getElementById("agendaForm")?.classList.contains("open"));
+        const tampil = isEditing ? basis.filter(a => String(a.id) !== String(AgendaAdmin.editingId)) : basis;
+
+        listEl.innerHTML = AgendaAdmin.renderSekbid(tampil, isEditing)
+            + (tampil.length
+                ? `<div style="text-align:center; padding:12px 4px">`
+                    + (AgendaAdmin.habis
+                        ? `<small style="color:var(--gray); font-weight:700">— Semua agenda sudah dimuat —</small>`
+                        : `<button class="btn btn-white btn-sm" onclick="AgendaAdmin.muat(false)"><i class="fa-solid fa-angles-down"></i> Muat lagi</button>`)
+                    + `</div><div id="agendaSentinel" style="height:8px"></div>`
+                : "");
+        // Tanpa IO → sembunyikan sentinel, tombol manual yang dipakai
+        let io = null;
+        try { if (typeof pasangSentinel === "function") io = pasangSentinel("agendaSentinel", () => AgendaAdmin.muat(false)); } catch {}
+        if (!io) { const s = document.getElementById("agendaSentinel"); if (s) s.style.display = "none"; }
+    },
+
+    // ===== TAMPILAN: per hari (newest -> oldest), di dalamnya dipisah per sekbid =====
+    renderSekbid(tampil, isEditing) {
+        const urut = AgendaAdmin.urutkan(tampil);
+        if (!urut.length) {
+            if (isEditing) return `<div class="pesan-empty" style="font-size:0.82rem;color:var(--gray)"><i class="fa-solid fa-pen"></i> Sedang mengedit — lihat form di atas.</div>`;
+            return `<div class="pesan-empty"><i class="fa-solid fa-calendar"></i> Belum ada agenda.</div>`;
+        }
+        // Urutan sekbid ikut master list biar konsisten tiap hari
+        const orderSekbid = {};
+        (AgendaAdmin.sekbidList || []).forEach((s, i) => { orderSekbid[String(s.id)] = i; });
+        const namaGrupSekbid = (sid) => {
+            const s = (AgendaAdmin.sekbidList || []).find(x => String(x.id) === String(sid));
+            return s ? s.nama : "Sekbid lain";
+        };
+        // Kelompokkan per tanggal dulu
+        const grupHari = {};
+        urut.forEach(a => {
+            const k = AgendaAdmin.kunciTanggal(a);
+            (grupHari[k] = grupHari[k] || []).push(a);
+        });
+        const kunciUrut = Object.keys(grupHari).sort((x, y) => {
+            if (x === "" && y !== "") return 1;
+            if (y === "" && x !== "") return -1;
+            return y.localeCompare(x); // YYYY-MM-DD: string desc = newest dulu
+        });
+        return kunciUrut.map(k => {
+            const isiHari = grupHari[k];
+            // Pecah isi satu hari per sekbid
+            const perSekbid = {};
+            isiHari.forEach(a => {
+                const sid = String(a.sekbid_id ?? "");
+                (perSekbid[sid] = perSekbid[sid] || []).push(a);
+            });
+            const sidUrut = Object.keys(perSekbid).sort((x, y) => {
+                const ox = orderSekbid[x], oy = orderSekbid[y];
+                if (ox == null && oy == null) return x.localeCompare(y);
+                if (ox == null) return 1;
+                if (oy == null) return -1;
+                return ox - oy;
+            });
+            const isiHtml = sidUrut.map(sid => {
+                const list = perSekbid[sid];
+                const kartuHtml = `<div class="agenda-grid">${list.map(a => AgendaAdmin.kartu(a, false)).join("")}</div>`;
+                // Satu sekbid aja dalam hari ini = tanpa divider biar ringkas
+                if (sidUrut.length === 1) return kartuHtml;
+                return `
+                    <div class="agenda-sekbid-sub">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>${escapeHtml(namaGrupSekbid(sid))}</span>
+                        <span class="agenda-grup-count">${list.length}</span>
+                    </div>
+                    ${kartuHtml}`;
+            }).join("");
+            return `
+                <div class="agenda-hari">
+                    <div class="agenda-hari-head">
+                        <span><i class="fa-solid fa-calendar-day"></i> ${escapeHtml(AgendaAdmin.labelTanggal(k))}</span>
+                        <span class="agenda-grup-count">${isiHari.length} agenda</span>
+                    </div>
+                    ${isiHtml}
+                </div>`;
+        }).join("");
+    },
+
+    // ============ DETAIL (klik foto — tampilkan agenda lebih jelas) ============
+    detail(id, idx) {
+        const a = (AgendaAdmin.cache || []).find(x => String(x.id) === String(id));
+        if (!a) return;
+        AgendaAdmin.detailId = id;
+        const fotos = Array.isArray(a.fotos) ? a.fotos : [];
+        AgendaAdmin.detailIdx = Math.max(0, Math.min(parseInt(idx, 10) || 0, fotos.length - 1));
+        const tgl = a.tanggal ? new Date(a.tanggal).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : "-";
+        const oleh = String(a.pengunggah || "").trim() || "Tidak diketahui";
+        document.getElementById("agendaDetailBody").innerHTML = `
+            <span class="agenda-sekbid-tag"><i class="fa-solid fa-folder-open"></i> ${escapeHtml(AgendaAdmin.namaSekbid(a.sekbid_id))}</span>
+            <h3 style="font-size:1.05rem; font-weight:900; margin:6px 0 2px; overflow-wrap:anywhere">${escapeHtml(a.judul || "Tanpa judul")}</h3>
+            <div class="agenda-info">
+                <div class="agenda-info-item">
+                    <span class="agenda-info-ico ai-tgl"><i class="fa-solid fa-calendar-days"></i></span>
+                    <div class="agenda-info-txt"><span class="agenda-info-lbl">Tanggal</span><b>${escapeHtml(tgl)}</b></div>
+                </div>
+                <div class="agenda-info-item">
+                    <span class="agenda-info-ico ai-tempat"><i class="fa-solid fa-location-dot"></i></span>
+                    <div class="agenda-info-txt"><span class="agenda-info-lbl">Tempat</span><b>${escapeHtml(a.lokasi || "-")}</b></div>
+                </div>
+                <div class="agenda-info-item">
+                    <span class="agenda-info-ico ai-oleh"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <div class="agenda-info-txt"><span class="agenda-info-lbl">Diunggah oleh</span><b>${escapeHtml(oleh)}</b></div>
+                </div>
+            </div>
+            ${a.deskripsi ? `<p style="font-size:0.9rem; font-weight:500; color:#2b2425; line-height:1.65; margin:10px 0 2px; overflow-wrap:anywhere">${escapeHtml(a.deskripsi)}</p>` : ""}
+            ${fotos.length ? `<div class="agenda-detail-stage media-muat media-muat-tinggi">
+                <img id="agendaDetailFoto" src="" onload="this.closest('.media-muat').classList.add('sudah-muat')" onerror="this.closest('.media-muat').classList.add('sudah-muat')" alt="${escapeHtml(a.judul || "Foto agenda")}">
+                <span class="media-muat-loading" aria-hidden="true" style="z-index:auto"><span class="spinner"></span></span>${fotos.length > 1 ? `<button type="button" class="agenda-detail-nav prev" onclick="AgendaAdmin.fotoGeser(-1)" title="Sebelumnya"><i class="fa-solid fa-chevron-left"></i></button>
+                <button type="button" class="agenda-detail-nav next" onclick="AgendaAdmin.fotoGeser(1)" title="Berikutnya"><i class="fa-solid fa-chevron-right"></i></button>` : ""}
+                ${fotos.length > 1 ? `<span class="agenda-detail-count" id="agendaDetailCount"></span>` : ""}
+            </div>
+            ${fotos.length > 1 ? `<div class="agenda-detail-thumbs" id="agendaDetailThumbs">${fotos.map((f, fi) => {
+                const p = typeof f === "string" ? f : f.path;
+                return `<span class="media-muat mini" style="width:64px;height:64px;flex-shrink:0"><img src="${getFoto(p)}" alt="" loading="lazy" data-thumb="${fi}" style="width:64px;height:64px" onload="this.closest('.media-muat').classList.add('sudah-muat')" onerror="this.closest('.media-muat').classList.add('sudah-muat')" onclick="AgendaAdmin.fotoPilih(${fi})"><span class="media-muat-loading" aria-hidden="true" style="border-radius:10px"><span class="spinner"></span></span></span>`;
+            }).join("")}</div>` : ""}` : ""}`;
+        AgendaAdmin.renderDetailFoto();
+        document.getElementById("agendaDetail").classList.add("open");
+        document.body.style.overflow = "hidden";
+    },
+
+    renderDetailFoto() {
+        const a = (AgendaAdmin.cache || []).find(x => String(x.id) === String(AgendaAdmin.detailId));
+        if (!a) return;
+        const fotos = Array.isArray(a.fotos) ? a.fotos : [];
+        if (!fotos.length) return;
+        AgendaAdmin.detailIdx = (AgendaAdmin.detailIdx + fotos.length) % fotos.length;
+        const f = fotos[AgendaAdmin.detailIdx];
+        const img = document.getElementById("agendaDetailFoto");
+        if (img) {
+            img.closest(".media-muat")?.classList.remove("sudah-muat");
+            img.src = getFoto(typeof f === "string" ? f : f.path);
+        }
+        const count = document.getElementById("agendaDetailCount");
+        if (count) count.textContent = (AgendaAdmin.detailIdx + 1) + " / " + fotos.length;
+        document.querySelectorAll("#agendaDetailThumbs img").forEach(el => {
+            el.classList.toggle("aktif", parseInt(el.dataset.thumb, 10) === AgendaAdmin.detailIdx);
+        });
+    },
+
+    fotoPilih(i) {
+        AgendaAdmin.detailIdx = parseInt(i, 10) || 0;
+        AgendaAdmin.renderDetailFoto();
+    },
+
+    fotoGeser(arah) {
+        AgendaAdmin.detailIdx += (parseInt(arah, 10) || 0);
+        AgendaAdmin.renderDetailFoto();
+    },
+
+    tutupDetail() {
+        document.getElementById("agendaDetail")?.classList.remove("open");
+        if (!document.getElementById("agendaForm")?.classList.contains("open")) {
+            document.body.style.overflow = "";
+        }
+        AgendaAdmin.detailId = null;
+        AgendaAdmin.detailIdx = 0;
+    },
+
+    bukaForm() {
+        const u = OsisAuth.getUser && OsisAuth.getUser();
+        if (!u || u.mode !== "osis") return;
+        AgendaAdmin.editingId = null;
+        AgendaAdmin.pendingFiles = [];
+        AgendaAdmin.existingFotos = [];
+        AgendaAdmin._revokePreviewUrls();
+        document.getElementById("agendaId").value = "";
+        AgendaAdmin.isiOpsiSekbidForm(null);
+        // Sekbid tujuan: global = pilihan form, sisanya otomatis sekbid sendiri.
+        // TIDAK ada dropdown pilih sekbid buat user biasa (field disembunyikan).
+        const sidAwal = AgendaAdmin.bisaGlobal()
+            ? (document.getElementById("agendaSekbid")?.value || null)
+            : AgendaAdmin.sekbidSaya();
+        if (!AgendaAdmin.bisaKendali(sidAwal)) {
+            if (typeof showToast === "function") showToast("Jabatanmu tidak cocok sekbid manapun — hubungi admin.", "error");
+            return;
+        }
+        document.getElementById("agendaJudul").value = "";
+        document.getElementById("agendaDeskripsi").value = "";
+        // Tanggal otomatis hari ini (lokal, bukan UTC biar tidak mundur sehari)
+        const _t = new Date();
+        document.getElementById("agendaTanggal").value =
+            `${_t.getFullYear()}-${String(_t.getMonth() + 1).padStart(2, "0")}-${String(_t.getDate()).padStart(2, "0")}`;
+        document.getElementById("agendaLokasi").value = "";
+        const ft = document.getElementById("agendaFormTitle");
+        if (ft) ft.textContent = "Tambah Agenda";
+        const fi = document.getElementById("agendaFotos");
+        if (fi) fi.value = "";
+        AgendaAdmin.renderPreview();
+        document.getElementById("agendaForm").classList.add("open");
+        document.body.style.overflow = "hidden";
+        AgendaAdmin.render();
+    },
+
+    edit(id) {
+        AgendaAdmin.tutupMenu();
+        const item = AgendaAdmin.cache.find(a => String(a.id) === String(id));
+        if (!item) return;
+        if (!AgendaAdmin.bisaKendali(item.sekbid_id)) {
+            if (typeof showToast === "function") showToast("Kamu tidak punya kendali atas sekbid ini.", "error");
+            return;
+        }
+        AgendaAdmin.editingId = id;
+        AgendaAdmin.pendingFiles = [];
+        AgendaAdmin._revokePreviewUrls();
+        // normalize existing fotos ke {path,caption}
+        const fotos = Array.isArray(item.fotos) ? item.fotos : [];
+        AgendaAdmin.existingFotos = fotos.map(f => typeof f === "string" ? { path: f, caption: "" } : { path: f.path, caption: f.caption || "" }).filter(f => f.path);
+        document.getElementById("agendaId").value = id;
+        AgendaAdmin.isiOpsiSekbidForm(item.sekbid_id);
+        document.getElementById("agendaJudul").value = item.judul || "";
+        document.getElementById("agendaDeskripsi").value = item.deskripsi || "";
+        document.getElementById("agendaTanggal").value = item.tanggal || "";
+        document.getElementById("agendaLokasi").value = item.lokasi || "";
+        const ft = document.getElementById("agendaFormTitle");
+        if (ft) ft.textContent = "Edit Agenda";
+        const fi = document.getElementById("agendaFotos");
+        if (fi) fi.value = "";
+        // buka form dulu baru render supaya filter editingId kepake
+        document.getElementById("agendaForm").classList.add("open");
+        document.body.style.overflow = "hidden";
+        AgendaAdmin.renderPreview();
+        AgendaAdmin.render();
+    },
+
+    tutupForm() {
+        const form = document.getElementById("agendaForm");
+        if (form) form.classList.remove("open");
+        document.body.style.overflow = "";
+        AgendaAdmin.editingId = null;
+        AgendaAdmin.pendingFiles = [];
+        AgendaAdmin.existingFotos = [];
+        AgendaAdmin._revokePreviewUrls();
+        const pv = document.getElementById("agendaPreview");
+        if (pv) { pv.innerHTML = ""; pv.style.display = "none"; }
+        const fi = document.getElementById("agendaFotos");
+        if (fi) fi.value = "";
+        const drop = document.getElementById("agendaDrop");
+        if (drop) drop.classList.remove("dragover");
+        AgendaAdmin.render();
+    },
+
+    // Menu titik-tiga di kartu (Edit / Hapus).
+    toggleMenu(btn) {
+        const wrap = btn && btn.closest ? btn.closest(".agenda-kebab") : null;
+        if (!wrap) return;
+        const lagiBuka = wrap.classList.contains("buka");
+        AgendaAdmin.tutupMenu();
+        if (!lagiBuka) wrap.classList.add("buka");
+    },
+    tutupMenu() {
+        document.querySelectorAll(".agenda-kebab.buka").forEach(w => w.classList.remove("buka"));
+    },
+
+    // handler baru — dipanggil dari drop & file input (support banyak file sekaligus)
+    handleFiles(fileList) {
+        if (!fileList || fileList.length === 0) return;
+        let added = 0;
+        for (const f of fileList) {
+            if (!f.type || !f.type.startsWith("image/")) {
+                showToast(`"${f.name}" bukan gambar`, "error");
+                continue;
+            }
+            AgendaAdmin.pendingFiles.push(f);
+            added++;
+        }
+        if (added > 0) AgendaAdmin.renderPreview();
+    },
+
+    // legacy: dipanggil via onchange lama (kalo ada) — forward ke handleFiles
+    preview(input) {
+        if (input && input.files) {
+            AgendaAdmin.handleFiles(input.files);
+            input.value = "";
+        }
+    },
+
+    renderPreview() {
+        const preview = document.getElementById("agendaPreview");
+        if (!preview) return;
+        // revoke url lama sebelum bikin baru
+        AgendaAdmin._revokePreviewUrls();
+        preview.innerHTML = "";
+
+        const existing = AgendaAdmin.existingFotos || [];
+        const pending = AgendaAdmin.pendingFiles || [];
+        if (existing.length === 0 && pending.length === 0) {
+            preview.style.display = "none";
+            return;
+        }
+        preview.style.display = "flex";
+
+        // foto existing (dari DB) — bisa dihapus sebelum simpan
+        existing.forEach((f, idx) => {
+            const wrap = document.createElement("div");
+            wrap.className = "agenda-preview-item";
+            wrap.innerHTML = `<img src="${getFoto(f.path)}" alt=""><button type="button" class="agenda-preview-del" title="Hapus foto ini"><i class="fa-solid fa-xmark"></i></button>`;
+            wrap.querySelector(".agenda-preview-del").addEventListener("click", () => AgendaAdmin.hapusExistingFoto(idx));
+            preview.appendChild(wrap);
+        });
+
+        // file pending (lokal) — preview via objectURL
+        pending.forEach((file, idx) => {
+            if (!file.type.startsWith("image/")) return;
+            const url = URL.createObjectURL(file);
+            AgendaAdmin._previewUrls.push(url);
+            const wrap = document.createElement("div");
+            wrap.className = "agenda-preview-item";
+            wrap.innerHTML = `<img src="${url}" alt=""><button type="button" class="agenda-preview-del" title="Hapus foto ini"><i class="fa-solid fa-xmark"></i></button>`;
+            wrap.querySelector(".agenda-preview-del").addEventListener("click", () => AgendaAdmin.hapusPending(idx));
+            preview.appendChild(wrap);
+        });
+    },
+
+    hapusExistingFoto(idx) {
+        AgendaAdmin.existingFotos.splice(idx, 1);
+        AgendaAdmin.renderPreview();
+    },
+
+    hapusPending(idx) {
+        AgendaAdmin.pendingFiles.splice(idx, 1);
+        AgendaAdmin.renderPreview();
+    },
+
+    _revokePreviewUrls() {
+        (AgendaAdmin._previewUrls || []).forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
+        AgendaAdmin._previewUrls = [];
+    },
+
+    async simpan() {
+        const u = OsisAuth.getUser && OsisAuth.getUser();
+        if (!u || u.mode !== "osis") { showPopup("Cuma OSIS", "error"); return; }
+        // Sekbid tujuan: global = pilihan form (boleh pindah saat edit),
+        // sisanya OTOMATIS sekbid sendiri. User biasa tidak memilih apa-apa.
+        const id = document.getElementById("agendaId").value ? parseInt(document.getElementById("agendaId").value, 10) : null;
+        let sekbidId = null;
+        const itemEdit = id ? AgendaAdmin.cache.find(a => String(a.id) === String(id)) : null;
+        if (AgendaAdmin.bisaGlobal()) {
+            const v = document.getElementById("agendaSekbid")?.value;
+            sekbidId = v ? parseInt(v, 10) : (itemEdit ? parseInt(itemEdit.sekbid_id, 10) : null);
+        } else if (id) {
+            sekbidId = itemEdit ? parseInt(itemEdit.sekbid_id, 10) : null;
+        } else {
+            sekbidId = AgendaAdmin.sekbidSaya();
+        }
+        const judul = document.getElementById("agendaJudul").value.trim();
+        const deskripsi = document.getElementById("agendaDeskripsi").value.trim();
+        const tanggal = document.getElementById("agendaTanggal").value || null;
+        const lokasi = document.getElementById("agendaLokasi").value.trim();
+        // Agenda di sini = kegiatan yang sudah dilaksanakan, status selalu selesai
+        const status = "selesai";
+        // Tanpa urutan manual: tampilan selalu tanggal terbaru -> terlama.
+
+        if (!judul) { showToast("Judul wajib diisi", "error"); return; }
+        if (!sekbidId) { showToast("Jabatanmu tidak cocok sekbid manapun — hubungi admin.", "error"); return; }
+        if (!AgendaAdmin.bisaKendali(sekbidId)) {
+            showToast("Kamu tidak punya kendali atas sekbid ini.", "error");
+            return;
+        }
+
+        const __spec = () => ({ modul: "agenda", op: id ? "update" : "create",
+            label: "Agenda: " + String(judul).slice(0, 42),
+            payload: { id: id || null, sekbid_id: sekbidId, judul, deskripsi, tanggal, lokasi,
+                status, fotosExisting: [...(AgendaAdmin.existingFotos || [])] },
+            files: (AgendaAdmin.pendingFiles || []).filter(fl => fl.type && fl.type.startsWith("image/"))
+                .map((fl, i) => ({ slot: "foto" + i, file: fl, name: fl.name, type: fl.type })),
+            cacheKeys: ["agenda_all", "agenda_*"] });
+        const __sesudahAntre = () => {
+            AgendaAdmin.tutupForm();
+            AgendaAdmin.pendingFiles = [];
+            AgendaAdmin.existingFotos = [];
+            AgendaAdmin._revokePreviewUrls();
+            const fi = document.getElementById("agendaFotos");
+            if (fi) fi.value = "";
+            const pv = document.getElementById("agendaPreview");
+            if (pv) { pv.innerHTML = ""; pv.style.display = "none"; }
+        };
+        if (typeof Outbox !== "undefined" && Outbox.offline()) {
+            try { await Outbox.enqueue(__spec()); } catch (e) { showToast(e.message, "error"); return; }
+            Outbox.sesudahAntre(__sesudahAntre);
+            return;
+        }
+
+        const btn = document.getElementById("btnSimpanAgenda");
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...'; }
+
+        try {
+            // fotos akhir = existing yang masih disisain + upload pending baru
+            let fotos = [...(AgendaAdmin.existingFotos || [])];
+            const files = AgendaAdmin.pendingFiles || [];
+            for (let i = 0; i < files.length; i++) {
+                const f = files[i];
+                if (!f.type.startsWith("image/")) continue;
+                const ext = (f.name.split(".").pop() || "jpg").toLowerCase();
+                const path = `agenda/agenda-${u.id}-${Date.now()}-${i}.${ext}`;
+                await uploadFotoStorage(f, path);
+                fotos.push({ path, caption: "" });
+            }
+
+            if (id) {
+                await updateAgenda(u.id, id, judul, deskripsi, tanggal, lokasi, status, fotos);
+                showToast("Agenda diperbarui!", "success");
+            } else {
+                const newId = await buatAgenda(u.id, sekbidId, judul, deskripsi, tanggal, lokasi, status, fotos);
+                if (!newId || newId <= 0) throw new Error("Gagal simpan (" + newId + ")");
+                showToast("Agenda ditambah!", "success");
+            }
+            AgendaAdmin.tutupForm();
+            // reset state preview
+            AgendaAdmin.pendingFiles = [];
+            AgendaAdmin.existingFotos = [];
+            AgendaAdmin._revokePreviewUrls();
+            const fi = document.getElementById("agendaFotos");
+            if (fi) fi.value = "";
+            const pv = document.getElementById("agendaPreview");
+            if (pv) { pv.innerHTML = ""; pv.style.display = "none"; }
+            await AgendaAdmin.muat();
+        } catch (err) {
+            console.error(err);
+            if (typeof Outbox !== "undefined" && await Outbox.enqueueOnNetErr(err, __spec())) {
+                Outbox.sesudahAntre(__sesudahAntre);
+                return;
+            }
+            showToast("Gagal simpan: " + err.message, "error");
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan'; }
+        }
+    },
+
+    async hapus(id) {
+        AgendaAdmin.tutupMenu();
+        const u = OsisAuth.getUser && OsisAuth.getUser();
+        if (!u || u.mode !== "osis") return;
+        const item0 = AgendaAdmin.cache.find(a => String(a.id) === String(id));
+        if (item0 && !AgendaAdmin.bisaKendali(item0.sekbid_id)) {
+            showPopup("Kamu tidak punya kendali atas sekbid ini.", "error");
+            return;
+        }
+        const yakin = await showPopup("Hapus agenda ini? Fotonya ikut terhapus.", "confirm");
+        if (!yakin) return;
+        try {
+            const item = AgendaAdmin.cache.find(a => String(a.id) === String(id));
+            await hapusAgenda(u.id, id);
+            if (item && Array.isArray(item.fotos)) {
+                for (const f of item.fotos) {
+                    const p = typeof f === "string" ? f : f.path;
+                    if (p) try { await hapusFotoStorage(p); } catch {}
+                }
+            }
+            showToast("Agenda dihapus", "success");
+            await AgendaAdmin.muat();
+        } catch (err) {
+            console.error(err);
+            showPopup("Gagal hapus: " + err.message, "error");
+        }
+    }
+};
+
+document.addEventListener("DOMContentLoaded", () => AgendaAdmin.init());

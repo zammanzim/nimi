@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Nihongo Quiz • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+
+    <style>
+        @media (min-width: 1024px) {
+            .main-content { flex-wrap: wrap; }
+            .jp-full { flex: 0 0 100%; }
+        }
+
+        .jp-card {
+            background: rgba(15, 20, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .jp-section-title {
+            font-size: 15px;
+            font-weight: 850;
+            margin: 0 0 12px;
+        }
+
+        .jp-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .jp-mode {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: inherit;
+            border-radius: 14px;
+            padding: 12px 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.18s;
+        }
+
+        .jp-mode:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .jp-mode.active {
+            border-color: var(--accent, #00eaff);
+            background: rgba(0, 234, 255, 0.1);
+            box-shadow: inset 0 0 0 1px var(--accent, #00eaff);
+        }
+
+        .jp-mode strong { display: block; font-size: 14px; }
+        .jp-mode small { display: block; opacity: 0.6; margin-top: 3px; line-height: 1.35; }
+
+        .jp-question {
+            min-height: 440px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .jp-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 750;
+            opacity: 0.9;
+        }
+
+        .jp-kana {
+            font-family: "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+            font-size: clamp(100px, 18vw, 170px);
+            line-height: 1;
+            margin: 22px 0 14px;
+            font-weight: 500;
+        }
+
+        .jp-prompt { opacity: 0.6; font-size: 14px; }
+
+        .jp-answers {
+            width: min(560px, 100%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .jp-answer {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: inherit;
+            border-radius: 14px;
+            padding: 14px 12px;
+            font-size: 17px;
+            font-weight: 750;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .jp-answer:hover { background: rgba(255, 255, 255, 0.09); }
+
+        .jp-answer.correct {
+            background: rgba(46, 213, 115, 0.18);
+            border-color: #2ed573;
+            color: #2ed573;
+        }
+
+        .jp-answer.wrong {
+            background: rgba(255, 107, 129, 0.15);
+            border-color: #ff6b81;
+            color: #ff6b81;
+        }
+
+        .jp-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .jp-stat {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .jp-stat b { display: block; font-size: 22px; }
+        .jp-stat span { font-size: 11px; opacity: 0.6; }
+
+        .jp-input-row { display: flex; gap: 8px; }
+
+        .jp-input-row input {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(0, 0, 0, 0.3);
+            color: inherit;
+            border-radius: 12px;
+            padding: 13px 14px;
+            outline: none;
+        }
+
+        .jp-input-row input:focus {
+            border-color: var(--accent, #00eaff);
+            box-shadow: 0 0 0 3px rgba(0, 234, 255, 0.12);
+        }
+
+        .jp-primary {
+            border: 0;
+            background: var(--accent, #00eaff);
+            color: #000;
+            border-radius: 12px;
+            padding: 0 17px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .jp-secondary {
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.05);
+            color: inherit;
+            border-radius: 12px;
+            padding: 11px 14px;
+            font-weight: 750;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .jp-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .jp-feedback {
+            min-height: 44px;
+            border-radius: 12px;
+            padding: 11px 13px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .jp-feedback.good {
+            background: rgba(46, 213, 115, 0.14);
+            border-color: rgba(46, 213, 115, 0.3);
+            color: #2ed573;
+        }
+
+        .jp-feedback.bad {
+            background: rgba(255, 107, 129, 0.12);
+            border-color: rgba(255, 107, 129, 0.3);
+            color: #ff6b81;
+        }
+
+        .jp-info {
+            padding: 14px;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            opacity: 0.7;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .jp-kbd {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.07);
+            border-bottom-width: 2px;
+            border-radius: 6px;
+            padding: 1px 5px;
+            font-size: 11px;
+        }
+
+        .jp-side { display: flex; flex-direction: column; gap: 12px; }
+
+        @media (max-width: 500px) {
+            .jp-card { padding: 15px; border-radius: 18px; }
+            .jp-mode-grid { grid-template-columns: 1fr 1fr; }
+            .jp-kana { font-size: 110px; }
+            .jp-question { min-height: 390px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="jp-full" style="flex: 0 0 100%; width: 100%;">
+            <h1 class="glow"><i class="fa-solid fa-torii-gate"></i> 日本語 — Tebak Huruf Jepang</h1>
+            <p style="opacity: 0.6; margin-top: 5px; margin-bottom: 20px;">Latihan hiragana &amp; katakana, mode dipisah kayak daftar huruf di buku</p>
+
+            <div class="jp-card">
+                <div class="jp-section-title">Pilih mode</div>
+                <div class="jp-mode-grid" id="modes"></div>
+            </div>
+        </div>
+
+        <div class="left-section">
+            <div class="jp-card jp-question">
+                <div class="jp-pill" id="modeLabel">Hiragana dasar • 46 huruf</div>
+                <div class="jp-kana" id="kana">あ</div>
+                <div class="jp-prompt">Huruf ini dibaca apa?</div>
+                <div class="jp-answers" id="answers"></div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div class="jp-card jp-side">
+                <div class="jp-stats">
+                    <div class="jp-stat"><b id="score">0</b><span>Skor</span></div>
+                    <div class="jp-stat"><b id="streak">0</b><span>Streak</span></div>
+                    <div class="jp-stat"><b id="accuracy">0%</b><span>Akurasi</span></div>
+                </div>
+                <div>
+                    <div class="jp-section-title">Atau ketik jawaban</div>
+                    <div class="jp-input-row">
+                        <input id="answerInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="contoh: ka" /><button class="jp-primary" id="submit">Cek</button>
+                    </div>
+                </div>
+                <div class="jp-feedback" id="feedback">Pilih salah satu jawaban atau ketik romaji.</div>
+                <button class="jp-secondary" id="next">Soal berikutnya →</button>
+                <div class="jp-info">
+                    <b>Tips:</b> buat mode dakuten/handakuten, perhatiin tanda
+                    <span class="jp-kbd">゛</span> dan <span class="jp-kbd">゜</span>. Mode
+                    kombinasi pake ゃ / ゅ / ょ kecil.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/jepun.js?v=20260822" defer></script>
+</body>
+
+</html>

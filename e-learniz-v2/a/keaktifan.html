@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peringkat Keaktifan • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+    <style>
+        /* ── RANKING CARD ── */
+        .ranking-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        /* ── PODIUM ── */
+        .podium-wrap {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 8px;
+            margin: 1.5rem 0 2rem;
+        }
+
+        .podium-item {
+            flex: 1;
+            max-width: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .podium-avatar {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            margin-bottom: 8px;
+            object-fit: cover;
+            background: #1a1a1c;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .podium-item:hover .podium-avatar { transform: scale(1.1); z-index: 5; }
+        .podium-item.active .podium-avatar { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 234, 255, 0.3); }
+
+        .podium-rank {
+            position: absolute;
+            top: -10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 900;
+            color: #000;
+            z-index: 2;
+        }
+
+        .rank-1 .podium-rank { background: linear-gradient(135deg, #ffd700, #ffae00); }
+        .rank-2 .podium-rank { background: linear-gradient(135deg, #c0c0c0, #8e8e8e); }
+        .rank-3 .podium-rank { background: linear-gradient(135deg, #cd7f32, #a0522d); }
+
+        .rank-1 .podium-avatar { width: 75px; height: 75px; border-color: #ffd700; }
+        .rank-2 .podium-avatar { border-color: #c0c0c0; }
+        .rank-3 .podium-avatar { border-color: #cd7f32; }
+
+        .podium-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ── LIST ── */
+        .lb-list { display: flex; flex-direction: column; gap: 8px; }
+        .lb-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lb-item:hover { background: rgba(255, 255, 255, 0.04); transform: translateX(4px); }
+        .lb-item.active { border-color: var(--accent); background: rgba(0, 234, 255, 0.05); }
+
+        .lb-rank { width: 20px; font-size: 12px; font-weight: 800; color: #555; text-align: center; }
+        .lb-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+        .lb-info { flex: 1; min-width: 0; }
+        .lb-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 1px; }
+        .lb-pts { font-size: 14px; font-weight: 800; color: var(--accent); }
+
+        /* ── ACTIVITY TRACKER ── */
+        .activity-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 24px;
+            min-height: 400px;
+        }
+
+        .track-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 2rem;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .track-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--accent); }
+        .track-user-info h3 { margin: 0; font-size: 16px; color: #fff; }
+        .track-user-info p { margin: 2px 0 0; font-size: 12px; color: #888; }
+
+        .timeline { position: relative; padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.05); margin-left: 10px; }
+        .timeline-item { position: relative; margin-bottom: 20px; }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 5px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #444;
+            border: 2px solid #0a0a0c;
+        }
+        .timeline-item.recent::before { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .tl-content { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .tl-time { font-size: 10px; color: #666; margin-bottom: 4px; display: block; }
+        .tl-action { font-size: 12px; color: #ddd; font-weight: 600; }
+        .tl-page { font-size: 11px; color: var(--accent); opacity: 0.8; margin-top: 2px; display: block; }
+
+        .btn-filter {
+            padding: 8px 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1); color: #888; font-size: 11px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-filter.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .empty-state { text-align: center; padding: 4rem 1rem; color: #444; }
+        .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+
+        /* ── EXCLUDE LIST STYLING ── */
+        .exclude-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .exclude-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .exclude-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .exclude-item input[type="checkbox"]:checked {
+            background: var(--accent, #00eaff);
+            border-color: var(--accent, #00eaff);
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+        }
+
+        .exclude-item input[type="checkbox"]:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 11px;
+            color: #000;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .exclude-item span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ddd;
+        }
+
+        /* ── 404 ERROR ITEMS ── */
+        .err404-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .err404-item:hover { background: rgba(255, 107, 107, 0.05); transform: translateX(4px); }
+        .err404-url { font-size: 12px; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .err404-meta { font-size: 10px; color: #888; margin-top: 2px; }
+        .err404-del { background: none; border: none; color: #ff4757; font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0; }
+        .err404-del:hover { color: #ff6b6b; }
+        .err404-item.active { border-color: var(--accent); background: rgba(255, 107, 107, 0.1); }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <!-- LEFT: RANKING -->
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-trophy" style="font-size:24px; color:#ffd700;"></i> Keaktifan</h1>
+                
+                <!-- CLASS SWITCHER & EXCLUDED (Super Admin Only) -->
+                <div id="classSwitcherWrap" style="display:none; gap:8px; margin: 10px 0 5px; overflow-x:auto; padding-bottom:5px; scrollbar-width:none; align-items:center;">
+                    <!-- Diisi via JS -->
+                </div>
+
+                <div style="display:flex; gap:8px; margin: 5px 0 15px;">
+                    <button class="btn-filter active" id="btn-all" onclick="loadLeaderboard('all')" data-i18n="all_time">All Time</button>
+                    <button class="btn-filter" id="btn-month" onclick="loadLeaderboard('month')">Bulan Ini</button>
+                    <button class="btn-filter" id="btn-week" onclick="loadLeaderboard('week')">Minggu Ini</button>
+                    <button class="btn-filter" id="btn-404" onclick="load404Errors()" style="display:none; border-color:#ff6b6b; color:#ff6b6b;"><i class="fa-solid fa-bug"></i> 404</button>
+                </div>
+            </div>
+
+            <div class="ranking-card">
+                <div id="podiumContainer" class="podium-wrap"></div>
+                <div class="lb-list" id="lbList"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT: ACTIVITY TRACKER (Desktop) -->
+        <div class="right-section" id="desktopTracker">
+            <div class="activity-card">
+                <div id="trackerContent">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-shoe-prints"></i>
+                        <p data-i18n="select_student_activity">Pilih siswa untuk melihat jejak aktivitasnya.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL (Mobile) -->
+    <div class="modal-overlay hidden" id="activityModal" onclick="closeModal(event)">
+        <div class="glass-modal-box" onclick="event.stopPropagation()">
+            <div id="modalTrackerContent"></div>
+        </div>
+    </div>
+
+    <!-- EXCLUDE MODAL -->
+    <div class="modal-overlay hidden" id="excludeModal" onclick="this.classList.add('hidden')">
+        <div class="glass-modal-box" onclick="event.stopPropagation()">
+            <div id="excludeModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUsers = [];
+        let activeUserId = null;
+        let currentTimeFilter = 'all';
+        let _404selectedUser = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof supabase === 'undefined') return;
+            setupClassSwitcher();
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'super_admin') {
+                document.getElementById('btn-404').style.display = '';
+            }
+
+            await loadLeaderboard('all');
+        });
+
+        function setupClassSwitcher() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'super_admin') return;
+
+            const wrap = document.getElementById('classSwitcherWrap');
+            wrap.style.display = 'flex';
+
+            const classes = [
+                { id: '1', name: 'X-RPL 1' },
+                { id: '2', name: 'X-RPL 2' },
+                { id: '3', name: 'X-RPL 3' },
+                { id: '4', name: 'X-RPL 4' }
+            ];
+
+            const currentClass = getEffectiveClassId();
+
+            let html = classes.map(c => `
+                <button class="btn-filter ${String(c.id) === String(currentClass) ? 'active' : ''}" 
+                        onclick="changeClass('${c.id}', '${c.name}')" 
+                        style="border-radius:10px; padding:6px 12px; font-size:10px;">
+                    ${c.name}
+                </button>
+            `).join('');
+
+            // Tombol Edit Excluded
+            html += `
+                <button class="btn-filter" onclick="openExcludeModal()" 
+                        style="border-radius:10px; padding:6px 12px; font-size:10px; border-color:#ff4757; color:#ff4757;" data-i18n="edit_excluded">
+                    <i class="fa-solid fa-user-slash"></i> Excluded
+                </button>
+            `;
+
+            wrap.innerHTML = html;
+        }
+
+        async function openExcludeModal() {
+            const container = document.getElementById('excludeModalContent');
+            const classId = getEffectiveClassId();
+            
+            document.getElementById('excludeModal').classList.remove('hidden');
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading_data')}</div>`;
+
+            const { data: users, error } = await supabase
+                .from('users')
+                .select('id, full_name, is_excluded')
+                .eq('class_id', classId)
+                .order('full_name');
+
+            if (error) {
+                container.innerHTML = t('failed_load_data');
+                return;
+            }
+
+            let html = `
+                <div class="track-header">
+                    <div class="track-user-info">
+                        <h3>Exclude People</h3>
+                        <p>Klik checkbox untuk langsung menyimpan perubahan.</p>
+                    </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+            `;
+
+            html += users.map(u => `
+                <label class="exclude-item">
+                    <input type="checkbox" class="exclude-chk" onchange="toggleExclusion(${u.id}, this.checked)" ${u.is_excluded ? 'checked' : ''}>
+                    <span>${u.full_name}</span>
+                </label>
+            `).join('');
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        async function toggleExclusion(id, status) {
+            try {
+                const { error } = await supabase
+                    .from('users')
+                    .update({ is_excluded: status })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast(status ? 'Siswa dikesampingkan' : 'Siswa dimasukkan ranking');
+                // Refresh leaderboard di background
+                await loadLeaderboard(currentTimeFilter);
+            } catch (e) {
+                console.error(e);
+                showToast('Gagal sinkronisasi data', 'error');
+            }
+        }
+
+        async function changeClass(id, name) {
+            sessionStorage.setItem('class_override', id);
+            sessionStorage.setItem('class_override_name', name);
+            setupClassSwitcher(); // Re-render pills
+            await loadLeaderboard(currentTimeFilter);
+        }
+
+        async function loadLeaderboard(timeFilter) {
+            currentTimeFilter = timeFilter;
+            const btns = document.querySelectorAll('.btn-filter');
+            btns.forEach(b => {
+                b.classList.remove('active');
+                const txt = b.innerText.toLowerCase();
+                if (timeFilter === '404') return;
+                if (txt.includes('all') || txt.includes('bulan') || txt.includes('minggu')) {
+                    if (txt.includes(timeFilter === 'all' ? 'all' : timeFilter === 'month' ? 'bulan' : 'minggu')) {
+                        b.classList.add('active');
+                    }
+                }
+            });
+
+            const list = document.getElementById('lbList');
+            const podium = document.getElementById('podiumContainer');
+            list.innerHTML = `<div style="padding:20px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading')}</div>`;
+            podium.innerHTML = '';
+
+            try {
+                const classId = getEffectiveClassId();
+                let startDate = null;
+
+                if (timeFilter === 'month') {
+                    const d = new Date(); d.setDate(1); d.setHours(0,0,0,0);
+                    startDate = d.toISOString();
+                } else if (timeFilter === 'week') {
+                    const d = new Date(); const day = d.getDay() || 7;
+                    if (day !== 1) d.setHours(-24 * (day - 1)); d.setHours(0,0,0,0);
+                    startDate = d.toISOString();
+                }
+
+                // Panggil RPC (Fungsi Database) biar server yang ngitungin poin
+                const { data, error } = await supabase.rpc('get_leaderboard', {
+                    p_class_id: String(classId), // Kirim sebagai string biar anti-error type mismatch
+                    p_start_date: startDate
+                });
+                
+                if (error) throw error;
+
+                currentUsers = data || [];
+                renderLeaderboard(currentUsers);
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = `<div class="empty-state">${t('failed_load_data')}</div>`;
+            }
+        }
+
+        function renderLeaderboard(data) {
+            const list = document.getElementById('lbList');
+            const podium = document.getElementById('podiumContainer');
+            const top3 = data.slice(0, 3);
+            const others = data.slice(3);
+
+            // Podium
+            const pOrder = [1, 0, 2];
+            podium.innerHTML = pOrder.map(idx => {
+                const u = top3[idx]; if (!u) return '';
+                const rank = idx + 1;
+                return `
+                <div class="podium-item rank-${rank} ${activeUserId == u.id ? 'active' : ''}" onclick="selectUser(${u.id})">
+                    <div class="podium-rank">${rank}</div>
+                    <img src="${u.avatar_url || '../icons/profpicture.png'}" class="podium-avatar" onerror="this.src='../icons/profpicture.png'">
+                    <div class="podium-name">${u.short_name || u.full_name.split(' ')[0]}</div>
+                    <div class="podium-pts">${u.points.toLocaleString()}</div>
+                </div>`;
+            }).join('');
+
+            // List
+            list.innerHTML = others.map((u, i) => {
+                const rank = i + 4;
+                return `
+                <div class="lb-item ${activeUserId == u.id ? 'active' : ''}" onclick="selectUser(${u.id})">
+                    <div class="lb-rank">${rank}</div>
+                    <img src="${u.avatar_url || '../icons/profpicture.png'}" class="lb-avatar" onerror="this.src='../icons/profpicture.png'">
+                    <div class="lb-info">
+                        <div class="lb-name">${u.full_name}</div>
+                        <div class="lb-pts">${u.points.toLocaleString()} pts</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function selectUser(userId) {
+            activeUserId = userId;
+            renderLeaderboard(currentUsers); // Refresh active state
+
+            const isMobile = window.innerWidth < 1024;
+            const containerId = isMobile ? 'modalTrackerContent' : 'trackerContent';
+            const container = document.getElementById(containerId);
+
+            if (isMobile) {
+                document.getElementById('activityModal').classList.remove('hidden');
+                if (typeof lockScroll === 'function') lockScroll();
+            }
+
+            container.innerHTML = `<div style="padding:40px; text-align:center; color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> ${t('loading_data')}</div>`;
+
+            try {
+                const user = currentUsers.find(u => u.id == userId);
+                const { data: logs, error } = await supabase
+                    .from('activity_logs')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (error) throw error;
+
+                let html = `
+                    <div class="track-header">
+                        <img src="${user.avatar_url || '../icons/profpicture.png'}" class="track-avatar" onerror="this.src='../icons/profpicture.png'">
+                        <div class="track-user-info">  
+                            <h3>${user.full_name}</h3>
+                          <p>Total Poin: <b style="color:var(--accent)">${user.points.toLocaleString()}</b></p>
+                        </div>
+                    </div>
+                    <div class="timeline">
+                `;
+
+                if (!logs || logs.length === 0) {
+                    html += `<p style="color:#555; font-size:13px; text-align:center; padding:20px;">${t('no_activity_log')}</p>`;
+                } else {
+                    html += logs.map((l, i) => `
+                        <div class="timeline-item ${i === 0 ? 'recent' : ''}">
+                            <div class="tl-content">
+                                <span class="tl-time">${new Date(l.created_at).toLocaleString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</span>
+                                <div class="tl-action">${l.action_text} <span style="color:var(--accent); font-size:10px;">+${l.points}</span></div>
+                                <span class="tl-page"><i class="fa-solid fa-location-dot" style="font-size:9px;"></i> ${l.page_name}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                html += `</div>`;
+                container.innerHTML = html;
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="empty-state">${t('failed_load_data')}</div>`;
+            }
+        }
+
+        function closeModal(e) {
+            document.getElementById('activityModal').classList.add('hidden');
+            if (typeof unlockScroll === 'function') unlockScroll();
+        }
+
+        /* ── 404 ERROR LOGS ── */
+        let _404userMap = {}; // user_id → { name, avatar }
+
+        async function _load404Users() {
+            const { data } = await supabase.from('users').select('id, full_name, nickname, short_name, avatar_url');
+            if (data) {
+                data.forEach(u => {
+                    const name = u.nickname || u.short_name || u.full_name || 'User ' + u.id;
+                    _404userMap[String(u.id)] = { name, avatar: u.avatar_url };
+                });
+            }
+        }
+
+        function _404displayName(userId) {
+            if (!userId) return 'Anonymous';
+            const found = _404userMap[String(userId)];
+            return found ? found.name : userId;
+        }
+
+        async function load404Errors() {
+            const list = document.getElementById('lbList');
+            const podium = document.getElementById('podiumContainer');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role !== 'super_admin') return;
+
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-404').classList.add('active');
+            podium.innerHTML = '';
+            _404selectedUser = null;
+
+            // Reset tracker
+            const tracker = document.getElementById('trackerContent');
+            if (tracker) tracker.innerHTML = `<div class="empty-state"><i class="fa-solid fa-shoe-prints"></i><p>Pilih user buat liat 404 nya.</p></div>`;
+
+            list.innerHTML = `<div style="padding:20px;text-align:center;color:#555;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>`;
+
+            try {
+                await _load404Users();
+
+                const { data, error } = await supabase
+                    .from('page_errors')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(200);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-check"></i><p>Ga ada error 404 👍</p></div>`;
+                    return;
+                }
+
+                // Group by user_id
+                const groups = {};
+                data.forEach(e => {
+                    const key = e.user_id || '__anon__';
+                    if (!groups[key]) groups[key] = { userId: e.user_id, errors: [], count: 0, latest: null };
+                    groups[key].errors.push(e);
+                    groups[key].count++;
+                    if (!groups[key].latest || new Date(e.created_at) > new Date(groups[key].latest)) {
+                        groups[key].latest = e.created_at;
+                    }
+                });
+
+                const sorted = Object.values(groups).sort((a, b) => new Date(b.latest) - new Date(a.latest));
+
+                list.innerHTML = sorted.map(g => {
+                    const key = g.userId || '__anon__';
+                    const displayName = _404displayName(g.userId);
+                    return `
+                        <div class="err404-item ${_404selectedUser === key ? 'active' : ''}" data-userkey="${escHtml(key)}" onclick="view404User(this.dataset.userkey)">
+                            <div style="flex:1;min-width:0;">
+                                <div class="err404-url">${escHtml(displayName)}</div>
+                                <div class="err404-meta">${g.count} error${g.count > 1 ? 's' : ''} &bull; ${new Date(g.latest).toLocaleString('id-ID', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+                            </div>
+                            <button class="err404-del" onclick="event.stopPropagation();deleteAllUser404('${escHtml(key)}')" title="Hapus semua"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>${t('failed_load_data')}</p></div>`;
+            }
+        }
+
+        async function view404User(userKey) {
+            _404selectedUser = userKey;
+
+            // Re-render list biar ada active state
+            document.querySelectorAll('.err404-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.userkey === userKey);
+            });
+
+            const actualUserId = userKey === '__anon__' ? '' : userKey;
+
+            const { data, error } = await supabase
+                .from('page_errors')
+                .select('*')
+                .eq('user_id', actualUserId)
+                .order('created_at', { ascending: false });
+
+            if (error || !data) return;
+
+            const isMobile = window.innerWidth < 1024;
+            const containerId = isMobile ? 'modalTrackerContent' : 'trackerContent';
+            const container = document.getElementById(containerId);
+
+            if (isMobile) {
+                document.getElementById('activityModal').classList.remove('hidden');
+                if (typeof lockScroll === 'function') lockScroll();
+            }
+
+            const displayName = _404displayName(actualUserId);
+
+            container.innerHTML = `
+                <div class="track-header">
+                    <div class="track-user-info">
+                        <h3><i class="fa-solid fa-bug" style="color:#ff6b6b;"></i> 404 — ${escHtml(displayName)}</h3>
+                        <p>${data.length} error${data.length > 1 ? 's' : ''}</p>
+                    </div>
+                </div>
+                <div class="timeline">
+                    ${data.map((e, i) => `
+                        <div class="timeline-item ${i === 0 ? 'recent' : ''}">
+                            <div class="tl-content" style="display:flex;flex-direction:column;gap:6px;">
+                                <span class="tl-time">${new Date(e.created_at).toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+                                <div class="err404-url" style="white-space:normal;word-break:break-all;">${escHtml(e.url)}</div>
+                                ${e.referrer ? `<span style="font-size:10px;color:#666;">Dari: ${escHtml(e.referrer)}</span>` : ''}
+                                <button class="err404-del" onclick="delete404Error(${e.id})" style="align-self:flex-end;font-size:12px;">
+                                    <i class="fa-solid fa-trash"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        async function delete404Error(id) {
+            const confirmed = await showPopup('Hapus entry 404 ini?', 'confirm');
+            if (!confirmed) return;
+
+            const { error } = await supabase
+                .from('page_errors')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                showToast('Gagal hapus', 'error');
+                return;
+            }
+
+            showToast('Berhasil dihapus', 'success');
+            if (_404selectedUser) view404User(_404selectedUser);
+            else load404Errors();
+        }
+
+        async function deleteAllUser404(userKey) {
+            const confirmed = await showPopup('Hapus semua error 404 user ini?', 'confirm');
+            if (!confirmed) return;
+
+            const actualUserId = userKey === '__anon__' ? '' : userKey;
+
+            const { error } = await supabase
+                .from('page_errors')
+                .delete()
+                .eq('user_id', actualUserId);
+
+            if (error) {
+                showToast('Gagal hapus', 'error');
+                return;
+            }
+
+            showToast('Semua berhasil dihapus', 'success');
+            if (userKey === _404selectedUser) _404selectedUser = null;
+            load404Errors();
+        }
+
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

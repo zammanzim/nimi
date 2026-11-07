@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nilai • Ujian</title>
+    <meta
+      name="description"
+      content="Nilai ulangan per kelas: pribadimu + leaderboard + file asli."
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=3"></script>
+    <script src="js/db.js?v=6"></script>
+    <script src="js/media.js?v=3"></script>
+    <script src="js/track.js?v=3"></script>
+    <script src="js/viewer.js?v=3"></script>
+    <link rel="stylesheet" href="css/style.css?v=4" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>"
+    />
+  </head>
+  <body class="page-nilai">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="topbar-row">
+          <div class="brand"><i class="fa-solid fa-trophy"></i> NILAI</div>
+          <div class="top-user-wrap">
+            <button
+              type="button"
+              class="top-user"
+              id="topUser"
+              style="display: none"
+            >
+              <span class="ava" id="topAva">?</span><span id="topHai">Haii</span
+              ><i class="fa-solid fa-chevron-down top-caret"></i>
+            </button>
+            <div class="top-drop" id="topDrop">
+              <a id="dropKisi" href="kisi"
+                ><i class="fa-solid fa-book-open"></i> Kisi-Kisi</a
+              >
+              <a id="dropQuiz" href="quiz"
+                ><i class="fa-solid fa-graduation-cap"></i> Latihan Soal</a
+              >
+              <a id="dropNilai" href="nilai"
+                ><i class="fa-solid fa-trophy"></i> Nilai</a
+              >
+              <a id="dropAdmin" href="admin" style="display: none"
+                ><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a
+              >
+              <button id="dropSetting" style="display: none">
+                <i class="fa-solid fa-gear"></i> Pengaturan
+              </button>
+              <button id="dropViewAll" style="display: none">
+                <i class="fa-solid fa-eye"></i> Liat semua nilai
+              </button>
+              <a id="dropIndex" href="index"
+                ><i class="fa-solid fa-house"></i> Beranda</a
+              >
+            </div>
+          </div>
+        </div>
+        <div class="topbar-sub">
+          Web Kisi-Kisi, Quiz, and Nilai. Made by Nizam or nimi •
+          <span class="top-domain">e-learniz.my.id</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-text">
+          <h1>Nilai</h1>
+          <div class="hero-domain">e-learniz.my.id</div>
+          <p id="testDesc">
+            Nilai murni ASTS. Ada nilai pribadi, leaderboard, dan daftar nilai
+            kelas.
+          </p>
+        </div>
+        <div class="hero-actions" style="display: none"></div>
+        <div
+          class="hero-actions split2"
+          style="flex: 1 1 100%; margin-left: 0"
+        >
+          <a class="btn btn-hero" id="heroKisiLink" href="kisi"
+            ><i class="fa-solid fa-book-open"></i>Liat Kisi-Kisi →</a
+          >
+          <a class="btn gold btn-hero" id="heroQuizLink" href="quiz"
+            ><i class="fa-solid fa-graduation-cap"></i>Liat Latihan Soal →</a
+          >
+        </div>
+      </div>
+
+      <!-- Layout 2 kolom ala nimi/a/scores: kiri sticky, kanan konten -->
+      <div class="nilai-layout">
+        <div class="left-section">
+          <!-- Kartu pribadimu -->
+          <div class="section-label">
+            <i class="fa-solid fa-user"></i> Pribadimu
+          </div>
+          <!-- Kartu pribadimu (compact: header sebaris + toggle di atas tabel) -->
+          <div class="info-card compact" id="myCard">
+            <div class="me-row">
+              <div class="score-emoji" id="myAva">🙂</div>
+              <div class="me-id">
+                <h2 id="myName">…</h2>
+                <p class="info-best" id="myMsg"></p>
+              </div>
+              <div class="me-avg">
+                <span id="myAvg">-</span>
+                <small>rata-rata • <span id="myRank">-</span></small>
+              </div>
+            </div>
+            <div id="myTable"></div>
+          </div>
+          <label class="priv-row priv-top" id="privWrap" style="display: none">
+            <span
+              ><i class="fa-solid fa-eye-slash"></i> Sembunyikan nilai aku dari
+              semua orang</span
+            >
+            <span class="switch"
+              ><input type="checkbox" id="privToggle" /><span
+                class="slider"
+              ></span
+            ></span>
+          </label>
+        </div>
+
+        <div class="right-section">
+          <div class="class-pick-row">
+            <button type="button" class="class-pick-btn" id="kelasPickBtn">
+              <span>Liat nilai kelas: <b id="kelasPickName">…</b></span>
+              <i class="fa-solid fa-chevron-down"></i>
+            </button>
+            <div class="class-pick-drop" id="kelasPickDrop"></div>
+          </div>
+          <!-- Podium -->
+          <div class="section-label">
+            <i class="fa-solid fa-trophy"></i> Leaderboard
+          </div>
+          <div id="podiumTop3" class="podium-top3"></div>
+          <div id="podiumRest" style="margin-top: 10px"></div>
+
+          <!-- Rata-rata kelas -->
+          <div class="section-label">
+            <i class="fa-solid fa-chart-simple"></i> Rata-rata Kelas
+          </div>
+          <div class="score-card" id="avgCard" style="display: none">
+            <div
+              style="
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                flex-wrap: wrap;
+                margin-bottom: 12px;
+              "
+            >
+              <div>
+                <div
+                  class="score-num"
+                  style="font-size: 2.2rem"
+                  id="avgOverall"
+                >
+                  -
+                </div>
+                <div class="info-cap">Rata-rata</div>
+              </div>
+              <div>
+                <div class="score-num" style="font-size: 2.2rem" id="avgTop">
+                  -
+                </div>
+                <div class="info-cap">Tertinggi</div>
+              </div>
+              <div>
+                <div class="score-num" style="font-size: 2.2rem" id="avgPass">
+                  -
+                </div>
+                <div class="info-cap">Lulus KKM</div>
+              </div>
+            </div>
+            <div id="avgList" style="text-align: left"></div>
+          </div>
+
+          <!-- Tabel kelas per mapel -->
+          <div class="section-label">
+            <i class="fa-solid fa-table"></i> Tabel Kelas
+          </div>
+          <div class="adm-card">
+            <div class="row2">
+              <div class="field">
+                <label>Mapel</label
+                ><select id="mapelSel"></select>
+              </div>
+              <div class="field">
+                <label>Urutkan</label>
+                <select id="sortSel">
+                  <option value="nilai">Nilai Tertinggi</option>
+                  <option value="nama">Nama (A-Z)</option>
+                </select>
+              </div>
+            </div>
+            <div class="mon-table-wrap">
+              <table class="mon-table">
+                <thead>
+                  <tr>
+                    <th style="width: 36px">#</th>
+                    <th>Nama</th>
+                    <th style="text-align: right">Nilai</th>
+                  </tr>
+                </thead>
+                <tbody id="classBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- File asli -->
+          <div class="section-label">
+            <i class="fa-solid fa-file-pdf"></i> File Nilai Asli
+          </div>
+          <div class="adm-card">
+            <div class="jadwal-note">
+              <i class="fa-solid fa-triangle-exclamation"></i> Nilai yang admin
+              masukkan <b>tidak 100% benar</b>. Cek file asli di bawah buat
+              mastiin.
+            </div>
+            <div id="filesList"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="foot">
+        Web kisi-kisi, quiz and nilai. Made by Nizam or nimi. <br />
+        &copy 2026 Web Nizam • All Right Reserved
+      </p>
+    </div>
+
+    <!-- Modal pengaturan admin -->
+    <div class="idpop-ov" id="admModal">
+      <div
+        class="idpop-card"
+        style="
+          max-width: 440px;
+          text-align: left;
+          max-height: 86vh;
+          overflow-y: auto;
+        "
+      >
+        <h2 style="text-align: center">
+          <i class="fa-solid fa-gear"></i> Pengaturan
+        </h2>
+        <div class="section-label">
+          <i class="fa-solid fa-eye-slash"></i> Nilai dijadiin -
+        </div>
+        <p style="font-size: 0.82rem; color: var(--muted); margin-bottom: 10px">
+          Centang mapel yang nilainya dijadiin - buat murid.
+        </p>
+        <div class="check-grid" id="hideGrid"></div>
+        <button
+          class="btn gold sm"
+          id="hideSave"
+          style="margin-top: 10px; width: 100%; justify-content: center"
+        >
+          Simpan
+        </button>
+        <div class="section-label">
+          <i class="fa-solid fa-file-arrow-up"></i> Upload file nilai
+        </div>
+        <div id="fileAdm">
+          <div class="field">
+            <label>Upload file nilai (PDF/gambar → R2)</label>
+            <input
+              id="fileUp"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp"
+            />
+          </div>
+          <div class="field">
+            <label>Label</label
+            ><input id="fileLabel" placeholder="cth: Nilai ASTS X RPL 2" />
+          </div>
+          <button class="btn sm" id="fileBtn">Upload</button>
+        </div>
+        <div class="idpop-btns">
+          <button
+            class="btn ghost"
+            id="admClose"
+            style="justify-content: center"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal detail siswa -->
+    <div class="idpop-ov" id="stuModal">
+      <div class="idpop-card" style="max-width: 420px; text-align: left">
+        <h2 id="stuName" style="text-align: center"></h2>
+        <p class="info-best" id="stuAvg" style="text-align: center"></p>
+        <div id="stuTable" style="margin-top: 10px"></div>
+        <div class="idpop-btns">
+          <button
+            class="btn ghost"
+            id="stuClose"
+            style="justify-content: center"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/nilai.js?v=38"></script>
+  </body>
+</html>

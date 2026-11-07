@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil</title>
+    <script>document.title = t('user') + ' • ' + t('app_name');</script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822"></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* ── Tombol + Upload — sejajar kanan foto ── */
+        .btn-add-post {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            background: var(--accent, #00eaff);
+            color: #000;
+            border: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            white-space: nowrap;
+        }
+
+        .btn-add-post:hover { opacity: 0.85; }
+        .btn-add-post:active { transform: scale(0.95); }
+
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .post-thumb {
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .post-thumb img, .post-thumb video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* ── Post detail modal ── */
+        .post-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        .post-modal-overlay.show { opacity: 1; visibility: visible; }
+
+        .post-modal-box {
+            width: 92%;
+            max-width: 28rem;
+            background: rgba(18, 18, 22, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.2rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .post-modal-user { display: flex; align-items: center; gap: 10px; }
+        .post-modal-user img { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--accent, #00eaff); }
+        .post-modal-username { font-size: 0.84rem; font-weight: 600; }
+        .post-modal-close { background: none; border: none; color: #777; font-size: 1.4rem; cursor: pointer; }
+
+        .post-modal-img { width: 100%; max-height: 55vh; object-fit: contain; background: #000; }
+        .post-modal-caption { padding: 0.85rem 1rem; font-size: 0.87rem; color: #ccc; }
+        .post-modal-actions { padding: 0 1rem 0.85rem; display: flex; justify-content: flex-end; }
+        
+        .btn-delete-post {
+            background: rgba(220, 50, 50, 0.1);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.22);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.77rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── Toggle Switch Styling ── */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 38px;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .3s;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #777;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: rgba(0, 234, 255, 0.2);
+            border-color: rgba(0, 234, 255, 0.4);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(18px);
+            background-color: var(--accent, #00eaff);
+            box-shadow: 0 0 8px rgba(0, 234, 255, 0.6);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content" style="padding-top: 4.5rem;">
+        <div class="profile-page-wrap" id="dashboardContainer">
+            
+            <!-- Bento Dashboard Grid -->
+            <div class="dashboard-grid" id="dashboardGrid">
+                
+                <!-- Profile Card -->
+                <div class="dash-card span-2 dash-profile-info animate-pop-up" onclick="window.location.href='settingacc'">
+                    <img id="dashAvatar" src="../icons/profpicture.png" class="dash-avatar" alt="">
+                    <div style="flex:1">
+                        <div id="dashFullName" style="font-weight:700; color:#fff; font-size:1.05rem;" data-i18n="loading">Memuat...</div>
+                        <div id="dashUsername" style="font-size:0.8rem; color:var(--accent,#00eaff);">@...</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right" style="font-size:12px; opacity:0.3;"></i>
+                </div>
+
+                <!-- Stats: Posts -->
+                <div class="dash-card animate-pop-up" style="animation-delay: 0.1s;">
+                    <div class="dash-card-title"><i class="fa-solid fa-image"></i> Post</div>
+                    <div class="dash-stat-val" id="statPosts">–</div>
+                    <div class="dash-stat-label">Postingan</div>
+                </div>
+
+                <!-- Stats: Tasks -->
+                <div class="dash-card animate-pop-up" style="animation-delay: 0.2s;">
+                    <div class="dash-card-title"><i class="fa-solid fa-list-check"></i> <span data-i18n="tugas">Tugas</span></div>
+                    <div class="dash-stat-val" id="statTasks">–</div>
+                    <div class="dash-stat-label"><span data-i18n="done">Selesai</span></div>
+                </div>
+
+                <!-- Task Progress Section -->
+                <div class="dash-card span-4 animate-pop-up" style="animation-delay: 0.3s;" onclick="window.location.href='tugas'">
+                    <div class="dash-card-title">
+                        <i class="fa-solid fa-bars-progress"></i> <span data-i18n="task_progress">Progress Tugas</span>
+                        <span id="dashTaskPercent" style="margin-left:auto; color:var(--accent,#00eaff);">0%</span>
+                    </div>
+                    <div id="dashTaskText" style="font-size:0.85rem; color:#ccc; margin-bottom:8px;" data-i18n="loading_task_progress">Memuat progress tugas...</div>
+                    <div class="dash-progress-wrap">
+                        <div id="dashTaskBar" class="dash-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="dash-card span-2 row-2 animate-pop-up" style="animation-delay: 0.4s;">
+                    <div class="dash-card-title">
+                        <i class="fa-solid fa-calendar-day"></i> <span data-i18n="today_schedule">Jadwal Hari Ini</span>
+                        <span id="dashTodayName" style="margin-left:auto; opacity:0.5; font-size:0.65rem;">...</span>
+                    </div>
+                    <div id="dashScheduleList">
+                        <!-- Filled by JS -->
+                        <div style="padding:1rem 0; text-align:center; color:#444; font-size:0.8rem;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        </div>
+                    </div>
+                    <button class="btn-glass-save" style="width:100%; margin-top:1rem; padding:8px; font-size:0.75rem;" onclick="window.location.href='../'" data-i18n="view_full_schedule">
+                        Lihat Full Jadwal
+                    </button>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dash-card span-2 animate-pop-up" style="animation-delay: 0.5s;">
+                    <div class="dash-card-title"><i class="fa-solid fa-bolt"></i> Aksi Cepat</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom: 12px;">
+                        <button class="btn-add-post" style="width:100%; justify-content:center;" onclick="openUploadModal()">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="post_photo">Post</span>
+                        </button>
+                        <button class="btn-glass-cancel" style="width:100%; border-radius:20px; font-size:0.82rem; font-weight:700; padding: 7px 0;" onclick="window.location.href='theme'">
+                            <i class="fa-solid fa-palette"></i> <span data-i18n="theme">Tema</span>
+                        </button>
+                    </div>
+
+                    <!-- Privacy Toggle -->
+                    <div class="privacy-toggle-row" style="padding: 10px 12px; border-radius: 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 0.8rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-lock" style="font-size: 10px;"></i> Akun Privat
+                            </span>
+                            <span style="font-size: 0.65rem; color: #666;">Sembunyikan dari Feed</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dashPrivacyToggle" onchange="DashboardApp.savePrivacy(this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Full Posts Grid Section -->
+                <div class="dash-card span-4 animate-pop-up" style="animation-delay: 0.6s; padding: 0; background: none; border: none; backdrop-filter: none;">
+                    <div class="dash-card-title" style="padding: 0 5px 10px;">
+                        <i class="fa-solid fa-grid-2"></i> Postingan Kamu
+                    </div>
+                    <div id="dashPostGrid" class="posts-grid">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== UPLOAD MODAL ===== -->
+    <div class="modal-overlay hidden" id="uploadModal">
+        <div class="glass-modal-box">
+            <h3><i class="fa-solid fa-image"></i> <span data-i18n="post_photo">Posting Foto</span></h3>
+
+            <div id="uploadDropZone" class="drop-area" onclick="document.getElementById('uploadFileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <div class="drop-text" data-i18n="select_photo_video">Pilih foto atau video</div>
+                <input type="file" id="uploadFileInput" accept="image/*,video/*" style="display:none;">
+            </div>
+
+            <div id="uploadPreviewWrap" class="upload-preview-wrap hidden">
+                <img id="uploadPreviewImg" class="upload-preview-img" alt="">
+                <video id="uploadPreviewVid"
+                    style="display:none;width:100%;max-height:260px;object-fit:contain;border-radius:8px;background:#000;"
+                    controls preload="metadata"></video>
+                <button class="upload-remove-btn" onclick="removeUploadPreview()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <textarea id="uploadCaption" class="glass-input" placeholder="Tulis caption..." maxlength="500" rows="3"
+                oninput="document.getElementById('captionCounter').textContent=this.value.length+'/500'"></textarea>
+            <div class="char-counter" id="captionCounter" style="font-size: 0.7rem; color: #555; text-align: right; margin-top: -5px; margin-bottom: 10px;">0/500</div>
+
+            <div class="action-buttons">
+                <button class="btn-glass-cancel" onclick="closeUploadModal()" data-i18n="cancel">Batal</button>
+                <button class="btn-glass-save" id="btnPostSave" onclick="submitPost()">
+                    <i class="fa-solid fa-paper-plane"></i> <span data-i18n="post_photo">Post</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== POST DETAIL MODAL ===== -->
+    <div class="post-modal-overlay" id="postDetailOverlay" onclick="handleDetailOverlayClick(event)">
+        <div class="post-modal-box">
+            <div class="post-modal-header">
+                <div class="post-modal-user">
+                    <img id="detailUserAvatar" src="" alt="">
+                    <div>
+                        <div class="post-modal-username" id="detailUserName"></div>
+                        <div class="post-modal-time" id="detailPostTime"></div>
+                    </div>
+                </div>
+                <button class="post-modal-close" onclick="closePostDetail()">
+                    <i class="fa-solid fa-xmark" style="margin:0"></i>
+                </button>
+            </div>
+
+            <img class="post-modal-img" id="detailPostImg" src="" alt="">
+
+            <!-- Custom video player -->
+            <div id="detailVidWrap"
+                style="display:none;position:relative;background:#000;max-height:55vh;overflow:hidden;">
+                <video id="detailPostVid" style="width:100%;max-height:55vh;object-fit:contain;display:block;"
+                    preload="metadata" playsinline loop></video>
+            </div>
+
+            <div class="post-modal-caption">
+                <span id="detailCapText"></span>
+            </div>
+
+            <div class="post-modal-actions hidden" id="detailActionsWrap">
+                <button class="btn-delete-post" id="btnDeletePost" onclick="deleteCurrentPost()" data-i18n="delete_post">
+                    <i class="fa-solid fa-trash"></i> Hapus Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/dashboard.js?v=20260822" defer></script>
+</body>
+
+</html>

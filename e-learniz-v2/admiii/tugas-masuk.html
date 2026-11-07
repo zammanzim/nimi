@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --accent: #00eaff;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent, #00eaff);
+            display: block;
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .filter-select {
+            flex: 1;
+            min-width: 140px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #fff;
+            padding: 9px 12px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23888'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 18px;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: var(--accent, #00eaff);
+        }
+
+        .filter-select option {
+            background: #111;
+        }
+
+        /* ── Submission Card ── */
+        .sub-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+
+        .sub-card:hover {
+            border-color: rgba(0, 234, 255, 0.2);
+        }
+
+        .sub-card-top {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .sub-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(0, 234, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sub-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sub-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .sub-class {
+            font-size: 11px;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .sub-time {
+            font-size: 10px;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .sub-teacher {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            padding-left: 48px;
+        }
+
+        .sub-teacher i {
+            color: var(--accent, #00eaff);
+            width: 16px;
+            font-size: 10px;
+        }
+
+        .sub-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding-left: 48px;
+        }
+
+        .sub-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: rgba(0, 234, 255, 0.06);
+            border: 1px solid rgba(0, 234, 255, 0.12);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #00eaff;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .sub-file:hover {
+            background: rgba(0, 234, 255, 0.12);
+        }
+
+        .sub-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: rgba(0, 200, 100, 0.06);
+            border: 1px solid rgba(0, 200, 100, 0.15);
+            border-radius: 8px;
+            font-size: 11px;
+            color: #0be881;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .sub-link:hover {
+            background: rgba(0, 200, 100, 0.12);
+        }
+
+        .sub-message {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+            padding-left: 48px;
+            margin-top: 6px;
+        }
+
+        .list-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #555;
+        }
+
+        .list-empty i {
+            font-size: 36px;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.4;
+        }
+
+        .list-empty p {
+            font-size: 13px;
+        }
+
+        .list-loading {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- LEFT: Stats + Filter -->
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-inbox" style="font-size:22px;"></i> <span data-i18n="incoming_tasks"></span></h1>
+            </div>
+
+            <div class="filter-bar" style="margin-top: 30px;">
+                <select class="filter-select" id="filterTeacher" onchange="applyFilter()">
+                    <option value="" data-i18n="all_teachers"></option>
+                </select>
+                <select class="filter-select" id="filterTugas" onchange="applyFilter()">
+                    <option value="" data-i18n="all"></option>
+                </select>
+                <select class="filter-select" id="filterDate" onchange="applyFilter()">
+                    <option value="" data-i18n="all_time_filter"></option>
+                    <option value="today" data-i18n="today_filter"></option>
+                    <option value="week" data-i18n="this_week"></option>
+                    <option value="month" data-i18n="this_month"></option>
+                </select>
+            </div>
+        </div>
+
+        <!-- RIGHT: Submission List -->
+        <div class="right-section">
+            <div id="submissionList">
+                <div class="list-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i><span data-i18n="loading"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let tugasTitleMap = {}; // tugas_id → big_title
+
+        // ── Format date ──
+        function fmtDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleDateString('id-ID', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            }) + ', ' + d.toLocaleTimeString('id-ID', {
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ── Generate public URL ──
+        function getFileUrl(filePath) {
+            try {
+                const { data } = supabase.storage
+                    .from('transfer-files')
+                    .getPublicUrl(filePath);
+                return data?.publicUrl || null;
+            } catch (err) {
+                console.warn('Gagal buat public URL:', err);
+                return null;
+            }
+        }
+
+        // ── Open file ──
+        function openFile(filePath, fileName) {
+            const url = getFileUrl(filePath);
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                showToast(t('failed_open_file'), 'error');
+            }
+        }
+
+        // ── Load task titles ──
+        async function loadTaskTitles() {
+            try {
+                const { data, error } = await supabase
+                    .from('subject_announcements')
+                    .select('id, big_title')
+                    .eq('is_task', true);
+                if (error) throw error;
+                (data || []).forEach(t => {
+                    tugasTitleMap[String(t.id)] = t.big_title || t('task_no_title');
+                });
+            } catch (err) {
+                console.warn('Gagal load task titles:', err);
+            }
+        }
+
+        // ── Load teachers ──
+        async function loadTeacherFilter() {
+            const sel = document.getElementById('filterTeacher');
+            try {
+                const { data, error } = await supabase
+                    .from('task_submissions')
+                    .select('teacher_name')
+                    .order('teacher_name');
+                if (error) throw error;
+                const names = [...new Set((data || []).map(d => d.teacher_name).filter(Boolean))];
+                names.forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = n;
+                    opt.textContent = n;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.warn('Gagal load guru:', err);
+            }
+        }
+
+        // ── Load tugas filter ──
+        async function loadTugasFilter() {
+            const sel = document.getElementById('filterTugas');
+            try {
+                const ids = Object.keys(tugasTitleMap);
+                ids.forEach(id => {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = tugasTitleMap[id];
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.warn('Gagal load tugas filter:', err);
+            }
+        }
+
+        // ── Load submissions ──
+        async function loadSubmissions() {
+            const container = document.getElementById('submissionList');
+            try {
+                const { data, error } = await supabase
+                    .from('task_submissions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(200);
+                if (error) throw error;
+
+                allData = data || [];
+
+                applyFilter();
+            } catch (err) {
+                console.error('Gagal load:', err);
+                container.innerHTML = '<div class="list-empty" style="color:#ff4757;"><i class="fa-solid fa-circle-exclamation"></i><p>' + t('failed_load_data') + '</p></div>';
+            }
+        }
+
+        // ── Apply filter + render ──
+        function applyFilter() {
+            const teacher = document.getElementById('filterTeacher').value;
+            const tugasFilter = document.getElementById('filterTugas').value;
+            const dateFilter = document.getElementById('filterDate').value;
+            const container = document.getElementById('submissionList');
+
+            let filtered = [...allData];
+
+            if (teacher) {
+                filtered = filtered.filter(s => s.teacher_name === teacher);
+            }
+
+            if (tugasFilter) {
+                filtered = filtered.filter(s => String(s.tugas_id) === tugasFilter);
+            }
+
+            if (dateFilter === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                filtered = filtered.filter(s => s.created_at?.startsWith(today));
+            } else if (dateFilter === 'week') {
+                const now = new Date();
+                const weekStart = new Date(now);
+                weekStart.setDate(now.getDate() - now.getDay());
+                weekStart.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(s => new Date(s.created_at) >= weekStart);
+            } else if (dateFilter === 'month') {
+                const now = new Date();
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                filtered = filtered.filter(s => new Date(s.created_at) >= monthStart);
+            }
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="list-empty"><i class="fa-solid fa-inbox"></i><p>' + t('no_submissions_data') + '</p></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach(s => {
+                const avatarSrc = s.avatar_url || '../icons/profpicture.png';
+                const hasFile = !!s.file_url;
+                const hasLink = !!s.link_url;
+                const tugasTitle = s.tugas_id ? (tugasTitleMap[String(s.tugas_id)] || '') : '';
+
+                const card = document.createElement('div');
+                card.className = 'sub-card';
+
+                let attachmentsHtml = '';
+                if (hasFile) {
+                    attachmentsHtml += `<a class="sub-file" onclick="openFile('${s.file_url}', '${s.file_name.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file"></i> ${s.file_name || t('view_file')}</a>`;
+                }
+                if (hasLink) {
+                    attachmentsHtml += `<a class="sub-link" href="${s.link_url}" target="_blank" rel="noopener"><i class="fa-solid fa-link"></i> ${t('open_link')}</a>`;
+                }
+
+                const msgHtml = s.message
+                    ? `<div class="sub-message"><i class="fa-regular fa-message"></i> ${s.message}</div>`
+                    : '';
+
+                card.innerHTML = `
+                    <div class="sub-card-top">
+                        <img class="sub-avatar" src="${avatarSrc}" onerror="this.src='../icons/profpicture.png'">
+                        <div class="sub-meta">
+                            <div class="sub-name">${s.user_name || t('student')}</div>
+                            <div class="sub-class">${s.user_class || ''}</div>
+                        </div>
+                        <div class="sub-time">${fmtDate(s.created_at)}</div>
+                    </div>
+                    ${tugasTitle ? `<div style="font-size:12px;font-weight:600;color:#ffd32a;padding-left:48px;margin-bottom:4px;">📋 ${tugasTitle}</div>` : ''}
+                    <div class="sub-teacher"><i class="fa-solid fa-chalkboard-user"></i> ${s.teacher_name}</div>
+                    ${attachmentsHtml ? `<div class="sub-attachments">${attachmentsHtml}</div>` : ''}
+                    ${msgHtml}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.title = t('incoming_tasks') + ' • ' + t('app_name');
+            await loadTaskTitles();
+            loadTugasFilter();
+            loadTeacherFilter();
+            loadSubmissions();
+        });
+    </script>
+</body>
+
+</html>

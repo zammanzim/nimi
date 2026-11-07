@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Setting • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/accountsetting.png" type="image/png">
+</head>
+<script>
+    let user = getUser();
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        if (!user) { window.location.href = "login"; return; }
+        document.title = t('settingacc') + ' • ' + t('app_name');
+        await refreshUserData();
+        if (typeof logVisitor === 'function') logVisitor();
+        checkAccountSecurity();
+    });
+
+    async function refreshUserData() {
+        try {
+            const { data, error } = await supabase.from('users').select('*').eq('id', user.id).single();
+            if (error) throw error;
+            if (!data) return;
+
+            user = data;
+            localStorage.setItem("user", JSON.stringify(data));
+
+            // Update UI
+            const ppUrl = data.avatar_url ? `${data.avatar_url}?t=${new Date().getTime()}` : "../icons/profpicture.png";
+            if (document.getElementById('previewPP')) document.getElementById('previewPP').src = ppUrl;
+            const _hPP = document.getElementById('headerPP');
+            if (_hPP && _hPP.getAttribute('src') !== ppUrl) _hPP.src = ppUrl;
+
+            document.getElementById('inputFullName').value = data.full_name || "-";
+            document.getElementById('inputRole').value = (data.role || "student").toUpperCase();
+            document.getElementById('inputShortName').value = data.short_name || "";
+            document.getElementById('inputBio').value = data.bio || "";
+            document.getElementById('inputUser').value = data.username || "";
+            document.getElementById('inputPass').value = data.password || "";
+            const togglePrivate = document.getElementById('togglePrivate');
+            if (togglePrivate) togglePrivate.checked = !!data.is_private;
+
+            if (document.getElementById('headerName')) {
+                document.getElementById('headerName').innerText = t('welcome', {name: data.short_name || data.nickname || 'User'});
+            }
+        } catch (err) { console.error("Load Error:", err); }
+    }
+
+    async function saveChanges() {
+        const btn = document.querySelector('.btn-save');
+        const originalText = btn.innerHTML;
+        const usernameVal = document.getElementById('inputUser').value.trim();
+        const passwordVal = document.getElementById('inputPass').value.trim();
+
+        // [VALIDASI] Harus isi keduanya atau kosong keduanya (tapi disarankan isi)
+        if ((usernameVal && !passwordVal) || (!usernameVal && passwordVal)) {
+            showPopup(t('warning_credentials_required'), "error");
+            return;
+        }
+
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> ' + t('saving');
+        btn.disabled = true;
+
+        try {
+            const fileInput = document.getElementById('inputPPFile');
+            let newAvatarUrl = user.avatar_url;
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const compressedFile = await compressImage(file, 500, 0.7);
+                const fileName = `${user.id}.jpg`;
+                const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, compressedFile, { upsert: true });
+                if (uploadError) throw uploadError;
+                const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                newAvatarUrl = `${publicUrlData.publicUrl}?v=${new Date().getTime()}`;
+            }
+
+            const updates = {
+                avatar_url: newAvatarUrl,
+                short_name: document.getElementById('inputShortName').value.trim() || null,
+                bio: document.getElementById('inputBio').value.trim() || null,
+                username: usernameVal || null,
+                password: passwordVal || null,
+                is_private: document.getElementById('togglePrivate')?.checked ?? false,
+            };
+
+            const { error: updateError } = await supabase.from('users').update(updates).eq('id', user.id);
+            if (updateError) throw updateError;
+
+            showPopup("✅ " + t('profile_updated'), "success");
+            await refreshUserData();
+            checkAccountSecurity(); // Langsung update banner tanpa refresh
+
+        } catch (err) {
+            showPopup("❌ " + err.message, "error");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function checkAccountSecurity() {
+        const u = JSON.parse(localStorage.getItem("user"));
+        const warningEl = document.getElementById('accountWarning');
+        if (!u || !warningEl) return;
+
+        const hasUsn = u.username && u.username.trim() !== "";
+        const hasPw = u.password && u.password.trim() !== "";
+
+        if (!hasUsn || !hasPw) {
+            warningEl.style.display = 'flex';
+        } else {
+            warningEl.style.display = 'none'; // Sembunyikan kalau sudah lengkap
+        }
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => document.getElementById('previewPP').src = e.target.result;
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function togglePass() {
+        const input = document.getElementById('inputPass');
+        const icon = document.querySelector('.toggle-pw');
+        const isPw = input.type === "password";
+        input.type = isPw ? "text" : "password";
+        icon.className = isPw ? 'fa-solid fa-eye-slash toggle-pw' : 'fa-solid fa-eye toggle-pw';
+    }
+</script>
+<style>
+    h2.section-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--accent, #00eaff);
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #aaa;
+        font-weight: 600;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .form-input:focus {
+        border-color: var(--accent, #00eaff);
+        background: rgba(0, 234, 255, 0.05);
+        box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
+    }
+
+    /* STYLE KHUSUS INPUT DISABLED (READ ONLY) */
+    .form-input:disabled {
+        background: rgba(255, 255, 255, 0.05);
+        /* Lebih gelap/abu */
+        border-color: rgba(255, 255, 255, 0.05);
+        color: #cecece;
+        /* Teks abu */
+        cursor: not-allowed;
+        font-style: italic;
+    }
+
+    /* UPLOAD AREA */
+    .pp-upload-area {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    .current-pp {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 2px solid var(--accent, #00eaff);
+        object-fit: cover;
+        box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
+        background: #222;
+    }
+
+    .file-upload-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .file-upload-btn:hover {
+        border-color: var(--accent, #00eaff);
+        color: var(--accent, #00eaff);
+        background: rgba(0, 234, 255, 0.1);
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--accent, #00eaff), #0088ff);
+        color: black;
+        font-weight: 800;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 16px;
+        box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+        transition: 0.3s;
+        display: block;
+        width: 100%;
+        text-transform: uppercase;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
+    }
+
+    .btn-save:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .toggle-pw {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+
+    .ganti-foto {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    /* Toggle Switch Akun Privat */
+    .privacy-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+
+    .privacy-toggle-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .privacy-toggle-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .privacy-toggle-desc {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 26px;
+        flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+        transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        left: 3px;
+        top: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+        background: var(--accent, #00eaff);
+        box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
+    }
+
+    .toggle-switch input:checked+.toggle-slider::before {
+        transform: translateX(22px);
+        background: #000;
+    }
+
+    /* Styling Banner Peringatan Akun */
+    .warning-banner {
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.2);
+        background: var(--accent, #00eaff);
+    }
+</style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-user-gear"></i> <span data-i18n="settingacc"></span></h1>
+            </div>
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-id-card"></i> <span data-i18n="account_data"></span></h2>
+
+                <div class="form-group">
+                    <div class="ganti-foto">
+                        <label class="form-label" data-i18n="profile_photo"></label>
+                    </div>
+                    <div class="pp-upload-area">
+                        <img src="../icons/profpicture.png" id="previewPP" class="current-pp"
+                            onerror="this.src='../icons/profpicture.png'">
+                        <input type="file" id="inputPPFile" accept="image/*" style="display: none;"
+                            onchange="previewImage(this)">
+                    </div>
+                    <div class="ganti-foto">
+                        <label for="inputPPFile" class="file-upload-btn">
+                            <i class="fa-solid fa-camera"></i> <span data-i18n="change_photo"></span>
+                        </label>
+                    </div>
+                    <div class="ganti-foto">
+                        <p style="font-size: 12px;"><i data-i18n="change_photo_note"></i></p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin: 5px 0">
+                    <label class="form-label" data-i18n="full_name"></label>
+                    <input type="text" id="inputFullName" class="form-input" disabled data-i18n-placeholder="loading">
+                </div>
+
+                <div class="form-group" style="margin-bottom:10px">
+                    <label class="form-label" data-i18n="role_status"></label>
+                    <input type="text" id="inputRole" class="form-input" disabled data-i18n-placeholder="loading">
+                </div>
+                <p style="color: rgb(255, 55, 0); margin-top: -10px; font-size: 14px;"><i data-i18n="admin_edit_note"></i>
+                </p>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+
+                <div class="form-group">
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="nickname_display"></label>
+                    <input type="text" id="inputShortName" class="form-input" data-i18n-placeholder="nickname_placeholder">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="bio"></label>
+                    <input type="text" id="inputBio" class="form-input" data-i18n-placeholder="bio_placeholder">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="color:var(--accent, #00eaff);" data-i18n="privacy"></label>
+                    <label class="privacy-toggle-row" for="togglePrivate">
+                        <div class="privacy-toggle-info">
+                            <span class="privacy-toggle-label">
+                                <i class="fa-solid fa-lock"></i> <span data-i18n="private_account"></span>
+                            </span>
+                            <span class="privacy-toggle-desc" data-i18n="privacy_desc"></span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="togglePrivate">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div id="accountWarning" class="warning-banner hidden"
+                style="background: rgb(255, 0, 21); border: 1px solid #ff4757; color: #ffffff; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; font-weight: 600; display: none; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span data-i18n="warning_set_credentials"></span>
+            </div>
+            <div class="course-card" style="margin-top: 0;">
+                <h2 class="section-title"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="account_login"></span></h2>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="username_label"></label>
+                    <input type="text" id="inputUser" class="form-input" data-i18n-placeholder="username_placeholder">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" data-i18n="password_label"></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="inputPass" class="form-input" data-i18n-placeholder="password_placeholder">
+                        <i class="fa-solid fa-eye toggle-pw" onclick="togglePass()"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="saveChanges()">
+                <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="save_changes"></span>
+            </button>
+
+        </div>
+    </div>
+    <script>
+
+        // 4. COMPRESS IMAGE
+        function compressImage(file, maxWidth = 500, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = e => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement("canvas");
+                        const scale = maxWidth / img.width;
+                        canvas.width = maxWidth;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob(blob => {
+                            if (!blob) return reject("Gagal compress!");
+                            resolve(blob);
+                        }, "image/jpeg", quality);
+                    };
+                };
+                reader.onerror = err => reject(err);
+            });
+        }
+    </script>
+</body>
+
+</html>

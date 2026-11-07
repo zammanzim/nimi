@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cleanup Storage • Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #111;
+            color: #fff;
+        }
+
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #222;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+            cursor: help;
+        }
+
+        .preview-container {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 100;
+            display: none;
+            border: 2px solid #00eaff;
+            background: #000;
+            max-width: 40vw;
+            max-height: 80vh;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Cleanup Orphaned Photos</h1>
+    <button onclick="scanStorage()">1. Scan & Preview</button>
+    <button id="deleteBtn" onclick="runCleanup()"
+        style="display:none; background: #ff4757; color: white; border: none;">2. <span data-i18n="delete_selected_files">Hapus File yang Terpilih</span></button>
+
+    <div id="fileList" class="file-list"></div>
+    <div id="log" class="log"></div>
+
+    <div id="previewBox" class="preview-container"><img id="previewImg" class="preview-img"></div>
+
+    <script>
+        let orphanedFiles = [];
+        const log = (msg) => {
+            document.getElementById('log').innerHTML += `<div>${msg}</div>`;
+        };
+
+        function showPreview(url) {
+            document.getElementById('previewImg').src = url;
+            document.getElementById('previewBox').style.display = 'block';
+        }
+
+        function hidePreview() {
+            document.getElementById('previewBox').style.display = 'none';
+        }
+
+        async function scanStorage() {
+            document.getElementById('fileList').innerHTML = "";
+            document.getElementById('log').innerHTML = "";
+            orphanedFiles = [];
+
+            log("Fetching database...");
+            const { data: ann, error } = await supabase.from('subject_announcements').select('photo_url');
+            if (error) { log("Error DB: " + error.message); return; }
+
+            const usedFiles = new Set();
+            ann.forEach(a => {
+                if (a.photo_url) {
+                    try {
+                        const urls = Array.isArray(a.photo_url) ? a.photo_url : JSON.parse(a.photo_url);
+                        urls.forEach(u => {
+                            const parts = u.split('/subject-photos/');
+                            if (parts.length > 1) usedFiles.add(decodeURIComponent(parts[1]));
+                        });
+                    } catch (e) {
+                        const parts = a.photo_url.split('/subject-photos/');
+                        if (parts.length > 1) usedFiles.add(decodeURIComponent(parts[1]));
+                    }
+                }
+            });
+            log(`Found ${usedFiles.size} active files in DB.`);
+
+            log("Scanning storage folders...");
+            const { data: folders, error: fErr } = await supabase.storage.from('subject-photos').list();
+            if (fErr) { log("Error Storage: " + fErr.message); return; }
+
+            for (const folder of folders) {
+                if (folder.name === '.emptyFolderPlaceholder') continue;
+                const { data: files, error: fileErr } = await supabase.storage.from('subject-photos').list(`${folder.name}/new`);
+                if (fileErr) continue;
+
+                files.forEach(f => {
+                    const fullPath = `${folder.name}/new/${f.name}`;
+                    if (!usedFiles.has(fullPath)) {
+                        orphanedFiles.push(fullPath);
+                    }
+                });
+            }
+
+            log(`Scan selesai. Ditemukan ${orphanedFiles.length} file tidak terpakai.`);
+
+            const listDiv = document.getElementById('fileList');
+            orphanedFiles.forEach(f => {
+                const url = supabase.storage.from('subject-photos').getPublicUrl(f).data.publicUrl;
+                listDiv.innerHTML += `
+                    <div class="file-item" onmouseover="showPreview('${url}')" onmouseout="hidePreview()">
+                        <span>${f}</span>
+                    </div>`;
+            });
+
+            if (orphanedFiles.length > 0) {
+                document.getElementById('deleteBtn').style.display = 'inline-block';
+            }
+        }
+
+        async function runCleanup() {
+            if (!confirm(`Yakin hapus ${orphanedFiles.length} file?`)) return;
+
+            try {
+                log("Deleting files...");
+                await supabase.storage.from('subject-photos').remove(orphanedFiles);
+                log(t('deleted_success'));
+                document.getElementById('deleteBtn').style.display = 'none';
+                document.getElementById('fileList').innerHTML = "";
+            } catch (e) {
+                log("Error: " + e.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

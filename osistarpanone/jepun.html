@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tebak Huruf Jepang — OSIS TARPAN ONE</title>
+    <meta
+      name="description"
+      content="Latihan hiragana & katakana gratis: tebak huruf Jepang, ukur skor, streak, dan akurasi. Halaman latihan bahasa Jepang untuk siswa SMK Taruna Harapan 1 Cipatat."
+    />
+    <meta name="theme-color" content="#e11d2e" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="icons/favicon-32.png"
+    />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="OSIS TARPAN ONE" />
+    <link rel="canonical" href="https://osistarpanone.my.id/jepun.html" />
+    <link rel="stylesheet" href="css/style.css?v=40" />
+    <link rel="stylesheet" href="css/jepun.css?v=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <script src="js/supabase.min.js?v=10"></script>
+    <script src="js/config.js?v=14"></script>
+    <script src="js/db.js?v=35" defer></script>
+    <script src="js/aktivitas.js?v=10" defer></script>
+    <script src="js/app.js?v=15" defer></script>
+    <script src="js/dropdown.js?v=3" defer></script>
+    <script src="js/toast.js?v=10" defer></script>
+    <script src="js/notice.js?v=10" defer></script>
+    <script src="js/upload.js?v=10" defer></script>
+    <script src="js/show-popup.js?v=15" defer></script>
+    <script src="js/osis-auth.js?v=19" defer></script>
+    <script src="js/jepun.js?v=1" defer></script>
+    <script src="js/pwa.js?v=11" defer></script>
+  </head>
+
+  <body>
+    <header class="top-nav">
+      <a href="index" class="brand">
+        <div class="logo-box"><img data-foto="logo1" alt="Logo OSIS" /></div>
+        <div class="brand-text">
+          <h2>OSIS TARPAN ONE</h2>
+          <p>SMK Taruna Harapan 1 Cipatat</p>
+        </div>
+      </a>
+      <div class="top-nav-extra">
+        <span
+          class="status-badge"
+          style="
+            font-size: 0.64rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 2px solid var(--ink);
+            background: var(--yellow);
+            color: var(--ink);
+          "
+          >Tebak Huruf</span
+        >
+        <div id="areaAuth"></div>
+      </div>
+    </header>
+
+    <main class="jep-wrap">
+      <!-- ===== HERO ===== -->
+      <section class="jep-card accent-top jep-hero">
+        <div class="sec-tag">Nihongo Rakuraku</div>
+        <h1>Tebak <span class="red">Huruf Jepang</span></h1>
+        <p class="jep-desc">
+          Latihan hiragana &amp; katakana. Pilih mode huruf yang mau kamu
+          hafal, lalu tebak cara bacanya. Bisa jawab pakai tombol, atau ketik
+          romaji (misal: <b>ka</b>).
+        </p>
+        <div class="jep-meta">
+          <span class="chip"
+            ><i class="fa-solid fa-layer-group"></i>&nbsp;<b id="jepLabel"
+              >Hiragana dasar • 46 huruf</b
+            ></span
+          >
+          <span class="chip"
+            ><i class="fa-solid fa-trophy"></i>&nbsp;Rekor <b id="jepRekor">0</b></span
+          >
+          <span class="chip"
+            ><i class="fa-solid fa-keyboard"></i>&nbsp;Shortcut: <b>1-4</b> jawab,
+            <b>N</b> next</span
+          >
+        </div>
+      </section>
+
+      <!-- ===== PILIH MODE ===== -->
+      <section class="jep-card">
+        <div class="jep-label-sm">Pilih mode latihan</div>
+        <div class="jep-modes" id="jepModes"></div>
+      </section>
+
+      <!-- ===== SKOR (sticky di atas area kuis) ===== -->
+      <section class="jep-card jep-scorecard">
+        <div class="jep-stats">
+          <div class="jep-stat">
+            <b id="jepSkor">0</b><span>Skor</span>
+          </div>
+          <div class="jep-stat hot">
+            <b id="jepStreak">0</b><span>Streak</span>
+          </div>
+          <div class="jep-stat">
+            <b id="jepAkurasi">0%</b><span>Akurasi</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AREA KUIS ===== -->
+      <section class="jep-quiz">
+        <div class="jep-card jep-q">
+          <div class="jep-kana" id="jepKana">あ</div>
+          <div class="jep-prompt">Huruf ini dibaca apa?</div>
+          <div class="jep-answers" id="jepAnswers"></div>
+        </div>
+
+        <aside class="jep-card jep-side">
+          <div>
+            <div class="jep-label-sm">Atau ketik jawaban</div>
+            <div class="jep-row">
+              <input
+                class="jep-input"
+                id="jepInput"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="contoh: ka"
+              />
+              <button class="btn btn-red" id="jepSubmit">Cek</button>
+            </div>
+          </div>
+
+          <div class="jep-feedback" id="jepFeedback">
+            Pilih salah satu jawaban atau ketik romaji.
+          </div>
+
+          <button class="btn btn-dark btn-block" id="jepNext">
+            <i class="fa-solid fa-forward"></i> Soal berikutnya
+          </button>
+
+          <div class="jep-tips">
+            <b>Tips:</b> untuk mode dakuten/handakuten, perhatikan tanda
+            <span class="jep-kbd">゛</span> dan <span class="jep-kbd">゜</span>.
+            Mode kombinasi memakai ゃ / ゅ / ょ kecil.
+          </div>
+        </aside>
+      </section>
+
+      <p class="jep-foot">
+        Data huruf mengikuti kelompok dasar, dakuten/handakuten, dan yōon pada
+        referensi bahasa Jepang. Rekor tersimpan di perangkat ini.
+      </p>
+
+      <a class="login-back login-center" href="index"
+        ><i class="fa-solid fa-house"></i> Kembali ke beranda</a
+      >
+    </main>
+  </body>
+</html>

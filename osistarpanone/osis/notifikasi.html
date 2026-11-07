@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kirim Notifikasi — OSIS TARPAN ONE</title>
+    <link rel="stylesheet" href="../css/style.css?v=40" />
+    <link rel="stylesheet" href="../css/osis2.css?v=12" />
+    <meta name="theme-color" content="#e11d2e" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png" />
+    <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="OSIS TARPAN ONE" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/osis-notifikasi.css?v=3" />
+    <script src="../js/supabase.min.js?v=10"></script>
+    <script src="../js/config.js?v=14"></script>
+    <script src="../js/db.js?v=35" defer></script>
+    <script src="../js/aktivitas.js?v=10" defer></script>
+    <script src="../js/app.js?v=11" defer></script>
+    <script src="../js/dropdown.js?v=3" defer></script>
+    <script src="../js/toast.js?v=10" defer></script>
+    <script src="../js/notice.js?v=10" defer></script>
+    <script src="../js/upload.js?v=10" defer></script>
+    <script src="../js/show-popup.js?v=15" defer></script>
+    <script src="../js/osis-auth.js?v=19" defer></script>
+    <script src="../js/osis-visitor.js?v=5" defer></script>
+    <script src="../js/osis-sidebar.js?v=45" defer></script>
+    <script src="../js/osis-header.js?v=14" defer></script>
+    <script src="../js/notifikasi.js?v=10" defer></script>
+    <script src="../js/pwa.js?v=11" defer></script>
+  </head>
+  <body>
+    <header class="top-nav">
+      <a href="../index#/" class="brand">
+        <div class="logo-box"><img data-foto="logo1" alt="Logo" /></div>
+        <div class="brand-text">
+          <h2>NOTIFIKASI</h2>
+          <p>Kirim ke HP</p>
+        </div>
+      </a>
+      <div class="top-nav-extra">
+        <a href="../index#/" class="btn btn-white btn-sm" style="display: inline-flex"
+          ><i class="fa-solid fa-house"></i> Beranda</a
+        >
+        <div id="areaAuth"></div>
+      </div>
+    </header>
+
+    <div class="notif-wrap" id="notifWrap">
+      <div class="notif-cols">
+      <div class="notif-side">
+
+      <div class="notif-hero">
+        <div class="ico"><i class="fa-solid fa-paper-plane"></i></div>
+        <div style="flex: 1; min-width: 180px">
+          <h1>KIRIM NOTIFIKASI</h1>
+          <p>Bebas kirim notif apapun ke HP subscriber. Khusus super admin.</p>
+        </div>
+      </div>
+
+      <div class="notif-card" style="font-size:.78rem;font-weight:600;color:var(--gray);line-height:1.65">
+        <b style="color:var(--ink)"><i class="fa-solid fa-circle-info" style="color:var(--red)"></i> Cara pakai</b>
+        <span>1. <b>Tes di HP Ini</b> = munculin notif lokal, buat mastiin judul + isi enak dibaca (tanpa kirim ke siapa-siapa).</span>
+        <span>2. <b>Kirim ke Semua Target</b> = push beneran ke semua HP yang sudah Aktifkan Notif sesuai target.</span>
+        <span>3. Notif muncul walau web ditutup. Klik notif = buka halaman target.</span>
+      </div>
+      </div>
+      <div class="notif-main">
+
+      <div class="notif-card">
+        <div class="field"><label>Judul *</label>
+          <input type="text" id="notifJudul" class="admin-input" maxlength="80" placeholder="cth: Besok libur, cek infonya!" autocomplete="off" />
+          <div class="notif-hitung"><span id="hitungJudul">0</span>/80</div>
+        </div>
+        <div class="field"><label>Isi *</label>
+          <textarea id="notifIsi" class="admin-input admin-textarea" rows="3" maxlength="180" placeholder="cth: Pengumuman libur bersama sudah terbit di Papan Informasi."></textarea>
+          <div class="notif-hitung"><span id="hitungIsi">0</span>/180</div>
+        </div>
+        <div class="field"><label>Buka halaman apa saat notif diklik?</label>
+          <input type="text" id="notifUrl" class="admin-input" maxlength="300" value="#/informasi" autocomplete="off" />
+          <div class="notif-chips" id="notifChips">
+            <button type="button" data-url="#/informasi">Papan Informasi</button>
+            <button type="button" data-url="#/galeri">Galeri</button>
+            <button type="button" data-url="polling">Polling</button>
+            <button type="button" data-url="#/aspirasi">Aspirasi</button>
+            <button type="button" data-url="osis/informasi">Info Internal</button>
+          </div>
+        </div>
+        <div class="field"><label>Target penerima</label>
+          <div class="notif-aud" id="notifAud">
+            <label class="pilih"><input type="radio" name="notifAud" value="publik" checked /><span>Publik<small>Semua pengunjung (info umum)</small></span></label>
+            <label><input type="radio" name="notifAud" value="osis" /><span>OSIS<small>Hanya HP pengurus login</small></span></label>
+            <label><input type="radio" name="notifAud" value="semua" /><span>Semua<small>Publik + OSIS</small></span></label>
+          </div>
+        </div>
+        <div class="field"><label>Pratinjau di HP</label>
+          <div class="notif-preview">
+            <span class="app-ico"><img src="../icons/icon-192.png" alt="" /></span>
+            <div style="min-width:0;flex:1">
+              <b id="prevJudul">Judul notif…</b>
+              <span id="prevIsi">Isi notif…</span>
+              <small>OSIS TARPAN ONE · sekarang</small>
+            </div>
+          </div>
+        </div>
+        <div id="notifHasil" aria-live="polite"></div>
+        <div class="form-actions-row" style="margin-top:2px">
+          <button class="btn btn-white" id="btnNotifUji"><i class="fa-solid fa-bell"></i> Tes di HP Ini</button>
+          <button class="btn btn-red" id="btnNotifKirim"><i class="fa-solid fa-paper-plane"></i> Kirim ke Semua Target</button>
+        </div>
+        <div style="text-align:right">
+          <button class="btn btn-white btn-sm" id="btnNotifStatus" title="Cek secret VAPID + subscriber di server"><i class="fa-solid fa-stethoscope"></i> Cek Status Server</button>
+        </div>
+      </div>
+
+      </div>
+      </div>
+    </div>
+  </body>
+</html>

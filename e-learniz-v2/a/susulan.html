@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materi Susulan • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- ===== LEFT SECTION ===== -->
+        <div class="left-section">
+            <div class="glow">
+                <h1>
+                    <i class="fa-solid fa-book-open-reader" style="font-size: 26px;"></i>
+                    <span data-i18n="susulan"></span>
+                </h1>
+            </div>
+
+            <div class="glass-card-effect" style="margin-bottom: 25px; padding: 20px; border-radius: 16px;">
+                <p style="opacity: 0.8; font-size: 14px; margin: 0 0 15px;" data-i18n="susulan_page"></p>
+                <div id="susulanLegend">
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
+                    <div class="skeleton" style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;"></div>
+                </div>
+                <!-- Admin: Kelola Tanggal Susulan -->
+                <div id="susulanDateManager" style="display:none; margin-top:18px; border-top:1px solid rgba(255,255,255,0.08); padding-top:16px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <i class="fa-solid fa-calendar-days" style="color:var(--accent,#00eaff); font-size:13px;"></i>
+                        <span style="font-size:13px; font-weight:700; color:#fff;" data-i18n="susulan_manage_dates"></span>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <input type="date" id="susulanNewDate" class="glass-input" style="flex:1; padding:8px 10px; font-size:13px;">
+                        <button id="susulanAddDateBtn" onclick="addSusulanDate()" style="background:var(--accent,#00eaff); color:#000; border:none; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">
+                            <i class="fa-solid fa-plus"></i> <span data-i18n="add"></span>
+                        </button>
+                    </div>
+                    <div id="susulanDateList" style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto;"></div>
+                    <p style="font-size:11px; color:rgba(255,255,255,0.35); margin:8px 0 0; line-height:1.4;" data-i18n="susulan_date_hint"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT SECTION ===== -->
+        <div class="right-section">
+
+            <!-- Announcements container — SubjectApp renders here, then susulan.js re-renders with day groups -->
+            <div id="announcements" class="announcements">
+                <!-- Skeleton loading -->
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+            </div>
+
+            <!-- Admin FAB + controls injected here by SubjectApp.setupAdminControls() -->
+            <div id="editControls"></div>
+        </div>
+    </div>
+
+    <!-- susulan.js must load AFTER subject-manager.js — patches SubjectApp.renderAnnouncements -->
+    <script src="../js/susulan.js?v=20260822" defer></script>
+
+</body>
+
+</html>

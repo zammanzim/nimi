@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisi-Kisi (Admin Editor) • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/checklist.png" type="image/png">
+</head>
+
+<body>
+
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- ===== LEFT SECTION ===== -->
+        <div class="left-section">
+            <div class="glow">
+                <h1>
+                    <i class="fa-solid fa-list-check" style="font-size: 26px;"></i>
+                    <span data-i18n="exam_topics"></span>
+                    <small style="font-size:12px; opacity:.6;">(Admin Editor — halaman publiknya di a/kisi-kisi.html)</small>
+                </h1>
+            </div>
+
+            <div id="kisiDailyCard" class="daily-card-final glass-card-effect"
+                style="margin-bottom: 25px; padding: 20px;">
+                <div id="kisiHeader" class="final-header animate-pop-in" style="margin-bottom: 20px;">
+                    <!-- Will be injected by JS -->
+                </div>
+
+                <div id="kisiInfoList" class="final-content">
+                    <div class="skeleton"
+                        style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;">
+                    </div>
+                    <div class="skeleton"
+                        style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;">
+                    </div>
+                    <div class="skeleton"
+                        style="width: 100%; height: 38px; border-radius: 10px; margin-bottom: 8px; opacity: 0.15;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== RIGHT SECTION ===== -->
+        <div class="right-section">
+
+            <!-- Announcements container — SubjectApp renders here, then kisi-kisi.js re-renders with day groups -->
+            <div id="announcements" class="announcements">
+                <!-- Skeleton loading -->
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+                <div class="sk-card">
+                    <div class="skeleton sk-title"></div>
+                    <div class="skeleton sk-text"></div>
+                    <div class="skeleton sk-text short"></div>
+                </div>
+            </div>
+
+            <!-- Admin FAB + controls injected here by SubjectApp.setupAdminControls() -->
+            <div id="editControls"></div>
+        </div>
+    </div>
+
+    <!-- kisi-kisi.js must load AFTER subject-manager.js — patches SubjectApp.renderAnnouncements -->
+    <script src="../js/kisi-kisi.js?v=20260822" defer></script>
+
+</body>
+
+</html>

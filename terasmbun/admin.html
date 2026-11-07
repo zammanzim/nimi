@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Teras Mbun</title>
+    <meta name="robots" content="noindex" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#2a1810" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Outfit:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- Gerbang PIN (sama kayak dapur — PIN disimpen di sessionStorage) -->
+    <div class="gate" id="gate">
+      <div class="box">
+        <div class="ikon"><i class="fa-solid fa-user-shield"></i></div>
+        <h1>Admin Teras Mbun</h1>
+        <p>Masukin PIN dulu biar bisa kelola menu & foto warung.</p>
+        <input
+          type="password"
+          id="inputPin"
+          placeholder="PIN dapur"
+          inputmode="numeric"
+          autocomplete="off"
+        />
+        <button
+          class="btn btn-hijau btn-lebar"
+          id="btnMasuk"
+          style="margin-top: 12px"
+        >
+          Masuk
+        </button>
+      </div>
+    </div>
+
+    <!-- Isi halaman -->
+    <div id="isi" hidden>
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="admin">
+            <span class="logo"><i class="fa-solid fa-user-shield"></i></span>
+            <span class="nama">Admin Mbun<small>KELOLA WARUNG</small></span>
+          </a>
+          <div class="top-right">
+            <a class="btn btn-kecil btn-kaca" href="dapur"
+              ><i class="fa-solid fa-kitchen-set"></i> Dapur</a
+            >
+            <button
+              class="btn btn-kecil btn-kaca"
+              id="btnKeluar"
+              title="Keluar"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="wrap">
+        <!-- MENU: tambah / edit / status / hapus -->
+        <section class="media-kartu">
+          <div class="head-media">
+            <h2><i class="fa-solid fa-utensils"></i> Menu</h2>
+            <button class="btn btn-kecil btn-foto" id="btnTambah">
+              <i class="fa-solid fa-plus"></i> Tambah menu
+            </button>
+          </div>
+          <p class="petunjuk">
+            Klik ✏️ buat edit nama, harga, kategori, deskripsi, urutan. Klik
+            foto kamera buat pasang fotonya.
+          </p>
+
+          <!-- form tambah / edit menu (sembunyi sampe diklik) -->
+          <form id="formMenu" class="form-menu" hidden>
+            <h3 id="formJudul">
+              <i class="fa-solid fa-circle-plus"></i> Menu baru
+            </h3>
+            <label class="field">
+              <span>Nama menu *</span>
+              <input
+                type="text"
+                id="fmNama"
+                placeholder="mis. Nasi Ayam Geprek"
+                maxlength="60"
+                autocomplete="off"
+              />
+            </label>
+            <div class="duo-field">
+              <label class="field">
+                <span>Harga (Rp) *</span>
+                <input
+                  type="number"
+                  id="fmHarga"
+                  min="0"
+                  max="10000000"
+                  step="500"
+                  inputmode="numeric"
+                  placeholder="14000"
+                />
+              </label>
+              <label class="field">
+                <span>Urutan</span>
+                <input
+                  type="number"
+                  id="fmUrut"
+                  min="0"
+                  inputmode="numeric"
+                  placeholder="kosong = paling bawah"
+                />
+              </label>
+            </div>
+            <label class="field">
+              <span>Kategori *</span>
+              <input
+                type="text"
+                id="fmKat"
+                list="listKat"
+                placeholder="nasi, minuman, snack… (bebas nulis baru)"
+                maxlength="40"
+                autocomplete="off"
+              />
+              <datalist id="listKat"></datalist>
+            </label>
+            <label class="field">
+              <span>Deskripsi</span>
+              <textarea
+                id="fmDesk"
+                rows="2"
+                maxlength="200"
+                placeholder="Opsional — ayam geprek, sambal matah, lalapan segar"
+              ></textarea>
+            </label>
+            <!-- area foto: klik buat pilih ATAU tarik (drag & drop) file fotonya -->
+            <div class="field">
+              <span>Foto menu</span>
+              <div
+                class="drop-foto"
+                id="dropFoto"
+                title="Klik atau tarik foto ke sini"
+              >
+                <input type="file" id="inputFotoForm" accept="image/*" hidden />
+                <div id="dropIsi"></div>
+              </div>
+            </div>
+            <label class="cek-tersedia">
+              <input type="checkbox" id="fmTersedia" checked />
+              <span>Tersedia dijual</span>
+            </label>
+            <div class="aksi-media">
+              <button class="btn btn-hijau btn-kecil" type="submit">
+                <i class="fa-solid fa-check"></i> Simpan
+              </button>
+              <button class="btn btn-kecil btn-kaca" type="button" id="fmBatal">
+                Batal
+              </button>
+            </div>
+          </form>
+
+          <div id="daftarMenu">
+            <p class="kosong">
+              <i class="fa-solid fa-spinner fa-spin"></i> Muat menu…
+            </p>
+          </div>
+        </section>
+
+        <!-- Foto latar web -->
+        <section class="media-kartu">
+          <h2><i class="fa-solid fa-image"></i> Foto Latar</h2>
+          <p class="petunjuk">
+            Foto besar yang jadi latar semua halaman. Kalo dihapus, latar balik
+            ke gradient hangat.
+          </p>
+          <div class="media-preview" id="prevBg"></div>
+          <div class="aksi-media">
+            <button class="btn btn-kecil btn-foto" data-media="bg:ganti">
+              <i class="fa-solid fa-camera"></i> Ganti foto
+            </button>
+            <button class="btn btn-kecil btn-kaca" data-media="bg:hapus">
+              <i class="fa-solid fa-trash"></i> Hapus
+            </button>
+          </div>
+        </section>
+
+        <!-- Foto QRIS -->
+        <section class="media-kartu">
+          <h2><i class="fa-solid fa-qrcode"></i> Foto QRIS</h2>
+          <p class="petunjuk">
+            Nongol otomatis di halaman pesen buat pelanggan yang pilih bayar
+            QRIS.
+          </p>
+          <div class="media-preview" id="prevQris"></div>
+          <div class="aksi-media">
+            <button class="btn btn-kecil btn-foto" data-media="qris:ganti">
+              <i class="fa-solid fa-camera"></i> Ganti foto
+            </button>
+            <button class="btn btn-kecil btn-kaca" data-media="qris:hapus">
+              <i class="fa-solid fa-trash"></i> Hapus
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- input file tersembunyi — dipicu tombol ganti/pasang foto -->
+    <input type="file" id="inputFoto" accept="image/*" hidden />
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/toast.js"></script>
+    <script src="js/notice.js"></script>
+    <script src="js/show-popup.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/visitor.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/pwa-refresh.js"></script>
+  </body>
+</html>

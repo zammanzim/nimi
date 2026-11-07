@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalisasi Tema • E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/subject-manager.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="icons/accountsetting.png" type="image/png">
+</head>
+
+<style>
+    h2.section-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #00eaff;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: #aaa;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    /* BG GRID */
+    .bg-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .bg-opt {
+        height: 52px;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.15s, border-color 0.15s;
+        background-size: 12px 12px, 12px 12px, cover;
+    }
+
+    .bg-opt:hover {
+        transform: scale(1.06);
+    }
+
+    .bg-opt:active {
+        transform: scale(0.95);
+    }
+
+    .bg-opt.selected {
+        border-color: #00eaff;
+        box-shadow: 0 0 10px rgba(0, 234, 255, 0.35);
+    }
+
+    .bg-opt .check-icon {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.4);
+        color: #00eaff;
+        font-size: 16px;
+    }
+
+    .bg-opt.selected .check-icon {
+        display: flex;
+    }
+
+    .custom-bg-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 0 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .custom-bg-row label {
+        font-size: 13px;
+        color: #aaa;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .color-pair {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .color-swatch {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        overflow: hidden;
+        position: relative;
+        transition: border-color 0.2s;
+    }
+
+    .color-swatch:hover {
+        border-color: #00eaff;
+    }
+
+    .color-swatch input[type=color] {
+        position: absolute;
+        inset: -4px;
+        width: calc(100% + 8px);
+        height: calc(100% + 8px);
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* ACCENT */
+    .accent-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .accent-opt {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s, border-color 0.2s;
+    }
+
+    .accent-opt:hover {
+        transform: scale(1.12);
+    }
+
+    .accent-opt:active {
+        transform: scale(0.9);
+    }
+
+    .accent-opt.selected {
+        border-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+    }
+
+    .accent-opt i {
+        font-size: 12px;
+        color: #000;
+        display: none;
+    }
+
+    .accent-opt.selected i {
+        display: block;
+    }
+
+    .accent-custom {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 2px dashed rgba(255, 255, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+        transition: border-color 0.2s, color 0.2s;
+    }
+
+    .accent-custom:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .accent-custom input[type=color] {
+        position: absolute;
+        inset: -4px;
+        width: calc(100% + 8px);
+        height: calc(100% + 8px);
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .btn-upload-bg {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        color: #ddd;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-upload-bg:hover {
+        background: rgba(0, 234, 255, 0.1);
+        border-color: #00eaff;
+        color: #00eaff;
+    }
+
+    /* FONT SIZE */
+    .font-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+    }
+
+    .font-opt {
+        padding: 14px 8px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.2);
+        color: rgba(255, 255, 255, 0.4);
+        transition: all 0.2s;
+    }
+
+    .font-opt:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .font-opt.selected {
+        border-color: #00eaff;
+        background: rgba(0, 234, 255, 0.08);
+        color: #fff;
+    }
+
+    .font-opt .size-label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .font-opt .size-desc {
+        font-size: 11px;
+        color: inherit;
+    }
+
+    .font-opt:nth-child(1) .size-label {
+        font-size: 14px;
+    }
+
+    .font-opt:nth-child(2) .size-label {
+        font-size: 18px;
+    }
+
+    .font-opt:nth-child(3) .size-label {
+        font-size: 22px;
+    }
+
+    /* SAVE */
+    .btn-save {
+        background: linear-gradient(135deg, #00eaff, #0088ff);
+        color: black;
+        font-weight: 800;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 16px;
+        box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+        transition: 0.3s;
+        display: block;
+        width: 100%;
+        text-transform: uppercase;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 234, 255, 0.5);
+    }
+
+    .btn-reset {
+        width: 100%;
+        margin-top: 10px;
+        padding: 12px;
+        background: none;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: 'Segoe UI', sans-serif;
+        transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn-reset:hover {
+        color: #ff6b81;
+        border-color: rgba(255, 107, 129, 0.4);
+    }
+
+    /* PREVIEW */
+    .preview-strip {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 4px;
+    }
+
+    .preview-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: rgba(0, 0, 0, 0.35);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .preview-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .preview-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        opacity: 0.8;
+    }
+
+    .preview-pill {
+        padding: 3px 10px;
+        border-radius: 20px;
+        color: #000;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .preview-nav {
+        display: flex;
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    .preview-nav span {
+        flex: 1;
+        text-align: center;
+        padding: 8px 0;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.3);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .preview-nav span:last-child {
+        border-right: none;
+    }
+
+    .preview-nav span.pv-act {
+        font-weight: 700;
+    }
+</style>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+
+        <!-- KIRI -->
+        <div class="left-section">
+            <div class="glow">
+                <h1 data-i18n="theme_title"><i class="fa-solid fa-palette"></i> Personalisasi</h1>
+            </div>
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-eye"></i> Preview</h2>
+                <div class="preview-strip">
+                    <div class="preview-topbar">
+                        <div class="preview-dot" id="pvDot"></div>
+                        <span class="preview-name" id="pvName">Haii, User!</span>
+                        <span class="preview-pill" id="pvPill">Aktif</span>
+                    </div>
+                    <div class="preview-nav">
+                        <span><i class="fa-solid fa-house"></i></span>
+                        <span class="pv-act" id="pvNav"><i class="fa-solid fa-bell"></i> Info</span>
+                        <span><i class="fa-solid fa-clipboard-list"></i></span>
+                        <span><i class="fa-solid fa-magnifying-glass"></i></span>
+                    </div>
+                </div>
+                <p style="font-size:11px; color:rgba(255,255,255,0.3); margin-top:10px; text-align:center;">
+                    <i class="fa-solid fa-circle-info" style="margin-right:4px;"></i>
+                    Background halaman ini berubah langsung saat pilih
+                </p>
+            </div>
+
+            <!-- BAHASA -->
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-language"></i> <span data-i18n="lang_select">Pilih Bahasa</span></h2>
+                <div class="font-row">
+                    <div class="font-opt" id="lang-id" onclick="setLanguage('id')">
+                        <span class="size-label">ID</span>
+                        <span class="size-desc" data-i18n="lang_id">Bahasa Indonesia</span>
+                    </div>
+                    <div class="font-opt" id="lang-en" onclick="setLanguage('en')">
+                        <span class="size-label">EN</span>
+                        <span class="size-desc" data-i18n="lang_en">English</span>
+                    </div>
+                    <div class="font-opt" id="lang-su" onclick="setLanguage('su')">
+                        <span class="size-label">SU</span>
+                        <span class="size-desc" data-i18n="lang_su">Basa Sunda</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-text-height"></i> <span data-i18n="text_size">Ukuran Teks</span></h2>
+                <div class="font-row">
+                    <div class="font-opt" data-size="kecil" onclick="pickFont(this)">
+                        <span class="size-label">Aa</span>
+                        <span class="size-desc" data-i18n="small">Kecil</span>
+                    </div>
+                    <div class="font-opt" data-size="sedang" onclick="pickFont(this)">
+                        <span class="size-label">Aa</span>
+                        <span class="size-desc" data-i18n="medium">Sedang</span>
+                    </div>
+                    <div class="font-opt" data-size="besar" onclick="pickFont(this)">
+                        <span class="size-label">Aa</span>
+                        <span class="size-desc" data-i18n="large">Besar</span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KANAN -->
+        <div class="right-section">
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-image"></i> <span data-i18n="bg_title">Background</span></h2>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="select_preset">Pilih Preset</label>
+                    <div class="bg-grid" id="bgGrid"></div>
+                </div>
+                <div class="custom-bg-row">
+                    <label><i class="fa-solid fa-camera"></i> <span data-i18n="own_photo">Foto sendiri</span></label>
+                    <button class="btn-upload-bg" onclick="document.getElementById('bgUploadInput').click()">
+                        <i class="fa-solid fa-upload"></i> <span data-i18n="upload_photo">Upload Foto</span>
+                    </button>
+                    <input type="file" id="bgUploadInput" hidden accept="image/*" onchange="uploadCustomBg(this)">
+                </div>
+            </div>
+
+            <div class="course-card">
+                <h2 class="section-title"><i class="fa-solid fa-droplet"></i> <span data-i18n="accent_title">Warna Aksen</span></h2>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label" data-i18n="accent_desc">Warna tombol, link, dan highlight</label>
+                    <div class="accent-grid" id="accentGrid"></div>
+                </div>
+            </div>
+
+            <button class="btn-save" id="btnSave" onclick="saveTheme()" data-i18n="save_apply">
+                <i class="fa-solid fa-floppy-disk"></i> SIMPAN & TERAPKAN
+            </button>
+            <button class="btn-reset" onclick="resetTheme()">
+                <i class="fa-solid fa-rotate-left" style="margin-right:6px;"></i> <span data-i18n="reset_default">Reset ke tampilan default</span>
+            </button>
+
+        </div>
+    </div>
+
+    <script>
+        const G = (op) =>
+            `linear-gradient(90deg,rgba(255,255,255,${op})1px,transparent 1px),` +
+            `linear-gradient(0deg,rgba(255,255,255,${op})1px,transparent 1px)`;
+
+        const BG_PRESETS = [
+            { label: 'Default', color: '#505a6a', grad: `${G('0.15')},linear-gradient(180deg,#353a50 0%,#505a6a 40%,#404560 70%,#2a2a45 100%)` },
+            { label: 'Jingga', color: '#c06020', grad: `${G('0.15')},linear-gradient(180deg,#8b2a2a 0%,#c06020 40%,#9a6a10 70%,#4a4a05 100%)` },
+            { label: 'Kuning', color: '#a08a10', grad: `${G('0.15')},linear-gradient(180deg,#7a5005 0%,#a08a10 40%,#507a20 70%,#1a5a20 100%)` },
+            { label: 'Hijau', color: '#1a8a40', grad: `${G('0.15')},linear-gradient(180deg,#0a5a20 0%,#1a8a40 40%,#108a60 70%,#054a50 100%)` },
+            { label: 'Biru', color: '#1a5090', grad: `${G('0.15')},linear-gradient(180deg,#054a55 0%,#1a5090 40%,#1a3a80 70%,#2a1060 100%)` },
+            { label: 'Nila', color: '#1a6090', grad: `${G('0.15')},linear-gradient(180deg,#1a3a80 0%,#1a6090 40%,#255090 65%,#351870 100%)` },
+            { label: 'Ungu', color: '#602a90', grad: `${G('0.15')},linear-gradient(180deg,#301870 0%,#602a90 40%,#801870 70%,#601028 100%)` },
+            { label: 'Pink', color: '#903060', grad: `${G('0.15')},linear-gradient(180deg,#601030 0%,#903060 40%,#901840 70%,#7a2020 100%)` },
+            { label: 'Tosca', color: '#107a6a', grad: `${G('0.15')},linear-gradient(180deg,#054a35 0%,#107a6a 40%,#1a6a80 70%,#0a3a60 100%)` },
+            { label: 'Abu', color: '#6b4c2a', grad: `${G('0.15')},linear-gradient(180deg,#3a2010 0%,#6b4c2a 40%,#4a3a20 70%,#2a1a10 100%)` },
+            { label: 'Hitam', color: '#2a2a45', grad: `${G('0.2')},linear-gradient(180deg,#1a1520 0%,#2a2a45 40%,#251a35 70%,#151020 100%)` },
+            { label: 'Custom', color: null, grad: null },
+        ];
+
+        const ACCENT_PRESETS = [
+            '#00eaff', '#4a9eff', '#a78bfa', '#f472b6',
+            '#34d399', '#fb923c', '#fbbf24', '#f87171',
+            '#e879f9', '#38bdf8', '#86efac', '#ffffff',
+        ];
+
+        const saved = JSON.parse(localStorage.getItem('user_theme') || '{}');
+        let state = {
+            bg: saved.bg || BG_PRESETS[0].grad,
+            accent: saved.accent || '#00eaff',
+            fontSize: saved.fontSize || 'sedang',
+        };
+
+        // Build BG Grid
+        const bgGrid = document.getElementById('bgGrid');
+        BG_PRESETS.forEach((p, i) => {
+            const div = document.createElement('div');
+            div.className = 'bg-opt' + (state.bg === p.grad ? ' selected' : '');
+            div.title = p.label;
+            if (p.color) {
+                div.style.backgroundImage = p.grad;
+                div.style.backgroundRepeat = 'repeat,repeat,no-repeat';
+                div.style.backgroundSize = '12px 12px,12px 12px,cover';
+            } else {
+                div.style.background = 'repeating-conic-gradient(rgba(255,255,255,0.05) 0% 25%,rgba(255,255,255,0.1) 0% 50%) 0 0/12px 12px';
+                div.innerHTML = `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;opacity:0.4;color:#fff;"><i class="fa-solid fa-plus"></i></span>`;
+                const isCustom = !BG_PRESETS.slice(0, -1).some(x => x.grad === state.bg);
+                if (isCustom) div.classList.add('selected');
+            }
+            div.innerHTML += `<div class="check-icon"><i class="fa-solid fa-check"></i></div>`;
+            div.onclick = p.grad
+                ? () => pickBg(div, p.grad)
+                : () => document.getElementById('customBgTop').click();
+            bgGrid.appendChild(div);
+        });
+
+        function pickBg(el, grad) {
+            document.querySelectorAll('.bg-opt').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+            state.bg = grad;
+            applyPreview();
+        }
+
+        function onCustomBg() {
+            const top = document.getElementById('customBgTop').value;
+            const bot = document.getElementById('customBgBot').value;
+            document.getElementById('swatchTop').style.background = top;
+            document.getElementById('swatchBot').style.background = bot;
+            state.bg = `${G('0.1')},linear-gradient(180deg,${top} 0%,${bot} 100%)`;
+            const opts = document.querySelectorAll('.bg-opt');
+            opts.forEach(x => x.classList.remove('selected'));
+            opts[opts.length - 1].classList.add('selected');
+            applyPreview();
+        }
+
+        // Build Accent Grid
+        const accentGrid = document.getElementById('accentGrid');
+        ACCENT_PRESETS.forEach(color => {
+            const div = document.createElement('div');
+            div.className = 'accent-opt' + (state.accent === color ? ' selected' : '');
+            div.style.background = color;
+            div.style.boxShadow = `0 2px 8px ${color}55`;
+            div.innerHTML = `<i class="fa-solid fa-check"></i>`;
+            div.onclick = () => pickAccent(div, color);
+            accentGrid.appendChild(div);
+        });
+        const customDiv = document.createElement('div');
+        customDiv.className = 'accent-custom';
+        customDiv.innerHTML = `<i class="fa-solid fa-plus"></i><input type="color" id="customAccentInput" value="${state.accent}" oninput="onCustomAccent(this.value)">`;
+        accentGrid.appendChild(customDiv);
+
+        function pickAccent(el, color) {
+            document.querySelectorAll('.accent-opt').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+            state.accent = color;
+            applyPreview();
+        }
+        function onCustomAccent(color) {
+            state.accent = color;
+            document.querySelectorAll('.accent-opt').forEach(x => x.classList.remove('selected'));
+            applyPreview();
+        }
+
+        // Font
+        function pickFont(el) {
+            document.querySelectorAll('.font-opt').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+            state.fontSize = el.dataset.size;
+            applyPreview();
+        }
+        document.querySelectorAll('.font-opt').forEach(el => {
+            el.classList.toggle('selected', el.dataset.size === state.fontSize);
+        });
+
+        // Preview
+        function applyPreview() {
+            const a = state.accent;
+            // Update CSS variable biar sidebar & komponen lain ikut
+            document.documentElement.style.setProperty('--accent', a);
+
+            document.getElementById('pvDot').style.background = a;
+            document.getElementById('pvPill').style.background = a;
+            document.getElementById('pvNav').style.color = a;
+            document.getElementById('btnSave').style.background = `linear-gradient(135deg,${a},#0088ff)`;
+
+            let styleTag = document.getElementById('user-theme-override');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'user-theme-override';
+                document.head.appendChild(styleTag);
+            }
+
+            const fontMap = { kecil: '13px', sedang: '15px', besar: '18px' };
+            const fontSize = fontMap[state.fontSize] || '15px';
+
+            const ar = parseInt(a.slice(1, 3), 16);
+            const ag = parseInt(a.slice(3, 5), 16);
+            const ab = parseInt(a.slice(5, 7), 16);
+            const rgba = (op) => `rgba(${ar},${ag},${ab},${op})`;
+
+            const isImage = state.bg.startsWith('http') || state.bg.startsWith('url(');
+            const finalBg = isImage && !state.bg.startsWith('url(') ? `url('${state.bg}')` : state.bg;
+
+            styleTag.textContent = `
+                html { font-size: ${fontSize} !important; }
+                body {
+                    background-image: ${finalBg} !important;
+                    background-repeat: ${isImage ? 'no-repeat' : 'repeat, repeat, no-repeat'} !important;
+                    background-size: ${isImage ? 'cover' : '2.125rem 2.125rem, 2.125rem 2.125rem, cover'} !important;
+                    background-position: center !important;
+                    background-attachment: fixed !important;
+                }
+                #welcomeText {
+                    color: #e9f4ff !important;
+                    text-shadow: 0 0 4px ${a}, 0 0 8px ${a}, 0 0 12px ${a} !important;
+                }
+                .glow {
+                    text-shadow: 0 0 5px ${a}, 0 0 10px ${a}, 0 0 20px ${rgba('0.8')}, 0 0 40px ${rgba('0.5')} !important;
+                }
+                /* === ACCENT COLOR OVERRIDE === */
+                .sidebar li:hover i, .sidebar li:hover b,
+                .sidebar li.active a, .sidebar li.active i,
+                .glass-modal-box h3 i, .drop-icon,
+                .info-content-scroll h4,
+                .final-badge,
+                .hide-desk { color: ${a} !important; }
+                .sidebar li.active {
+                    background: linear-gradient(90deg, ${rgba('0.15')} 10%, ${rgba('0')} 100%) !important;
+                    border-left-color: ${a} !important;
+                }
+                .glass-input:focus {
+                    border-color: ${a} !important;
+                    box-shadow: 0 0 0 3px ${rgba('0.15')} !important;
+                }
+                .uni-btn, .glass-nav-btn.active,
+                input:checked + .slider,
+                input:focus + .slider { background: ${a} !important; }
+                .drop-area:hover, .drop-area.dragover,
+                .task-shortcut-box:hover { border-color: ${a} !important; }
+                .editable-active:focus,
+                .btn-add-inline:hover { background: ${rgba('0.1')} !important; }
+                .btn-tool:hover { color: ${a} !important; }
+                .color-opt.active { border-color: ${a} !important; }
+                ::-webkit-scrollbar-thumb { background: ${a} !important; }
+                [style*="color:#00eaff"], [style*="color: #00eaff"] { color: ${a} !important; }
+                [style*="background:#00eaff"], [style*="background: #00eaff"],
+                [style*="border-color:#00eaff"] { background: ${a} !important; border-color: ${a} !important; }
+            `;
+        }
+
+        async function uploadCustomBg(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user.id) return showToast('Login dulu miz!', 'error');
+
+            const btn = document.querySelector('.btn-upload-bg');
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + t('uploading');
+            btn.disabled = true;
+
+            try {
+                const fileName = `bg_${user.id}_${Date.now()}.jpg`;
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+                const url = publicUrlData.publicUrl;
+
+                state.bg = url;
+                document.querySelectorAll('.bg-opt').forEach(x => x.classList.remove('selected'));
+                applyPreview();
+                showToast(t('photo_uploaded'), 'success');
+            } catch (e) {
+                console.error(e);
+                showToast(t('error_upload'), 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
+        applyPreview();
+
+        // Highlight Active Language
+        const currentLang = localStorage.getItem('app_lang') || 'id';
+        document.getElementById(`lang-${currentLang}`)?.classList.add('selected');
+
+        document.title = t('theme_title') + ' • ' + t('app_name');
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.nickname) document.getElementById('pvName').textContent = `Haii, ${user.nickname}!`;
+        if (user.short_name && document.getElementById('headerName'))
+            document.getElementById('headerName').textContent = `Haii, ${user.short_name}`;
+
+        // Mapping hex accent → nama warna
+        const ACCENT_NAMES = {
+            '#00eaff': 'Cyan',
+            '#4a9eff': 'Biru Muda',
+            '#a78bfa': 'Lavender',
+            '#f472b6': 'Pink',
+            '#34d399': 'Hijau Mint',
+            '#fb923c': 'Oranye',
+            '#fbbf24': 'Kuning',
+            '#f87171': 'Merah Muda',
+            '#e879f9': 'Ungu Neon',
+            '#38bdf8': 'Biru Langit',
+            '#86efac': 'Hijau Pastel',
+            '#ffffff': 'Putih',
+        };
+
+        function getBgLabel() {
+            const match = BG_PRESETS.find(p => p.grad === state.bg);
+            return match ? match.label : 'Custom';
+        }
+
+        function getAccentLabel() {
+            return ACCENT_NAMES[state.accent] || 'Custom (' + state.accent + ')';
+        }
+
+        // Save / Reset
+        async function saveTheme() {
+            // 1. Simpan ke localStorage dulu (tetap utama)
+            localStorage.setItem('user_theme', JSON.stringify(state));
+
+            // 2. Log ke Supabase
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.id && typeof supabase !== 'undefined') {
+                    await supabase.from('theme_logs').upsert({
+                        user_id: user.id,
+                        nickname: user.nickname || user.short_name || 'Unknown',
+                        class_id: String(user.class_id || ''),
+                        bg: getBgLabel(),
+                        accent: getAccentLabel(),
+                        font_size: state.fontSize,
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) {
+                console.warn('[Theme] Gagal sync ke Supabase:', e);
+            }
+
+            if (typeof showToast === 'function') showToast(t('success_save'), 'success');
+            setTimeout(() => window.location.reload(), 900);
+        }
+
+        async function resetTheme() {
+            localStorage.removeItem('user_theme');
+
+            // Log reset ke Supabase
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (user.id && typeof supabase !== 'undefined') {
+                    await supabase.from('theme_logs').upsert({
+                        user_id: user.id,
+                        nickname: user.nickname || user.short_name || 'Unknown',
+                        class_id: String(user.class_id || ''),
+                        bg: 'Default',
+                        accent: 'Default',
+                        font_size: 'sedang',
+                        updated_at: new Date().toISOString(),
+                    }, { onConflict: 'user_id' });
+                }
+            } catch (e) {
+                console.warn('[Theme] Gagal sync reset ke Supabase:', e);
+            }
+
+            if (typeof showToast === 'function') showToast(t('reset_default') + ' ✓', 'success');
+            setTimeout(() => window.location.reload(), 900);
+        }
+    </script>
+</body>
+
+</html>

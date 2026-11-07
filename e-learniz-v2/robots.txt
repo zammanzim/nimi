@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admiii/
+
+Sitemap: https://e-learniz.my.id/sitemap.xml

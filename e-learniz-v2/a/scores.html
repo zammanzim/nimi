@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle"></title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" id="pageIcon" href="../icons/app-icon.png" type="image/png">
+
+    <style>
+        :root {
+            --accent: #00eaff;
+            --glass: rgba(15, 20, 30, 0.85);
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        .glass-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        #pp {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+            background: #111;
+        }
+
+        .hero-info h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #fff, #00eaff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-info p {
+            font-size: 16px;
+            opacity: 0.7;
+            margin: 0;
+        }
+
+        .stat-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 100px;
+        }
+
+        .stat-badge .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            margin-bottom: 5px;
+        }
+
+        .stat-badge .value {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-radius: 80px;
+            border-spacing: 0 8px;
+        }
+
+        .modern-table th {
+            text-align: left;
+            padding: 10px 15px;
+            font-size: 13px;
+            text-transform: uppercase;
+            opacity: 0.5;
+            font-weight: 600;
+        }
+
+        .modern-table tr:not(thead tr) {
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+        }
+
+        .modern-table tr:not(thead tr):hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: scale(1.01);
+        }
+
+        .modern-table td {
+            padding: 12px 15px;
+        }
+
+        .modern-table td:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .modern-table td:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .score-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            background: rgba(0, 234, 255, 0.1);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+        }
+
+        .podium-section {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 15px;
+            padding: 40px 0 20px;
+            margin-top: 20px;
+        }
+
+        .podium-box {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 45px 10px 15px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .podium-box:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .p-rank {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            padding: 3px;
+            background: #111;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .p-rank img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+
+        .p1 {
+            height: 200px;
+            border-color: gold;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .p1 .p-rank {
+            border: 2px solid gold;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .p1 .p-rank::after {
+            content: '👑';
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        .p2 {
+            height: 160px;
+        }
+
+        .p3 {
+            height: 140px;
+        }
+
+        .p-name {
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .p-score {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .p-num {
+            font-size: 24px;
+            font-weight: 900;
+            opacity: 0.1;
+            position: absolute;
+            bottom: 5px;
+            right: 45%;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(-50%, 0);
+            }
+
+            50% {
+                transform: translate(-50%, -10px);
+            }
+        }
+
+        .leaderboard-list {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .leader-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .leader-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .leader-item.drag-over {
+            border-color: var(--accent);
+            background: rgba(0, 234, 255, 0.08);
+            transform: translateX(6px);
+        }
+
+        .leader-item img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .select-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .mapel-select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            appearance: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(30px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: white;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            opacity: 1;
+        }
+
+        .privacy-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 22px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 34px;
+            transition: .3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background: var(--accent);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .fab-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            display: flex;
+            gap: 15px;
+            z-index: 999;
+        }
+
+        .fab-admin {
+            width: 55px;
+            height: 55px;
+            background: var(--accent);
+            color: #000;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 234, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .fab-admin.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .fab-admin.active {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 20px #fff;
+        }
+
+        .fab-admin:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        .config-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .config-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-save-config {
+            width: 100%;
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        @media (min-width: 1024px) {
+            .main-content {
+                flex-wrap: wrap;
+            }
+
+            #filesCard {
+                flex: 0 0 100%;
+            }
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            transition: transform 0.2s;
+        }
+
+        .file-item:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .file-item .icon {
+            font-size: 26px;
+            color: #e74c3c;
+        }
+
+        .file-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-item .info .name {
+            font-weight: 600;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-item .info .date {
+            font-size: 11px;
+            opacity: 0.5;
+        }
+
+        .slide-row {
+            animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+        }
+
+        [data-slide] .slide-target {
+            animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+            animation-play-state: paused;
+        }
+        [data-slide].slide-visible .slide-target {
+            animation-play-state: running;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .file-item .btn-lihat {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: rgba(0, 234, 255, 0.1);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .file-item .btn-lihat:hover {
+            background: rgba(0, 234, 255, 0.2);
+        }
+
+        .drop-zone-file {
+            border: 2px dashed rgba(0, 234, 255, 0.3);
+            border-radius: 12px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0, 234, 255, 0.03);
+            margin-top: 12px;
+        }
+
+        .drop-zone-file:hover,
+        .drop-zone-file.dragover {
+            border-color: #00eaff;
+            background: rgba(0, 234, 255, 0.08);
+        }
+
+        .drop-zone-file .dz-icon {
+            font-size: 32px;
+            color: rgba(0, 234, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-file .dz-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .drop-zone-file .dz-file {
+            font-size: 12px;
+            color: #2ed573;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            margin-top: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .file-row .fr-icon {
+            font-size: 20px;
+            color: #e74c3c;
+        }
+
+        .file-row .fr-name {
+            flex: 1;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-row input {
+            width: 120px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 12px;
+            outline: none;
+            flex-shrink: 0;
+        }
+
+        .file-row input:focus {
+            border-color: #00eaff;
+        }
+
+        .file-row .fr-remove {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 4px;
+        }
+
+        .file-row .fr-remove:hover {
+            color: #ff6b81;
+        }
+
+        .file-order-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            margin-top: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: grab;
+            transition: opacity 0.2s, transform 0.2s;
+            user-select: none;
+        }
+
+        .file-order-item:active {
+            cursor: grabbing;
+        }
+
+        .file-order-item.drag-over {
+            border-color: #00eaff;
+            background: rgba(0, 234, 255, 0.1);
+        }
+
+        .file-order-item .fo-handle {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 14px;
+        }
+
+        .file-order-item .fo-name {
+            flex: 1;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-order-item .fo-delete {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.3);
+            padding: 4px;
+            font-size: 14px;
+        }
+
+        .file-order-item .fo-delete:hover {
+            color: #ff6b81;
+        }
+
+        .btn-save-order {
+            display: none;
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #00eaff33;
+            border-radius: 8px;
+            background: rgba(0, 234, 255, 0.1);
+            color: #00eaff;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-save-order:hover {
+            background: rgba(0, 234, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div id="scoreModal" class="modal-overlay" onclick="closeScoreModal(event)">
+        <div class="glass-card modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeScoreModal()">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <div class="fab-container">
+        <div id="viewAllFab" class="fab-admin secondary" onclick="toggleViewAll()"><i class="fa-solid fa-eye"></i></div>
+        <div id="adminFab" class="fab-admin" onclick="openAdminConfig()" title="Atur Mapel"><i
+                class="fa-solid fa-gear"></i></div>
+    </div>
+
+    <div id="adminModal" class="modal-overlay" onclick="closeAdminModal(event)">
+        <div class="glass-card modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeAdminModal()">&times;</span>
+            <h2 style="margin-bottom: 5px;"><i class="fa-solid fa-sliders"></i> Atur Mapel</h2>
+            <p style="opacity: 0.6; font-size: 13px; margin-bottom: 20px;" data-i18n="select_subject_hide"></p>
+            <div id="adminConfigList" class="config-list"></div>
+            <button class="btn-save-config" onclick="saveAdminConfig()"><i class="fa-solid fa-save"></i> <span
+                    data-i18n="save">Simpan</span></button>
+
+            <hr style="border-color:rgba(255,255,255,0.1);margin:25px 0;">
+            <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> Kelola File Nilai</h3>
+            <p style="opacity:0.6; font-size:13px; margin-bottom:15px;" data-i18n="upload_original_file">Upload file
+                PDF/gambar nilai asli</p>
+            <div id="adminFilesList" class="config-list" style="margin-bottom:15px;"></div>
+            <div class="btn-save-order" id="saveOrderBtn" onclick="saveFileOrder()"><i
+                    class="fa-solid fa-floppy-disk"></i> Simpan Urutan</div>
+            <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none;" multiple>
+            <div class="drop-zone-file" id="fileDropZone">
+                <div class="dz-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <div class="dz-text">Klik atau drag & drop file PDF/gambar</div>
+                <div class="dz-file" id="fileNameDisplay"></div>
+            </div>
+            <div id="fileList" style="margin-top:10px;"></div>
+            <button class="btn-save-config" onclick="uploadAllFiles()" style="margin-top:12px; display:none;"
+                id="uploadBtn">
+                <i class="fa-solid fa-upload"></i> Upload Semua</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <h1 id="headerTitle" class="glow" data-i18n="exam_scores">Nilai Ujian</h1>
+            <p id="leaderboardDesc" style="opacity: 0.6; margin-top: 5px; margin-bottom: 20px;">Ranking Berdasarkan
+                Rata-Rata Nilai</p>
+
+            <div class="glass-card">
+                <div class="hero-section">
+                    <img id="pp" src="">
+                    <div class="hero-info">
+                        <p id="uname" style="color:var(--accent); font-weight:600; font-size:14px;">@username</p>
+                        <h1 id="name" data-i18n="loading">Loading...</h1>
+                        <p id="ucapanText"></p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-top: 10px; justify-content: center;">
+                    <div class="stat-badge"><span class="label">Rata-Rata</span><span class="value"
+                            id="rataNum">-</span></div>
+                    <div class="stat-badge"><span class="label">Peringkat</span><span class="value"
+                            id="peringkatNum">-</span></div>
+                </div>
+
+                <div class="privacy-box">
+                    <div style="display: flex; align-items: center; gap: 10px;"><i class="fa-solid fa-eye-slash"
+                            style="opacity: 0.7;"></i>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700;">Privasi Nilai</div>
+                            <div style="font-size: 11px; opacity: 0.6;">Sembunyikan rincian nilai dari orang lain</div>
+                        </div>
+                    </div>
+                    <label class="toggle-switch"><input type="checkbox" id="privacyToggle"
+                            onchange="togglePrivacy(this.checked)"><span class="toggle-slider"></span></label>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-list-ol"></i> Rincian Nilai Pribadi</h3>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Note: Nilai yang atmin input tidak 100% bener,
+                    siapa tau ada yang salah, jadi cek nilai asli di dokumen yang dikasih guru.</p>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Mapel</th>
+                            <th style="text-align: center;">Nilai</th>
+                            <th style="text-align: center;">KKM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="personalTableBody"></tbody>
+                </table>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Jangan putus asa kalo nilai kecil. Yang penting
+                    udah belajar, berusaha buat ulangan. Jangan hiraukan juga yang nilainya lebih gede tapi "tidak
+                    sesuai" dengan keseharian. <br> Semua guru pasti tau, siapa yang pantas mendapat nilai besar, dan
+                    mendapat nilai kecil. Karena penilaian guru bukan cuma dari nilai ulangan aja, tapi dari keseharian,
+                    sikap, dan tugas. Jadi kalo ada siswa yang ke 3 itu jelek tapi nilai PSAT nya gede itu anomali itu,
+                    pasti guru akan menurunkan nilai akhirnya.</p>
+
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div class="glass-card" data-slide>
+                <div
+                    style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                    <h3 style="margin:0; color:var(--accent);"><i class="fa-solid fa-trophy"></i> Top 15 Leaderboard
+                    </h3>
+                    <select id="rightClassSelector" class="mapel-select"
+                        style="width:auto; min-width:100px; font-size:12px;"
+                        onchange="switchClass(this.value)"></select>
+                </div>
+                <p style="font-size: 13px; opacity: 0.6; margin: 0;">Ranking 15 besar berdasarkan <strong>NILAI
+                        PSAT</strong></p>
+                <div class="podium-section" id="podiumTop3"></div>
+                <div class="leaderboard-list" id="podiumRest"></div>
+            </div>
+
+            <div class="glass-card" id="avgCard" data-slide>
+                <h3 style="margin-bottom:12px;"><i class="fa-solid fa-calculator"></i> Rata-rata Kelas</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0s;">
+                        <div style="font-size:20px; font-weight:800; color:#00eaff;" id="avgOverall">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Rata-rata</div>
+                    </div>
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0.06s;">
+                        <div style="font-size:20px; font-weight:800; color:#2ed573;" id="avgPassRate">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Lulus ≥75</div>
+                    </div>
+                    <div class="slide-target" style="text-align:center; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; animation-delay:0.12s;">
+                        <div style="font-size:20px; font-weight:800; color:#ffd700;" id="avgTop">–</div>
+                        <div style="font-size:11px; opacity:0.5;">Tertinggi</div>
+                    </div>
+                </div>
+                <div id="avgSubjectList" style="font-size:12px;"></div>
+            </div>
+
+            <div class="glass-card" data-slide>
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-users"></i> <span data-i18n="class_scores">Nilai
+                        Kelas</span></h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="select-wrapper"><select id="mapelSelector" class="mapel-select"
+                            onchange="renderClassTable()"></select></div>
+                <div class="select-wrapper"><select id="sortSelector" class="mapel-select"
+                        onchange="renderClassTable()">
+                        <option value="nilai">Urutkan: Nilai Tertinggi</option>
+                        <option value="nama">Urutkan: Nama (A-Z)</option>
+                    </select></div></div>
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th><span data-i18n="student_name">Nama Siswa</span></th>
+                            <th style="text-align: right;">Nilai</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="glass-card" id="filesCard" style="display:none;">
+                <h3 style="margin-bottom:15px;"><i class="fa-solid fa-file-pdf"></i> File Nilai Asli</h3>
+                <div
+                    style="background:rgba(255,200,0,0.08); border:1px solid rgba(255,200,0,0.2); border-radius:12px; padding:12px 15px; margin-bottom:20px; font-size:13px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#f39c12; margin-right:8px;"></i>
+                    Nilai yang admin masukkan <b>tidak 100% benar</b>. Cek file asli di bawah untuk memastikan.
+                </div>
+                <div id="filesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TEST_CONFIG = {
+            'psts': { title: 'Nilai PSTS', icon: 'fa-clipboard-check' },
+            'psasi': { title: 'Nilai PSASI', icon: 'fa-file-invoice' },
+            'psat': { title: 'Nilai PSAT', icon: 'fa-file-invoice' }
+        };
+        const SCORES_TABLE = 'nilai_scores';
+        const MAPEL_CONFIG = { pabp: 'PABP', pp: 'PP', bindo: 'B. Indonesia', bing: 'B. Inggris', mtk: 'Matematika', sejarah: 'Sejarah', bjepang: 'B. Jepang', bsunda: 'B. Sunda', senibudaya: 'Seni Budaya', informatika: 'Informatika', pjok: 'PJOK', proipas: 'Proipas', dasprog1: 'DASPROGRPL 1', dasprog2: 'DASPROGRPL 2', dasprog3: 'DASPROGRPL 3' };
+        const KKM = 75;
+        const SCORES_CACHE_TTL = 5 * 60 * 1000; // 5 menit
+        function _scoresCacheGet(key) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed.ts || Date.now() - parsed.ts > SCORES_CACHE_TTL) return null;
+                return parsed;
+            } catch (e) { return null; }
+        }
+        function _scoresCacheSet(key, data) {
+            try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), ...data })); } catch (e) { }
+        }
+        let _selectedClassId = null, globalData = [], myGlobalData = [], avatarMap = {}, avatarUrlMap = {}, nicknameMap = {}, currentTestId = 'psts', currentHiddenSubjects = [], isAdminViewAll = false;
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        function getCurrentClassId() { return _selectedClassId || getEffectiveClassId(); }
+        function switchClass(classId) {
+            _selectedClassId = classId || null;
+            const ecId = getCurrentClassId();
+            Promise.all([
+                supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', ecId).eq('scores_type', currentTestId),
+                supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', ecId),
+            ]).then(([nRes, uRes]) => {
+                if (nRes.error) return;
+                const nm = {}, nn = {}, nu = {};
+                uRes.data?.forEach(u => {
+                    if (u.full_name) { nm[u.full_name.toLowerCase()] = u.id; if (u.avatar_url) nu[u.full_name.toLowerCase()] = u.avatar_url; nn[u.full_name.toLowerCase()] = u.nickname; }
+                    if (u.nickname) { nm[u.nickname.toLowerCase()] = u.id; if (u.avatar_url) nu[u.nickname.toLowerCase()] = u.avatar_url; nn[u.nickname.toLowerCase()] = u.nickname; }
+                });
+                const process = s => {
+                    let t = 0, c = 0;
+                    for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                    return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
+                };
+                globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+                avatarMap = nm; avatarUrlMap = nu; nicknameMap = nn;
+                renderAvgCard(); renderPodium(); renderClassTable(); loadAndRenderFiles(); initSlideAnimations();
+            }).catch(console.error);
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const testId = urlParams.get('id');
+            if (testId && TEST_CONFIG[testId]) currentTestId = testId;
+            const config = TEST_CONFIG[currentTestId];
+            document.title = `${config.title} • ${t('app_name')}`;
+            document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
+
+
+
+            updateProfileUI(localUser);
+            if (typeof SkeletonUI !== 'undefined') SkeletonUI.injectCSS();
+            showSkeletons();
+
+            // ── Populate class dropdown ──
+            const sel = document.getElementById('rightClassSelector');
+            const { data: classes } = await supabase.from('classes').select('id, name').eq('is_active', true).order('id');
+            if (classes) {
+                sel.innerHTML = classes.map(c =>
+                    `<option value="${c.id}">${c.name}</option>`
+                ).join('');
+                sel.value = getEffectiveClassId();
+            }
+
+            await loadData();
+
+            setupMultiDrop();
+        });
+
+        function getDisplayName(nama) {
+            if (!nama) return '-';
+            return nicknameMap[nama.toLowerCase()] || nama;
+        }
+
+        function updateProfileUI(user) {
+            if (!user) return;
+            document.getElementById('name').innerText = user.nickname || user.full_name;
+            document.getElementById('uname').innerText = `@${user.username || 'user'}`;
+            document.getElementById('pp').src = user.avatar_url || '../icons/profpicture.png';
+            if (user.role === 'super_admin') {
+                document.getElementById('adminFab').style.display = 'flex';
+                document.getElementById('viewAllFab').style.display = 'flex';
+                document.getElementById('viewAllFab').title = t('view_all_subjects');
+            }
+        }
+
+        async function loadData() {
+            if (!localUser) return;
+            const effectiveClassId = getCurrentClassId();
+            const cacheKey = `scores_cache_${currentTestId}_${effectiveClassId}`;
+
+            // Cache-first (TTL 5 menit)
+            const cached = _scoresCacheGet(cacheKey);
+            if (cached) {
+                globalData = cached.globalData; myGlobalData = cached.myGlobalData; avatarMap = cached.avatarMap; avatarUrlMap = cached.avatarUrlMap || {}; nicknameMap = cached.nicknameMap || {}; currentHiddenSubjects = cached.currentHiddenSubjects || [];
+                renderAll(); loadAndRenderFiles();
+                // Background refresh
+                _scoresFetchFresh({ effectiveClassId, cacheKey }).catch(err => console.error(err));
+                return;
+            }
+
+            // No cache → blocking fetch
+            await _scoresFetchFresh({ effectiveClassId, cacheKey, render: true });
+        }
+
+        async function _scoresFetchFresh({ effectiveClassId, cacheKey, render }) {
+            try {
+                const [nRes, uRes, mRes, cRes] = await Promise.all([
+                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', effectiveClassId).eq('scores_type', currentTestId),
+                    supabase.from('users').select('id, full_name, nickname, avatar_url').eq('class_id', effectiveClassId),
+                    supabase.from(SCORES_TABLE).select('*, is_private').eq('class_id', localUser.class_id).eq('scores_type', currentTestId),
+                    supabase.from('nilai_config').select('hidden_subjects').eq('test_id', currentTestId).eq('class_id', effectiveClassId).maybeSingle()
+                ]);
+                if (nRes.error) throw nRes.error;
+                currentHiddenSubjects = cRes.data ? cRes.data.hidden_subjects : [];
+                const newAvatarMap = {}, newNicknameMap = {};
+                const newAvatarUrlMap = {};
+                uRes.data?.forEach(u => {
+                    if (u.full_name) { newAvatarMap[u.full_name.toLowerCase()] = u.id; if (u.avatar_url) newAvatarUrlMap[u.full_name.toLowerCase()] = u.avatar_url; newNicknameMap[u.full_name.toLowerCase()] = u.nickname; }
+                    if (u.nickname) { newAvatarMap[u.nickname.toLowerCase()] = u.id; if (u.avatar_url) newAvatarUrlMap[u.nickname.toLowerCase()] = u.avatar_url; newNicknameMap[u.nickname.toLowerCase()] = u.nickname; }
+                });
+                const process = (s) => {
+                    let t = 0, c = 0;
+                    for (let k in MAPEL_CONFIG) {
+                        if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                        const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; }
+                    }
+                    return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
+                };
+                globalData = nRes.data.map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+                myGlobalData = (mRes.data || []).map(process).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+                avatarMap = newAvatarMap; avatarUrlMap = newAvatarUrlMap; nicknameMap = newNicknameMap;
+                _scoresCacheSet(cacheKey, { globalData, myGlobalData, avatarMap, avatarUrlMap, nicknameMap, currentHiddenSubjects });
+                renderAll(); loadAndRenderFiles();
+            } catch (err) { if (render) console.error(err); }
+        }
+
+        function renderAll() { renderMapelSelector(); renderPersonal(); renderAvgCard(); renderPodium(); renderClassTable(); initSlideAnimations(); }
+
+        function renderMapelSelector() {
+            const sel = document.getElementById('mapelSelector');
+            const prevVal = sel.value; let html = '';
+            for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; html += `<option value="${k}">${MAPEL_CONFIG[k]}</option>`; }
+            sel.innerHTML = html;
+            if (prevVal && sel.querySelector(`option[value="${prevVal}"]`)) sel.value = prevVal;
+        }
+
+        function renderAvgCard() {
+            const card = document.getElementById('avgCard');
+            if (!globalData.length) { card.style.display = 'none'; return; }
+            card.style.display = '';
+
+            const totals = {};
+            let totalAll = 0, countAll = 0;
+            for (const k in MAPEL_CONFIG) {
+                if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                let sum = 0, n = 0, top = -Infinity;
+                for (const s of globalData) {
+                    const v = parseFloat(s[k]);
+                    if (!isNaN(v)) { sum += v; n++; if (v > top) top = v; }
+                }
+                totals[k] = { avg: n ? sum / n : 0, top, n };
+                totalAll += sum;
+                countAll += n;
+            }
+
+            const overallAvg = countAll ? (totalAll / countAll) : 0;
+            const lulus = globalData.filter(s => s.average >= KKM).length;
+            const pct = globalData.length ? Math.round(lulus / globalData.length * 100) : 0;
+            const topAvg = Math.max(...globalData.map(s => s.average));
+
+            document.getElementById('avgOverall').textContent = overallAvg.toFixed(1);
+            document.getElementById('avgPassRate').textContent = `${lulus}/${globalData.length} (${pct}%)`;
+            document.getElementById('avgTop').textContent = topAvg.toFixed(1);
+
+            let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:4px 12px;">';
+            let sIdx = 0;
+            for (const k in totals) {
+                if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                const t = totals[k];
+                const avg = t.avg.toFixed(1);
+                const color = t.avg >= KKM ? '#2ed573' : '#ff6b81';
+                html += `<div class="slide-target" style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); animation-delay:${sIdx * 0.06}s;">
+                    <span style="opacity:0.7;">${MAPEL_CONFIG[k]}</span>
+                    <span style="color:${color}; font-weight:600;">${avg}</span>
+                </div>`;
+                sIdx++;
+            }
+            html += '</div>';
+            document.getElementById('avgSubjectList').innerHTML = html;
+        }
+
+        function renderPersonal() {
+            if (!localUser) return;
+            const idx = myGlobalData.findIndex(s => String(s.user_id) === String(localUser.id));
+            const data = myGlobalData[idx];
+            if (!data) {
+                document.getElementById('rataNum').innerText = '-';
+                document.getElementById('peringkatNum').innerText = '-';
+                document.getElementById('ucapanText').innerText = '';
+                document.getElementById('personalTableBody').innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px 10px;opacity:0.5;"><i class="fa-solid fa-database" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data nilai</td></tr>';
+                return;
+            }
+            document.getElementById('name').innerText = localUser.nickname || localUser.full_name || getDisplayName(data.nama_siswa);
+            if (idx >= 0 && idx < 10) data.is_private = false;
+            document.getElementById('privacyToggle').checked = !!data.is_private;
+            const color = getDynamicColor(data.average);
+            document.getElementById('rataNum').innerText = data.average.toFixed(2); document.getElementById('rataNum').style.color = color;
+            document.getElementById('peringkatNum').innerText = `#${idx + 1}`; document.getElementById('peringkatNum').style.color = color;
+            const ucapan = document.getElementById('ucapanText'); ucapan.style.color = color;
+            if (data.average >= 85) ucapan.innerText = "dinginn ah di puncak🥶";
+            else if (data.average >= 75) ucapan.innerText = "pass KKM aman laa";
+            else if (data.average >= 70) ucapan.innerText = "yah dikit lagi KKM";
+            else ucapan.innerText = "gapapa, semangat trus";
+            const tbody = document.getElementById('personalTableBody'); tbody.innerHTML = "";
+            let rowIdx = 0;
+            for (let k in MAPEL_CONFIG) {
+                if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue;
+                const v = parseFloat(data[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff";
+                const tr = document.createElement('tr');
+                tr.className = 'slide-row';
+                tr.style.animationDelay = `${rowIdx * 0.06}s`;
+                tr.innerHTML = `<td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '<i class="fa-solid fa-check" style="color:#2ecc71"></i>' : '<i class="fa-solid fa-xmark" style="color:#e74c3c"></i>') : '-'}</td>`;
+                tbody.appendChild(tr);
+                rowIdx++;
+            }
+        }
+
+        function renderPodium() {
+            const t3 = document.getElementById('podiumTop3'), rs = document.getElementById('podiumRest');
+            if (!globalData.length) {
+                t3.innerHTML = '';
+                rs.innerHTML = '<div style="text-align:center;padding:40px 10px;opacity:0.5;grid-column:1/-1;"><i class="fa-solid fa-trophy" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data leaderboard</div>';
+                return;
+            }
+            t3.innerHTML = ""; rs.innerHTML = "";
+            let pIdx = 0;
+            const mkP = (s, r, c) => {
+                const key = s.nama_siswa ? s.nama_siswa.toLowerCase() : '';
+                const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
+                const isT10 = globalData.indexOf(s) < 10;
+                const privIcon = s.is_private && !isT10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
+                pIdx++;
+                return `<div class="podium-box ${c} slide-target" style="cursor:pointer;animation-delay:${(pIdx - 1) * 0.1}s;" onclick="showStudentScores(${s.user_id})"><div class="p-rank"><img src="${url}" onerror="this.src='../icons/profpicture.png'"></div><div class="p-name">${getDisplayName(s.nama_siswa)}${privIcon}</div><div class="p-score">${s.average.toFixed(2)}</div><div class="p-num">${r}</div></div>`;
+            };
+            if (globalData[1]) t3.innerHTML += mkP(globalData[1], 2, 'p2');
+            if (globalData[0]) t3.innerHTML += mkP(globalData[0], 1, 'p1');
+            if (globalData[2]) t3.innerHTML += mkP(globalData[2], 3, 'p3');
+            for (let i = 3; i < 15; i++) {
+                if (globalData[i]) {
+                    const key = globalData[i].nama_siswa ? globalData[i].nama_siswa.toLowerCase() : '';
+                    const url = avatarUrlMap[key] || (avatarMap[key] ? supabase.storage.from('avatars').getPublicUrl(avatarMap[key] + '.jpg').data.publicUrl : '../icons/profpicture.png');
+                    const gPrivIcon = globalData[i].is_private && i >= 10 ? ' <i class="fa-solid fa-eye-slash" style="font-size:10px;opacity:0.3;"></i>' : '';
+                    rs.innerHTML += `<div class="leader-item slide-target" draggable="true" style="cursor:pointer;animation-delay:${(i - 2) * 0.06}s;" onclick="showStudentScores(${globalData[i].user_id})"><span style="width:20px; font-weight:900; opacity:0.3;">${i + 1}</span><img src="${url}" onerror="this.src='../icons/profpicture.png'"><div style="flex:1; overflow:hidden;"><div style="font-size:12px; font-weight:700; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${getDisplayName(globalData[i].nama_siswa)}${gPrivIcon}</div><div style="font-size:11px; color:var(--accent); font-weight:800;">${globalData[i].average.toFixed(2)}</div></div></div>`;
+                }
+            }
+            initDragDrop();
+        }
+
+        let _dragSrc = null;
+        function initDragDrop() {
+            const container = document.getElementById('podiumRest');
+            container.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                _dragSrc = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            container.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                item.classList.remove('dragging');
+                document.querySelectorAll('.leader-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+                _dragSrc = null;
+            });
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+            container.addEventListener('dragenter', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item || item === _dragSrc) return;
+                item.classList.add('drag-over');
+            });
+            container.addEventListener('dragleave', (e) => {
+                const item = e.target.closest('.leader-item');
+                if (!item) return;
+                item.classList.remove('drag-over');
+            });
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.leader-item');
+                if (!target || !_dragSrc || target === _dragSrc) return;
+                target.classList.remove('drag-over');
+                const parent = _dragSrc.parentNode;
+                const items = [...parent.querySelectorAll('.leader-item')];
+                const srcIdx = items.indexOf(_dragSrc);
+                const tgtIdx = items.indexOf(target);
+                if (srcIdx < tgtIdx) {
+                    target.after(_dragSrc);
+                } else {
+                    target.before(_dragSrc);
+                }
+            });
+        }
+
+        function renderClassTable() {
+            const k = document.getElementById('mapelSelector').value, sort = document.getElementById('sortSelector').value, tbody = document.getElementById('classTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!globalData.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:40px 10px;opacity:0.5;"><i class="fa-solid fa-table" style="font-size:40px;display:block;margin-bottom:15px;"></i>Belum ada data kelas</td></tr>';
+                return;
+            }
+            let sorted = [...globalData];
+            if (sort === 'nama') sorted.sort((a, b) => (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            else sorted.sort((a, b) => (parseFloat(b[k]) || 0) - (parseFloat(a[k]) || 0) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            sorted.forEach((s, i) => {
+                const v = parseFloat(s[k]); const dV = !isNaN(v) ? v.toFixed(2) : "-"; const cV = !isNaN(v) ? getDynamicColor(v) : "#fff";
+                const tr = document.createElement('tr'); tr.className = 'slide-target'; tr.style.cursor = "pointer"; tr.style.animationDelay = `${i * 0.04}s`; tr.onclick = () => showStudentScores(s.user_id);
+                if (localUser && String(s.user_id) === String(localUser.id)) { tr.style.background = "rgba(0, 234, 255, 0.15)"; tr.style.boxShadow = "inset 4px 0 0 var(--accent)"; }
+                tr.innerHTML = `<td style="font-weight:bold; opacity:0.5;">${i + 1}</td><td style="font-weight:600; display:flex; align-items:center; gap:8px;">${getDisplayName(s.nama_siswa)}${s.is_private ? '<i class="fa-solid fa-eye-slash" style="font-size:10px; opacity:0.3;"></i>' : ''}</td><td style="text-align:right;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${dV}</span></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function showStudentScores(userId) {
+            const s = globalData.find(x => String(x.user_id) === String(userId)); if (!s) return;
+            const isMe = localUser && String(userId) === String(localUser.id);
+            const top10Idx = globalData.findIndex(x => String(x.user_id) === String(userId));
+            const isTop10 = top10Idx >= 0 && top10Idx < 10;
+            let html = ""; const color = getDynamicColor(s.average);
+            if (s.is_private && !isMe && !isAdminViewAll && localUser?.role !== 'super_admin' && !isTop10) html = `<div style="text-align:center; padding: 30px 10px;"><i class="fa-solid fa-eye-slash" style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;"></i><h2 style="margin-bottom: 10px;">Nilai Tersembunyi</h2><p style="opacity:0.6;">Siswa ini mengaktifkan mode privasi.</p></div>`;
+            else {
+                html = `<div style="text-align:left;"><h2 style="color:${color}; margin-bottom:5px; font-size:24px;">${getDisplayName(s.nama_siswa)}</h2><p style="opacity:0.7; margin-bottom:25px;">Rata-Rata: <b style="color:${color}">${s.average.toFixed(2)}</b></p><table class="modern-table"><thead><tr><th>Mapel</th><th style="text-align:center;">Nilai</th><th style="text-align:center;">KKM</th></tr></thead><tbody>`;
+                for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); const isAda = !isNaN(v); const cV = isAda ? getDynamicColor(v) : "#fff"; html += `<tr><td style="font-weight:600;">${MAPEL_CONFIG[k]}</td><td style="text-align:center;"><span class="score-pill" style="color:${cV}; border-color:${cV}33; background:${cV}11">${isAda ? v.toFixed(2) : '-'}</span></td><td style="text-align:center;">${isAda ? (v >= KKM ? '✅' : '❌') : '-'}</td></tr>`; }
+                html += `</tbody></table></div>`;
+            }
+            document.getElementById('modalBody').innerHTML = html; document.getElementById('scoreModal').classList.add('active'); document.body.style.overflow = 'hidden'; window.history.pushState({ modalOpen: true }, "");
+        }
+
+        function closeScoreModal(e) { if (e && e.target !== document.getElementById('scoreModal')) return; document.getElementById('scoreModal').classList.remove('active'); document.body.style.overflow = ''; if (window.history.state?.modalOpen) window.history.back(); }
+
+        function toggleViewAll() { isAdminViewAll = !isAdminViewAll; const fab = document.getElementById('viewAllFab'); fab.classList.toggle('active', isAdminViewAll); fab.innerHTML = isAdminViewAll ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>'; reprocess(); renderAll(); }
+
+        function reprocess() {
+            const proc = (s) => {
+                let t = 0, c = 0;
+                for (let k in MAPEL_CONFIG) { if (!isAdminViewAll && currentHiddenSubjects.includes(k)) continue; const v = parseFloat(s[k]); if (!isNaN(v)) { t += v; c++; } }
+                return { ...s, average: c > 0 ? parseFloat((t / c).toFixed(2)) : 0 };
+            };
+            globalData = globalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+            myGlobalData = myGlobalData.map(proc).sort((a, b) => (b.average - a.average) || (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
+        }
+
+        function openAdminConfig() {
+            const list = document.getElementById('adminConfigList'); let html = '';
+            for (let k in MAPEL_CONFIG) { html += `<div class="config-item"><span>${MAPEL_CONFIG[k]}</span><label class="toggle-switch"><input type="checkbox" class="admin-subject-toggle" value="${k}" ${currentHiddenSubjects.includes(k) ? 'checked' : ''}><span class="toggle-slider"></span></label></div>`; }
+            list.innerHTML = html; document.getElementById('adminModal').classList.add('active'); document.body.style.overflow = 'hidden'; window.history.pushState({ adminModal: true }, "");
+            renderAdminFiles();
+        }
+
+        function closeAdminModal(e) { if (e && e.target !== document.getElementById('adminModal')) return; document.getElementById('adminModal').classList.remove('active'); document.body.style.overflow = ''; if (window.history.state?.adminModal) window.history.back(); }
+
+        async function saveAdminConfig() {
+            const hidden = Array.from(document.querySelectorAll('.admin-subject-toggle:checked')).map(cb => cb.value);
+            const classId = getCurrentClassId();
+            showToast('Menyimpan...', 'info');
+            const { error } = await supabase.from('nilai_config').upsert({ test_id: currentTestId, class_id: classId, hidden_subjects: hidden }, { onConflict: 'test_id, class_id' });
+            if (error) showToast(t('failed_generic') + ': ' + error.message, 'error'); else { showToast(t('success_generic'), 'success'); closeAdminModal(); loadData(); }
+        }
+
+        async function togglePrivacy(isP) {
+            if (isP && localUser) {
+                const myIdx = myGlobalData.findIndex(s => String(s.user_id) === String(localUser.id));
+                if (myIdx >= 0 && myIdx < 10) {
+                    document.getElementById('privacyToggle').checked = false;
+                    showPopup(`Kamu ada di peringkat #${myIdx + 1}, jadi gabisa privasi nilai.`, 'error');
+                    return;
+                }
+            }
+            if (!localUser) return;
+            showToast('Menyimpan...', 'info');
+            const { error } = await supabase.from(SCORES_TABLE).update({ is_private: isP }).eq('user_id', localUser.id).eq('scores_type', currentTestId);
+            showToast(t('done') + '!', 'success'); loadData();
+        }
+
+        function getDynamicColor(n) { n = parseFloat(n); if (isNaN(n)) return "#888"; if (n >= 90) return "#00eafe"; if (n >= 80) return "#00cec9"; if (n >= 75) return "#1abc9c"; if (n >= 70) return "#e67e22"; return "#ff4757"; }
+
+        function switchTest(testId) {
+            if (testId === currentTestId || !TEST_CONFIG[testId]) return;
+            currentTestId = testId;
+            const config = TEST_CONFIG[currentTestId];
+            document.title = `${config.title} • ${t('app_name')}`;
+            document.getElementById('headerTitle').innerHTML = `<i class="fa-solid ${config.icon}"></i> ${config.title}`;
+            showSkeletons();
+            loadData();
+            if (typeof updateActiveSidebar === 'function') updateActiveSidebar();
+        }
+
+        function closeMobileSidebar() {
+            if (window.innerWidth < 1024) {
+                const sb = document.getElementById('sidebar');
+                if (sb?.classList.contains('open')) {
+                    sb.classList.remove('open');
+                    document.getElementById('hamburger')?.classList.remove('active');
+                    document.getElementById('sidebarOverlay')?.classList.remove('show');
+                    document.body.style.overflow = '';
+                    if (typeof unlockScroll === 'function') unlockScroll();
+                }
+            }
+        }
+
+        // ── SPA NAVIGATION: intercept klik link ke halaman yang sama (scores) dengan ?id= ──
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a[href*="?id="]');
+            if (!link) return;
+            const url = new URL(link.href);
+            if (url.pathname !== window.location.pathname) return;
+            e.preventDefault();
+            const newId = url.searchParams.get('id');
+            if (!newId) return;
+            closeMobileSidebar();
+            history.pushState({ testId: newId }, '', link.href);
+            switchTest(newId);
+        });
+
+        window.addEventListener('popstate', () => {
+            const sM = document.getElementById('scoreModal'), aM = document.getElementById('adminModal');
+            if (sM) sM.classList.remove('active'); if (aM) aM.classList.remove('active'); document.body.style.overflow = '';
+            const urlParams = new URLSearchParams(window.location.search);
+            const testId = urlParams.get('id');
+            if (testId) switchTest(testId);
+        });
+
+        function initSlideAnimations() {
+            if (window._slideObserver) window._slideObserver.disconnect();
+            window._slideObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    const container = entry.target;
+                    container.classList.add('slide-visible');
+                    window._slideObserver.unobserve(container);
+                });
+            }, { threshold: 0.08 });
+            document.querySelectorAll('[data-slide]').forEach(el => window._slideObserver.observe(el));
+        }
+
+        // ── Skeletons ──
+        function showSkeletons() {
+            // Podium skeleton
+            document.getElementById('podiumTop3').innerHTML =
+                `<div class="podium-box p2" style="border-color:transparent;height:160px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>` +
+                `<div class="podium-box p1" style="border-color:transparent;height:200px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>` +
+                `<div class="podium-box p3" style="border-color:transparent;height:140px;padding-top:50px;"><div class="sk" style="width:60px;height:60px;border-radius:50%;margin:0 auto 10px;"></div><div class="sk" style="width:50%;height:14px;margin:0 auto;"></div><div class="sk" style="width:30%;height:20px;margin:8px auto 0;"></div></div>`;
+
+            // Leaderboard skeleton (12 items)
+            const lb = Array(12).fill(
+                `<div class="leader-item" style="border-color:transparent;"><span style="width:20px;"><div class="sk" style="width:16px;height:16px;border-radius:4px;"></div></span><div class="sk" style="width:35px;height:35px;border-radius:50%;flex-shrink:0;"></div><div style="flex:1;"><div class="sk" style="width:55%;height:12px;margin-bottom:4px;"></div><div class="sk" style="width:30%;height:11px;"></div></div></div>`
+            ).join('');
+            document.getElementById('podiumRest').innerHTML = lb;
+
+            // Class table skeleton (8 rows)
+            const ct = Array(8).fill(
+                `<tr><td><div class="sk" style="height:14px;width:20px;margin:0 auto;"></div></td><td><div class="sk" style="height:14px;width:55%;"` +
+                `></div></td><td style="text-align:right;"><div class="sk" style="height:22px;width:50px;border-radius:20px;margin-left:auto;"></div></td></tr>`
+            ).join('');
+            document.getElementById('classTableBody').innerHTML = ct;
+
+            // Personal table skeleton — skip hidden biar ga bocor
+            const _skCacheKey = `scores_cache_${currentTestId}_${getCurrentClassId()}`;
+            const _skCached = _scoresCacheGet(_skCacheKey);
+            const _skHidden = (_skCached && _skCached.currentHiddenSubjects) || [];
+            let pt = '';
+            for (let k in MAPEL_CONFIG) {
+                if (!isAdminViewAll && _skHidden.includes(k)) continue;
+                pt += `<tr><td><div class="sk" style="height:14px;width:50%;"></div></td>` +
+                    `<td style="text-align:center;"><div class="sk" style="height:24px;width:70px;border-radius:20px;margin:0 auto;"></div></td>` +
+                    `<td style="text-align:center;"><div class="sk" style="height:20px;width:20px;border-radius:50%;margin:0 auto;"></div></td></tr>`;
+            }
+            document.getElementById('personalTableBody').innerHTML = pt;
+
+            // Stat badges
+            document.getElementById('rataNum').innerHTML = '<div class="sk" style="height:24px;width:50px;margin:0 auto;"></div>';
+            document.getElementById('peringkatNum').innerHTML = '<div class="sk" style="height:24px;width:50px;margin:0 auto;"></div>';
+        }
+
+        // ── File Nilai Asli ──
+        async function loadAndRenderFiles() {
+            const classId = getCurrentClassId();
+            const { data, error } = await supabase.from('nilai_files')
+                .select('*').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('display_order', { ascending: true, nullsFirst: false });
+            if (error) return;
+            const card = document.getElementById('filesCard');
+            const list = document.getElementById('filesList');
+            if (!data || !data.length) { card.style.display = 'none'; return; }
+            card.style.display = 'block';
+            list.innerHTML = data.map(f => `
+                <div class="file-item">
+                    <i class="fa-solid fa-file-pdf icon"></i>
+                    <div class="info">
+                        <div class="name">${f.label || f.file_name}</div>
+                        <div class="date">${new Date(f.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    </div>
+                    <a href="${f.file_url}" target="_blank" rel="noopener" class="btn-lihat"><i class="fa-solid fa-eye"></i> Lihat</a>
+                </div>
+            `).join('');
+        }
+
+        // ── Multi-file store ──
+        const _nilaiFileStore = [];
+        function renderNilaiFileList() {
+            const list = document.getElementById('fileList');
+            const btn = document.getElementById('uploadBtn');
+            if (!_nilaiFileStore.length) { list.innerHTML = ''; btn.style.display = 'none'; return; }
+            btn.style.display = 'inline-flex';
+            list.innerHTML = _nilaiFileStore.map((f, i) =>
+                `<div class="file-row">
+                    <span class="fr-icon"><i class="fa-solid fa-file-pdf"></i></span>
+                    <span class="fr-name" title="${f.file.name}">${f.file.name}</span>
+                    <input type="text" value="${f.label}" placeholder="Label" onchange="_nilaiFileStore[${i}].label=this.value">
+                    <span class="fr-remove" onclick="removeNilaiFile(${i})"><i class="fa-solid fa-xmark"></i></span>
+                </div>`
+            ).join('');
+        }
+        function removeNilaiFile(idx) {
+            _nilaiFileStore.splice(idx, 1);
+            renderNilaiFileList();
+            document.getElementById('fileInput').value = '';
+        }
+        function setupMultiDrop() {
+            const dz = document.getElementById('fileDropZone');
+            const fi = document.getElementById('fileInput');
+            dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', e => {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    for (const f of e.dataTransfer.files) _nilaiFileStore.push({ file: f, label: '' });
+                    renderNilaiFileList();
+                }
+            });
+            fi.addEventListener('change', () => {
+                if (fi.files.length) {
+                    for (const f of fi.files) _nilaiFileStore.push({ file: f, label: '' });
+                    renderNilaiFileList();
+                    fi.value = '';
+                }
+            });
+            dz.addEventListener('click', () => fi.click());
+        }
+        async function uploadAllFiles() {
+            if (!_nilaiFileStore.length) return showToast(t('select_file_first'), 'error');
+            const classId = getCurrentClassId();
+            showToast(t('uploading_text'), 'info');
+            const { data: maxRow } = await supabase.from('nilai_files')
+                .select('display_order').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('display_order', { ascending: false }).limit(1);
+            let order = (maxRow && maxRow.length && maxRow[0].display_order != null) ? maxRow[0].display_order + 1 : 0;
+            for (const entry of _nilaiFileStore) {
+                const storagePath = `${currentTestId}/${classId}/${Date.now()}_${entry.file.name}`;
+                const { error: upErr } = await supabase.storage.from('nilai-files').upload(storagePath, entry.file);
+                if (upErr) { showPopup('Gagal upload ' + entry.file.name + ': ' + upErr.message, 'error'); continue; }
+                const { data: urlData } = supabase.storage.from('nilai-files').getPublicUrl(storagePath);
+                const { error: dbErr } = await supabase.from('nilai_files').insert({
+                    test_id: currentTestId, class_id: classId,
+                    file_name: entry.file.name, file_url: urlData.publicUrl,
+                    label: entry.label || entry.file.name,
+                    display_order: order++
+                });
+                if (dbErr) {
+                    await supabase.storage.from('nilai-files').remove([storagePath]);
+                    showPopup('Gagal simpan ' + entry.file.name + ': ' + dbErr.message, 'error');
+                }
+            }
+            _nilaiFileStore.length = 0;
+            renderNilaiFileList();
+            loadAndRenderFiles();
+            renderAdminFiles();
+        }
+
+        let _adminFilesData = [];
+        let _fileOrderDirty = false;
+        let _dragSrcIdx = null;
+
+        async function renderAdminFiles() {
+            const list = document.getElementById('adminFilesList');
+            if (!list) return;
+            const classId = getCurrentClassId();
+            const { data } = await supabase.from('nilai_files')
+                .select('*').eq('test_id', currentTestId).eq('class_id', classId)
+                .order('display_order', { ascending: true, nullsFirst: false });
+            if (!data || !data.length) {
+                list.innerHTML = '<div style="opacity:0.5; font-size:13px; text-align:center; padding:15px;">' + t('no_file_upload') + '</div>';
+                document.getElementById('saveOrderBtn').style.display = 'none';
+                _adminFilesData = []; return;
+            }
+            _adminFilesData = data;
+            _fileOrderDirty = false;
+            document.getElementById('saveOrderBtn').style.display = 'none';
+            renderAdminFileList();
+        }
+
+        function renderAdminFileList() {
+            const list = document.getElementById('adminFilesList');
+            if (!list) return;
+            list.innerHTML = _adminFilesData.map((f, i) => `
+                <div class="file-order-item" draggable="true"
+                    data-idx="${i}"
+                    ondragstart="onFileDragStart(event, ${i})"
+                    ondragover="onFileDragOver(event, ${i})"
+                    ondragend="onFileDragEnd(event)"
+                    ondrop="onFileDrop(event, ${i})">
+                    <span class="fo-handle"><i class="fa-solid fa-grip-lines"></i></span>
+                    <span class="fo-name" title="${f.label || f.file_name}">${f.label || f.file_name}</span>
+                    <span class="fo-delete" onclick="deleteFile(${f.id})"><i class="fa-solid fa-trash-can"></i></span>
+                </div>
+            `).join('');
+        }
+
+        function onFileDragStart(e, idx) {
+            _dragSrcIdx = idx;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', idx);
+            e.target.style.opacity = '0.4';
+        }
+        function onFileDragOver(e, idx) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            document.querySelectorAll('.file-order-item').forEach(el => el.classList.remove('drag-over'));
+            if (_dragSrcIdx !== null && _dragSrcIdx !== idx) {
+                e.currentTarget.classList.add('drag-over');
+            }
+        }
+        function onFileDragEnd(e) {
+            _dragSrcIdx = null;
+            document.querySelectorAll('.file-order-item').forEach(el => { el.style.opacity = ''; el.classList.remove('drag-over'); });
+        }
+        function onFileDrop(e, idx) {
+            e.preventDefault();
+            if (_dragSrcIdx === null || _dragSrcIdx === idx) return;
+            const item = _adminFilesData.splice(_dragSrcIdx, 1)[0];
+            _adminFilesData.splice(idx, 0, item);
+            _fileOrderDirty = true;
+            document.getElementById('saveOrderBtn').style.display = 'block';
+            renderAdminFileList();
+        }
+
+        async function saveFileOrder() {
+            if (!_fileOrderDirty) return;
+            const results = await Promise.all(
+                _adminFilesData.map((f, i) =>
+                    supabase.from('nilai_files').update({ display_order: i }).eq('id', f.id)
+                )
+            );
+            const err = results.find(r => r.error);
+            if (err) return showPopup('Gagal simpan urutan: ' + err.error.message, 'error');
+            _fileOrderDirty = false;
+            document.getElementById('saveOrderBtn').style.display = 'none';
+            showToast('Urutan file disimpan', 'success');
+            loadAndRenderFiles();
+        }
+
+        async function deleteFile(id) {
+            const sure = await showPopup(t('confirm_delete_file'), 'confirm');
+            if (!sure) return;
+            const { data } = await supabase.from('nilai_files').select('file_url').eq('id', id).single();
+            if (data) {
+                const path = data.file_url.split('/nilai-files/')[1];
+                if (path) await supabase.storage.from('nilai-files').remove([decodeURIComponent(path)]);
+            }
+            await supabase.from('nilai_files').delete().eq('id', id);
+            loadAndRenderFiles();
+            renderAdminFiles();
+        }
+    </script>
+</body>
+
+</html>

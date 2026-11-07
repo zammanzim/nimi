@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Nizam</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-clients.js?v=20260822" defer></script>
+    <script src="../js/ctx-menu.js?v=20260822"></script>
+    <script src="../js/ui-components.js?v=20260822" defer></script>
+    <script src="../js/sidebar.js?v=20260822"></script>
+    <script src="../js/lang.js?v=20260822"></script>
+    <script src="../js/basicfeat.js?v=20260822"></script>
+    <script src="../js/show-popup.js?v=20260822"></script>
+    <script src="../js/auth.js?v=20260822" defer></script>
+    <script src="../js/activity.js?v=20260822" defer></script>
+    <script src="../js/visitor.js?v=20260822" defer></script>
+    <script src="../js/theme.js?v=20260822"></script>
+    <script src="../js/toast.js?v=20260822"></script>
+    <script src="../js/bottom-nav.js?v=20260822"></script>
+    <script src="../js/system-notice.js?v=20260822"></script>
+    <script src="../js/footer.js?v=20260822"></script>
+    <link rel="stylesheet" href="../css/styleasli.css?v=20260822">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" href="../icons/app-icon.png" type="image/png">
+    <style>
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 1.25rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 211, 42, 0.04);
+            border: 1px solid rgba(255, 211, 42, 0.12);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 211, 42, 0.08);
+            border-color: rgba(255, 211, 42, 0.25);
+        }
+
+        .task-item .ti-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 211, 42, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .85rem;
+        }
+
+        .task-item .ti-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-item .ti-title {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #efefef;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .task-item .ti-meta {
+            font-size: .68rem;
+            color: #666;
+            margin-top: 1px;
+        }
+
+        .task-item .ti-badge {
+            font-size: .6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(255, 211, 42, 0.15);
+            color: #ffd32a;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .task-item.done {
+            opacity: .5;
+            border-color: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+            cursor: default;
+        }
+
+        .form-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .form-card h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0 0 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-card h2 i {
+            color: var(--accent, #00eaff);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #bbb;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: .65rem .85rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #eee;
+            font-size: .85rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color .2s;
+            appearance: none;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: rgba(0, 234, 255, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: #848484;
+        }
+
+        select.form-control {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23888'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 36px;
+            cursor: pointer;
+        }
+
+        select.form-control option {
+            background: #1a1a1e;
+            color: #eee;
+        }
+
+        .form-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1rem 0;
+            color: #d8d8d8;
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+
+        .form-divider::before,
+        .form-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .file-upload-wrap {
+            position: relative;
+        }
+
+        .file-upload-wrap input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .file-upload-box {
+            border: 2px dashed rgba(0, 234, 255, 0.15);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all .2s;
+            background: rgba(0, 234, 255, 0.02);
+        }
+
+        .file-upload-box:hover {
+            border-color: rgba(0, 234, 255, 0.4);
+            background: rgba(0, 234, 255, 0.04);
+        }
+
+        .file-upload-box .fu-icon {
+            font-size: 1.5rem;
+            color: rgba(0, 234, 255, 0.3);
+            margin-bottom: .4rem;
+        }
+
+        .file-upload-box .fu-text {
+            font-size: .82rem;
+            color: #aaa;
+        }
+
+        .file-upload-box .fu-hint {
+            font-size: .68rem;
+            color: #c3c3c3;
+            margin-top: .2rem;
+        }
+
+        .file-preview {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(0, 234, 255, 0.04);
+            border: 1px solid rgba(0, 234, 255, 0.12);
+            border-radius: 10px;
+            margin-top: 8px;
+        }
+
+        .file-preview.show {
+            display: flex;
+        }
+
+        .file-preview .fp-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            background: rgba(0, 234, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00eaff;
+            font-size: .8rem;
+            flex-shrink: 0;
+        }
+
+        .file-preview .fp-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-preview .fp-name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #efefef;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-preview .fp-size {
+            font-size: .7rem;
+            color: #888;
+        }
+
+        .file-preview .fp-remove {
+            background: none;
+            border: none;
+            color: #777;
+            font-size: .9rem;
+            cursor: pointer;
+            padding: 3px;
+            transition: color .15s;
+            flex-shrink: 0;
+        }
+
+        .file-preview .fp-remove:hover {
+            color: #ff4757;
+        }
+
+        .btn-submit {
+            width: 100%;
+            margin-top: 1rem;
+            padding: .8rem;
+            background: var(--accent, #00eaff);
+            color: #0a0a0c;
+            border: none;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submitting-spinner {
+            display: none;
+        }
+
+        .submitting-spinner.show {
+            display: inline-block;
+        }
+
+        .submission-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+
+        .submission-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color .2s;
+        }
+
+        .submission-item:hover {
+            border-color: rgba(0, 234, 255, 0.15);
+        }
+
+        .si-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(0,234,255,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .submission-item .si-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .submission-item .si-name {
+            font-size: .8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .submission-item .si-teacher {
+            font-size: .72rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 1px;
+        }
+
+        .submission-item .si-time {
+            font-size: .62rem;
+            color: #848484;
+            margin-top: 2px;
+        }
+
+        .submission-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #848484;
+        }
+
+        .submission-empty i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+            opacity: .4;
+        }
+
+        .submission-empty p {
+            font-size: .82rem;
+        }
+
+        .submission-loading {
+            text-align: center;
+            padding: 30px;
+            color: #848484;
+            font-size: .82rem;
+        }
+
+        @media (min-width: 1024px) {
+            .form-card {
+                padding: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar" id="sidebar"></div>
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <div class="main-content">
+        <div class="left-section">
+            <div class="glow">
+                <h1><i class="fa-solid fa-pen-to-square" style="font-size:24px;"></i> <span data-i18n="task_collection">Pengumpulan Tugas</span></h1>
+            </div>
+
+            <!-- Daftar Tugas Wajib Kumpul -->
+            <h3 style="font-size:.82rem;font-weight:700;color:#ffd32a;margin-bottom:.6rem;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-list-check" style="font-size:.78rem;"></i> <span data-i18n="mandatory_task">Tugas Wajib Dikumpul</span>
+            </h3>
+            <div id="taskList">
+                <div class="submission-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="loading">Memuat tugas...</span>
+                </div>
+            </div>
+
+            <div class="form-card" style="margin-top:1.25rem;">
+                <h2><i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="send_task">Kirim Tugas</span></h2>
+
+                <form id="submitForm" onsubmit="return false;">
+                    <!-- Tugas -->
+                    <div class="form-group">
+                        <label class="form-label" for="tugasSelect">Tugas</label>
+                        <select class="form-control" id="tugasSelect">
+<option value="" data-i18n="select_task_optional">— Pilih Tugas (opsional) —</option>
+                        </select>
+                    </div>
+
+                    <!-- Guru Pengajar -->
+                    <div class="form-group">
+                        <label class="form-label" for="teacherSelect">Guru Pengajar</label>
+                        <select class="form-control" id="teacherSelect" required>
+<option value="" data-i18n="select_teacher_option">— Pilih Guru —</option>
+                        </select>
+                    </div>
+
+                    <!-- Upload File -->
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="upload_file">Upload File</label>
+                        <div class="file-upload-wrap">
+                            <input type="file" id="fileInput" accept="*/*">
+                            <div class="file-upload-box" id="fileUploadBox">
+                                <div class="fu-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                                <div class="fu-text">Klik untuk pilih file</div>
+                                <div class="fu-hint">PDF, gambar, dokumen — maks 20 MB</div>
+                            </div>
+                        </div>
+                        <div class="file-preview" id="filePreview">
+                            <div class="fp-icon"><i class="fa-solid fa-file"></i></div>
+                            <div class="fp-info">
+                                <div class="fp-name" id="fileName"></div>
+                                <div class="fp-size" id="fileSize"></div>
+                            </div>
+                            <button type="button" class="fp-remove" onclick="removeFile()"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="form-divider">Atau</div>
+
+                    <!-- Link Tugas -->
+                    <div class="form-group">
+                        <label class="form-label" for="linkInput" data-i18n="task_link">Link Tugas</label>
+                        <input class="form-control" id="linkInput" type="url" placeholder="https://canva.com/..., https://drive.google.com/...">
+                    </div>
+
+                    <!-- Optional Message -->
+                    <div class="form-group">
+                        <label class="form-label" for="messageInput">Pesan</label>
+                        <input class="form-control" id="messageInput" type="text" placeholder="Catatan untuk guru...">
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn-submit" id="btnSubmit" onclick="submitTask()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span id="btnSubmitLabel" data-i18n="btn_send">Kirim</span>
+                        <span class="submitting-spinner" id="submitSpinner"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="right-section">
+            <div style="margin-top:0;">
+                <h3 style="font-size:.9rem;font-weight:700;color:#ccc;margin-bottom:.75rem;display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-users" style="color:var(--accent,#00eaff);font-size:.85rem;"></i>
+                    Yang sudah ngumpulin
+                </h3>
+                <div id="submissionHistory">
+                    <div class="submission-loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i> <span data-i18n="loading">Memuat...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let _teacherMap = {}; // subject_id → teacher_name
+        let _tasks = [];
+        let _userDone = [];
+
+        // ── Get current class ──
+        function getCurrentClass() {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (!user) return null;
+            return getEffectiveClassId ? getEffectiveClassId() : user.class_id;
+        }
+
+        // ── Load teachers ──
+        async function loadTeachers() {
+            const sel = document.getElementById('teacherSelect');
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('nickname, short_name')
+                    .eq('role', 'teacher')
+                    .order('nickname');
+                if (error) throw error;
+                sel.innerHTML = '<option value="">' + t('select_teacher_option') + '</option>';
+                (data || []).forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.nickname;
+                    opt.textContent = t.short_name || t.nickname;
+                    sel.appendChild(opt);
+                });
+            } catch (err) {
+                console.warn('Gagal load guru:', err);
+                sel.innerHTML = '<option value="">' + t('failed_load_data') + '</option>';
+            }
+        }
+
+        // ── Load tasks (is_task = true) ──
+        async function loadTasks() {
+            const classId = getCurrentClass();
+            if (!classId) return;
+            const container = document.getElementById('taskList');
+            const tugasSel = document.getElementById('tugasSelect');
+
+            try {
+                const academicYear = await getAcademicYear(classId);
+                // Fetch tasks + subject_teachers + user_progress sekaligus
+                const [tasksRes, teachersRes, progressRes] = await Promise.all([
+                    supabase.from('subject_announcements')
+                        .select('id, big_title, subject_id, class_id')
+                        .eq('is_task', true)
+                        .eq('class_id', classId)
+                        .eq('academic_year', academicYear)
+                        .order('created_at', { ascending: false }),
+                    supabase.from('subject_teachers')
+                        .select('subject_id, teacher_name'),
+                    supabase.from('user_progress')
+                        .select('announcement_id')
+                        .eq('user_id', JSON.parse(localStorage.getItem('user') || '{}').id || '')
+                ]);
+
+                if (tasksRes.error) throw tasksRes.error;
+
+                // Build teacher map
+                _teacherMap = {};
+                (teachersRes.data || []).forEach(t => {
+                    _teacherMap[t.subject_id] = t.teacher_name;
+                });
+
+                // Build done set
+                _userDone = (progressRes.data || []).map(p => String(p.announcement_id));
+
+                _tasks = tasksRes.data || [];
+
+                // Render task list
+                if (!_tasks.length) {
+                    container.innerHTML = '<div style="padding:20px;text-align:center;color:#555;font-size:.82rem;">' + t('no_mandatory_task') + '</div>';
+                    tugasSel.innerHTML = '<option value="">' + t('no_task_option') + '</option>';
+                    return;
+                }
+
+                container.innerHTML = '<div class="task-list"></div>';
+                const list = container.querySelector('.task-list');
+
+                _tasks.forEach(t => {
+                    const isDone = _userDone.includes(String(t.id));
+                    const teacher = _teacherMap[t.subject_id] || '—';
+                    const div = document.createElement('div');
+                    div.className = 'task-item' + (isDone ? ' done' : '');
+                    div.dataset.id = t.id;
+                    div.innerHTML = `
+                        <div class="ti-icon"><i class="fa-solid fa-file-lines" style="color:#ffd32a;"></i></div>
+                        <div class="ti-info">
+                            <div class="ti-title">${t.big_title || 'Tanpa judul'}</div>
+                            <div class="ti-meta">${teacher}</div>
+                        </div>
+                        <div class="ti-badge">${isDone ? '✅' : '📋'}</div>
+                    `;
+                    if (!isDone) {
+                        div.onclick = () => selectTugas(t.id);
+                    }
+                    list.appendChild(div);
+                });
+
+                // Populate tugas dropdown
+                tugasSel.innerHTML = '<option value="">' + t('select_task_optional') + '</option>';
+                _tasks.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.big_title || 'Tanpa judul';
+                    opt.dataset.subjectId = t.subject_id;
+                    tugasSel.appendChild(opt);
+                });
+
+                // Handle ?tugas=ID query param
+                const params = new URLSearchParams(window.location.search);
+                const tugasId = params.get('tugas');
+                if (tugasId) {
+                    tugasSel.value = tugasId;
+                    onTugasChange();
+                }
+
+            } catch (err) {
+                console.warn('Gagal load tasks:', err);
+                container.innerHTML = '<div style="padding:20px;text-align:center;color:#ff4757;font-size:.82rem;">' + t('failed_load_task') + '</div>';
+            }
+        }
+
+        // ── When tugas select changes ──
+        function onTugasChange() {
+            const sel = document.getElementById('tugasSelect');
+            const teacherSel = document.getElementById('teacherSelect');
+            const selectedId = sel.value;
+            if (!selectedId) return;
+
+            const task = _tasks.find(t => String(t.id) === selectedId);
+            if (!task) return;
+
+            const teacher = _teacherMap[task.subject_id];
+            if (teacher && [...teacherSel.options].some(o => o.value === teacher)) {
+                teacherSel.value = teacher;
+            }
+        }
+
+        function selectTugas(id) {
+            document.getElementById('tugasSelect').value = id;
+            onTugasChange();
+            document.getElementById('submitForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ── File handling ──
+        function getFileIcon(name) {
+            const ext = (name || '').split('.').pop().toLowerCase();
+            if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return 'fa-file-image';
+            if (['pdf'].includes(ext)) return 'fa-file-pdf';
+            if (['doc', 'docx'].includes(ext)) return 'fa-file-word';
+            if (['xls', 'xlsx'].includes(ext)) return 'fa-file-excel';
+            if (['ppt', 'pptx'].includes(ext)) return 'fa-file-powerpoint';
+            if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) return 'fa-file-zipper';
+            if (['mp4', 'webm', 'avi', 'mov', 'mkv'].includes(ext)) return 'fa-file-video';
+            return 'fa-file';
+        }
+
+        function fmtSize(b) {
+            if (!b) return '';
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            const f = e.target.files[0];
+            if (!f) return;
+            if (f.size > 20 * 1024 * 1024) {
+                showPopup('File terlalu besar! Maksimal 20 MB.', 'error');
+                this.value = '';
+                return;
+            }
+            selectedFile = f;
+            const prev = document.getElementById('filePreview');
+            prev.classList.add('show');
+            document.querySelector('.file-upload-box').style.display = 'none';
+            document.getElementById('fileName').textContent = f.name;
+            document.getElementById('fileSize').textContent = fmtSize(f.size);
+            prev.querySelector('.fp-icon i').className = 'fa-solid ' + getFileIcon(f.name);
+        });
+
+        function removeFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('filePreview').classList.remove('show');
+            document.querySelector('.file-upload-box').style.display = '';
+        }
+
+        // ── Submit ──
+        async function submitTask() {
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+            if (!user) { showToast(t('not_logged_in'), 'error'); return; }
+
+            const teacher = document.getElementById('teacherSelect').value;
+            if (!teacher) { showToast(t('select_teacher_first'), 'error'); return; }
+
+            const tugasId = document.getElementById('tugasSelect').value;
+            const link = document.getElementById('linkInput').value.trim();
+            const message = document.getElementById('messageInput').value.trim();
+
+            if (!selectedFile && !link) {
+                showToast(t('upload_or_link_required'), 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmit');
+            const label = document.getElementById('btnSubmitLabel');
+            const spinner = document.getElementById('submitSpinner');
+            btn.disabled = true;
+            label.textContent = 'Mengirim...';
+            spinner.classList.add('show');
+
+            try {
+                let fileUrl = null;
+                let fileName = null;
+
+                if (selectedFile) {
+                    const safeName = selectedFile.name.replace(/[^a-zA-Z 0-9._-]/g, '_');
+                    const filePath = `task-submissions/${user.id}/${Date.now()}_${safeName}`;
+
+                    const { error: se } = await supabase.storage
+                        .from('transfer-files')
+                        .upload(filePath, selectedFile, { upsert: false });
+                    if (se) throw se;
+
+                    fileUrl = filePath;
+                    fileName = selectedFile.name;
+                }
+
+                const { error: de } = await supabase.from('task_submissions').insert({
+                    user_id: String(user.id),
+                    user_name: user.nickname || user.full_name || user.name || 'Siswa',
+                    user_class: user.class_name || String(user.class_id || ''),
+                    avatar_url: user.avatar_url || null,
+                    teacher_name: teacher,
+                    tugas_id: tugasId ? Number(tugasId) : null,
+                    file_url: fileUrl,
+                    file_name: fileName,
+                    link_url: link || null,
+                    message: message || null,
+                });
+                if (de) throw de;
+
+                // Kalo ada tugas_id, tandai selesai di user_progress juga
+                if (tugasId) {
+                    try {
+                        await supabase.from('user_progress').insert({
+                            user_id: String(user.id),
+                            announcement_id: Number(tugasId)
+                        });
+                    } catch (_) {}
+                }
+
+                showToast(t('task_sent_success'), 'success');
+
+                document.getElementById('submitForm').reset();
+                removeFile();
+                document.getElementById('btnSubmitLabel').textContent = t('send_again');
+                document.getElementById('linkInput').value = '';
+                document.getElementById('messageInput').value = '';
+
+                loadHistory();
+                loadTasks();
+            } catch (err) {
+                console.error('Gagal kirim tugas:', err);
+                showPopup('Gagal kirim tugas: ' + (err.message || err), 'error');
+            } finally {
+                btn.disabled = false;
+                label.textContent = t('btn_send');
+                spinner.classList.remove('show');
+            }
+        }
+
+        // ── History ──
+        async function loadHistory() {
+            const container = document.getElementById('submissionHistory');
+            try {
+                const { data, error } = await supabase
+                    .from('task_submissions')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+                if (error) throw error;
+
+                if (!data || !data.length) {
+                    container.innerHTML = '<div class="submission-empty"><i class="fa-solid fa-inbox"></i><p>' + t('no_submissions') + '</p></div>';
+                    return;
+                }
+
+                container.innerHTML = '<div class="submission-list"></div>';
+                const list = container.querySelector('.submission-list');
+
+                data.forEach(s => {
+                    const date = new Date(s.created_at);
+                    const dateStr = date.toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                    }) + ', ' + date.toLocaleTimeString('id-ID', {
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    const avatarSrc = s.avatar_url || '../icons/profpicture.png';
+
+                    const div = document.createElement('div');
+                    div.className = 'submission-item';
+                    div.innerHTML = `
+                        <img class="si-avatar" src="${avatarSrc}" onerror="this.src='../icons/profpicture.png'">
+                        <div class="si-info">
+                            <div class="si-name">${s.user_name || 'Siswa'}</div>
+                            <div class="si-teacher">Tugas ${s.teacher_name}</div>
+                            <div class="si-time">${dateStr}</div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch (err) {
+                console.warn('Gagal load history:', err);
+                container.innerHTML = '<div class="submission-loading" style="color:#ff4757;">Gagal memuat</div>';
+            }
+        }
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', () => {
+            document.title = t('page_title_tugas');
+            loadTeachers();
+            loadTasks();
+            loadHistory();
+
+            document.getElementById('tugasSelect').addEventListener('change', onTugasChange);
+        });
+    </script>
+</body>
+
+</html>

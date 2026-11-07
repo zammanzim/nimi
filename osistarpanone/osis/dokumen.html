@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dokumen — OSIS TARPAN ONE</title>
+    <link rel="stylesheet" href="../css/style.css?v=40" />
+    <meta name="theme-color" content="#e11d2e" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="../icons/favicon-32.png"
+    />
+    <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="OSIS TARPAN ONE" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/osis-dokumen.css?v=4" />
+    <script src="../js/supabase.min.js?v=10"></script>
+    <script src="../js/config.js?v=14"></script>
+    <script src="../js/db.js?v=35" defer></script>
+    <script src="../js/aktivitas.js?v=10" defer></script>
+    <script src="../js/app.js?v=10" defer></script>
+    <script src="../js/dropdown.js?v=3" defer></script>
+    <script src="../js/toast.js?v=10" defer></script>
+    <script src="../js/notice.js?v=10" defer></script>
+    <script src="../js/upload.js?v=10" defer></script>
+    <script src="../js/show-popup.js?v=15" defer></script>
+    <script src="../js/osis-auth.js?v=19" defer></script>
+    <script src="../js/osis-visitor.js?v=5" defer></script>
+    <script src="../js/osis-sidebar.js?v=45" defer></script>
+    <script src="../js/osis-header.js?v=14" defer></script>
+    <script src="../js/form-persist.js?v=10" defer></script>
+    <script src="../js/dokumen.js?v=15" defer></script>
+    <script src="../js/pwa.js?v=11" defer></script>
+  </head>
+  <body>
+    <header class="top-nav">
+      <a href="../index#/" class="brand">
+        <div class="logo-box"><img data-foto="logo1" alt="Logo" /></div>
+        <div class="brand-text">
+          <h2>DOKUMEN</h2>
+          <p>Arsip OSIS</p>
+        </div>
+      </a>
+
+      <div class="top-nav-extra">
+        <a href="../index#/" class="btn btn-white btn-sm"
+          ><i class="fa-solid fa-house"></i> Beranda</a
+        >
+
+        <div id="areaAuth"></div>
+      </div>
+    </header>
+
+    <div class="dokumen-wrap">
+      <div class="dokumen-cols">
+      <div class="dokumen-side">
+
+      <div class="dokumen-head">
+        <div class="ico"><i class="fa-solid fa-folder-open"></i></div>
+        <div style="flex: 1; min-width: 180px">
+          <h1>DOKUMEN OSIS</h1>
+          <p>Arsip dan kelola seluruh dokumen OSIS dalam satu tempat.</p>
+        </div>
+        <button
+          class="btn btn-red"
+          id="btnUploadDokumen"
+          style="display: none"
+        >
+          <i class="fa-solid fa-plus"></i> Upload Dokumen
+        </button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="lbl"><i class="fa-solid fa-file"></i> Total File</span
+          ><b id="statTotal">-</b><small>semua dokumen</small>
+        </div>
+        <div class="stat-card">
+          <span class="lbl"
+            ><i class="fa-solid fa-calendar-days"></i> Bulan Ini</span
+          ><b id="statBulan">-</b><small id="statBulanLbl">-</small>
+        </div>
+        <div class="stat-card">
+          <span class="lbl"
+            ><i class="fa-solid fa-file-lines"></i> Proposal</span
+          ><b id="statProposal">-</b><small>kategori proposal</small>
+        </div>
+        <div class="stat-card">
+          <span class="lbl"
+            ><i class="fa-solid fa-file-circle-check"></i> LPJ</span
+          ><b id="statLpj">-</b><small>kategori LPJ</small>
+        </div>
+      </div>
+
+      <div class="filter-card">
+        <div class="field">
+          <label>Cari nama dokumen</label
+          ><input
+            type="text"
+            id="filterQ"
+            class="admin-input"
+            placeholder="Cari nama dokumen..."
+          />
+        </div>
+        <div class="field">
+          <label>Kategori</label
+          ><select id="filterKategori" class="admin-input">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tahun</label
+          ><select id="filterTahun" class="admin-input">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Divisi</label
+          ><select id="filterDivisi" class="admin-input">
+            <option value="">Semua</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Urutkan</label
+          ><select id="filterSort" class="admin-input">
+            <option value="baru">Terbaru</option>
+            <option value="lama">Terlama</option>
+            <option value="nama">Nama A-Z</option>
+            <option value="besar">Terbesar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label
+          ><button
+            class="btn btn-white btn-sm"
+            id="btnResetFilter"
+            title="Reset filter"
+          >
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="folder-grid" id="folderGrid"></div>
+      </div>
+      <div class="dokumen-main">
+
+      <div id="dokumenList">
+        <div class="loading-block">
+          <div class="spinner"></div>
+          Memuat dokumen...
+        </div>
+      </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- POPUP UPLOAD / EDIT -->
+    <div class="dokumen-form" id="dokumenForm">
+      <div class="dokumen-form-inner">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+          "
+        >
+          <span
+            style="
+              font-weight: 900;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 1rem;
+            "
+            ><i class="fa-solid fa-upload" style="color: var(--red)"></i>
+            <span id="dokumenFormTitle">Upload Dokumen</span></span
+          >
+          <button
+            class="icon-btn"
+            onclick="Dokumen.tutupForm()"
+            title="Tutup"
+            style="width: 34px; height: 34px; flex-shrink: 0"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="field">
+          <label>File</label>
+          <div id="dokDrop" class="dok-drop">
+            <div class="dok-drop-inner" id="dokDropInner">
+              <i class="fa-solid fa-file-arrow-up"></i>
+              <span>Tarik file ke sini atau</span>
+              <span class="btn btn-white btn-sm" style="pointer-events: none"
+                >Pilih File</span
+              >
+              <small
+                >PDF, DOCX, XLSX, PPTX, ZIP, JPG/PNG, dll. Maks 20MB.</small
+              >
+            </div>
+          </div>
+          <input type="file" id="dokFile" hidden />
+        </div>
+        <div id="dokFileInfo" style="display: none"></div>
+        <div class="field" style="margin-top: 10px">
+          <label>Nama dokumen</label
+          ><input
+            type="text"
+            id="dokNama"
+            class="admin-input"
+            placeholder="cth: Proposal Class Meeting 2026"
+            maxlength="160"
+          />
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+          <div class="field">
+            <label>Kategori</label
+            ><select id="dokKategori" class="admin-input"></select>
+          </div>
+          <div class="field">
+            <label>Tahun</label
+            ><input
+              type="number"
+              id="dokTahun"
+              class="admin-input"
+              value="2026"
+              min="2000"
+              max="2100"
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label>Divisi</label
+          ><select id="dokDivisi" class="admin-input"></select>
+        </div>
+        <div class="field">
+          <label>Deskripsi (opsional)</label
+          ><textarea
+            id="dokDeskripsi"
+            class="admin-input admin-textarea"
+            rows="3"
+            maxlength="1000"
+            placeholder="Keterangan singkat dokumen..."
+          ></textarea>
+        </div>
+        <div class="form-actions-row" style="margin-top: 12px">
+          <button class="btn btn-white" id="btnBatalDokumen">Batal</button>
+          <button class="btn btn-red" id="btnSimpanDokumen">
+            <i class="fa-solid fa-floppy-disk"></i> Simpan
+          </button>
+        </div>
+        <input type="hidden" id="dokId" />
+      </div>
+    </div>
+
+    <!-- POPUP DETAIL -->
+    <div class="dokumen-form" id="dokumenDetail">
+      <div class="dokumen-form-inner" style="width: min(620px, 100%)">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+          "
+        >
+          <span
+            style="
+              font-weight: 900;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-size: 1rem;
+            "
+            ><i class="fa-solid fa-file-lines" style="color: var(--red)"></i>
+            Detail Dokumen</span
+          >
+          <button
+            class="icon-btn"
+            onclick="Dokumen.tutupDetail()"
+            title="Tutup"
+            style="width: 34px; height: 34px; flex-shrink: 0"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div id="dokDetailBody"></div>
+        <div class="form-actions-row" style="margin-top: 14px">
+          <button class="btn btn-white btn-sm" onclick="Dokumen.tutupDetail()">
+            Tutup
+          </button>
+          <button class="btn btn-white btn-sm" id="btnDownloadDetail">
+            <i class="fa-solid fa-download"></i> Download
+          </button>
+          <button
+            class="btn btn-white btn-sm"
+            id="btnEditDariDetail"
+            style="display: none"
+          >
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <button
+            class="btn btn-red btn-sm"
+            id="btnHapusDariDetail"
+            style="display: none"
+          >
+            <i class="fa-solid fa-trash-can"></i> Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

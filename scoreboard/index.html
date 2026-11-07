@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SCOREBOARD</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="title">SCOREBOARD</h1>
+
+    <div class="point-control">
+      <span class="point-label">Nilai Poin Aktif</span>
+      <div class="point-display" id="pointDisplay">1</div>
+      <div class="point-quick">
+        <button class="point-btn" data-point="1">1</button>
+        <button class="point-btn" data-point="2">2</button>
+        <button class="point-btn" data-point="3">3</button>
+        <button class="point-btn" data-point="5">5</button>
+        <button class="point-btn" data-point="10">10</button>
+        <div class="point-custom">
+          <input type="number" id="pointInput" step="1" placeholder="Custom (±)" />
+          <button class="point-btn apply" id="pointApply">Set</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-count-control">
+      <span class="point-label">Jumlah Tim</span>
+      <div class="count-quick">
+        <button class="point-btn count-btn" data-count="2">2</button>
+        <button class="point-btn count-btn" data-count="3">3</button>
+        <button class="point-btn count-btn" data-count="4">4</button>
+        <button class="point-btn count-btn" data-count="5">5</button>
+        <div class="point-custom">
+          <input type="number" id="countInput" min="1" max="20" step="1" placeholder="Custom" />
+          <button class="point-btn apply" id="countApply">Set</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-controls">
+      <button class="ctrl-btn undo" id="undoBtn" title="Batalkan perubahan terakhir">
+        <span class="ic">&#8634;</span> Undo
+      </button>
+      <button class="ctrl-btn reset" id="resetBtn" title="Reset semua skor ke 0">
+        <span class="ic">&#10227;</span> Reset
+      </button>
+    </div>
+  </header>
+
+  <main class="board" id="board"></main>
+
+  <!-- Modal konfirmasi reset -->
+  <div class="modal-overlay" id="resetModal" hidden>
+    <div class="modal">
+      <h2>Reset Semua Skor?</h2>
+      <p>Seluruh skor akan dikembalikan ke 0. Tindakan ini tidak bisa dibatalkan dengan Undo setelah dikonfirmasi.</p>
+      <div class="modal-actions">
+        <button class="ctrl-btn" id="resetCancel">Batal</button>
+        <button class="ctrl-btn reset" id="resetConfirm">Ya, Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
