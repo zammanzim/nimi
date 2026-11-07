@@ -250,7 +250,7 @@ try {
   await db.openDatabase();
 
   await test('saveArchiveWithMessages online reports cloud:true and is readable back', async () => {
-    const res = await db.saveArchiveWithMessages(metaOnline, messagesOnline);
+    const res = await db.saveArchiveWithMessages(metaOnline, messagesOnline, { syncToCloud: true });
     assert.equal(res.cloud, true);
 
     const list = await db.getAllArchives();

@@ -33,6 +33,8 @@ const {
   cloudDeleteArchive,
   cloudClearAll,
   getDeviceId,
+  setDeviceId,
+  generateNewDeviceId,
   metaToRow,
   rowToMeta,
   MESSAGE_CHUNK_SIZE
@@ -101,6 +103,22 @@ console.log(`Device: ${TEST_DEVICE_ID}\n`);
 try {
   await test('getDeviceId() returns the persisted device id', () => {
     assert.equal(getDeviceId(), TEST_DEVICE_ID);
+  });
+
+  await test('setDeviceId() updates active id and persists, generateNewDeviceId() creates new unique id', () => {
+    const prev = getDeviceId();
+    const customKey = 'custom-device-sync-key-123';
+    const updated = setDeviceId(customKey);
+    assert.equal(updated, customKey);
+    assert.equal(getDeviceId(), customKey);
+    assert.equal(fakeStorage.get('waclone_device_id'), customKey);
+
+    const generated = generateNewDeviceId();
+    assert.ok(generated && generated !== customKey);
+    assert.equal(getDeviceId(), generated);
+
+    // restore original test id
+    setDeviceId(prev);
   });
 
   await test('metaToRow/rowToMeta roundtrip preserves the archive meta shape', () => {

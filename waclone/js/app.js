@@ -23,7 +23,11 @@ import {
   clearAllData,
   getSetting,
   setSetting,
-  syncWithCloud
+  syncWithCloud,
+  getDeviceId,
+  setDeviceId,
+  generateNewDeviceId,
+  clearLocalDataOnly
 } from './database.js';
 import { ChatRenderer } from './chat-renderer.js';
 import { ChatSearch } from './search.js';
@@ -75,11 +79,13 @@ class WhatsAppArchiveApp {
     this.menuNewChat = document.getElementById('menuNewChat');
     this.menuImportTxt = document.getElementById('menuImportTxt');
     this.menuLoadDemo = document.getElementById('menuLoadDemo');
+    this.menuSyncDevice = document.getElementById('menuSyncDevice');
     this.menuSyncAllSupabase = document.getElementById('menuSyncAllSupabase');
     this.menuClearAllData = document.getElementById('menuClearAllData');
 
     // Empty state actions
     this.btnEmptyImportTxt = document.getElementById('btnEmptyImportTxt');
+    this.btnEmptySyncDevice = document.getElementById('btnEmptySyncDevice');
     this.btnEmptyLoadDemo = document.getElementById('btnEmptyLoadDemo');
 
     // Sidebar elements
@@ -232,6 +238,19 @@ class WhatsAppArchiveApp {
     this.btnEmptyLoadDemo.addEventListener('click', () => {
       this.loadSampleArchive();
     });
+
+    if (this.menuSyncDevice) {
+      this.menuSyncDevice.addEventListener('click', () => {
+        this._closeAllDropdowns();
+        this.openSyncDevicePopup();
+      });
+    }
+
+    if (this.btnEmptySyncDevice) {
+      this.btnEmptySyncDevice.addEventListener('click', () => {
+        this.openSyncDevicePopup();
+      });
+    }
 
     this.menuSyncAllSupabase.addEventListener('click', () => {
       this._closeAllDropdowns();
@@ -1561,6 +1580,23 @@ class WhatsAppArchiveApp {
         this.preferredOwnerName = savedOwner;
       }
 
+      // Check URL param ?sync= / ?device= / ?key= for instant cross-device pairing
+      await this._handleSyncParamOnStartup();
+
+      // Background cloud sync to keep archives updated
+      try {
+        syncWithCloud()
+          .then(async (syncRes) => {
+            if (syncRes && (syncRes.pulled > 0 || syncRes.pushed > 0)) {
+              this.archives = await getAllArchives();
+              this.renderSidebarArchiveList(this.sidebarSearchInput.value);
+            }
+          })
+          .catch((e) => console.warn('Background sync on startup:', e));
+      } catch (syncErr) {
+        console.warn('Sync trigger error:', syncErr);
+      }
+
       this.archives = await getAllArchives();
       this.renderSidebarArchiveList();
 
@@ -1570,6 +1606,338 @@ class WhatsAppArchiveApp {
       console.error('Initialization error:', err);
       this.showEmptyState();
     }
+  }
+
+  /**
+   * Handle incoming ?sync= / ?device= / ?key= parameter in current page URL
+   */
+  async _handleSyncParamOnStartup() {
+    if (typeof window === 'undefined' || !window.location) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const syncKey = (params.get('sync') || params.get('device') || params.get('key') || '').trim();
+
+      if (!syncKey) return;
+
+      // Clean URL parameter from the browser address bar immediately without reloading
+      try {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl || '/');
+      } catch {
+        // Ignore history error
+      }
+
+      const currentId = getDeviceId();
+      if (syncKey === currentId) {
+        return; // Already using this sync key
+      }
+
+      const localArchives = await getAllArchives();
+
+      // If local has no archives (e.g. fresh device opening a shared link)
+      if (localArchives.length === 0) {
+        setDeviceId(syncKey);
+        this.showBanner('☁️ Menghubungkan ke perangkat lain & mengunduh arsip...');
+        const syncRes = await syncWithCloud();
+        this.archives = await getAllArchives();
+        this.renderSidebarArchiveList();
+        this.showInfoPopup(
+          'Perangkat Berhasil Terhubung!',
+          `Tautan sinkronisasi berhasil diterapkan.\nKunci: ${syncKey}\n\n• ${formatNumber(syncRes.pulled)} arsip percakapan berhasil diunduh dari cloud.`
+        );
+        return;
+      }
+
+      // If local already has archives, ask whether to merge or replace
+      const container = document.createElement('div');
+      container.className = 'sync-container';
+
+      const desc = document.createElement('p');
+      desc.className = 'popup-description';
+      desc.textContent = `Tautan sinkronisasi terdeteksi untuk menghubungkan ke kunci: "${syncKey}".`;
+
+      const sub = document.createElement('p');
+      sub.className = 'sync-hint';
+      sub.textContent = `Saat ini terdapat ${localArchives.length} arsip percakapan lokal di perangkat ini. Pilih opsi sinkronisasi:`;
+
+      container.appendChild(desc);
+      container.appendChild(sub);
+
+      this.openCustomPopup({
+        title: 'Hubungkan Sinkronisasi Perangkat',
+        bodyNode: container,
+        buttons: [
+          { label: 'Abaikan (Tetap Pakai Kunci Lama)', variant: 'cancel' },
+          {
+            label: 'Ganti Chat Lokal (Unduh Cloud)',
+            variant: 'danger',
+            onClick: async () => {
+              this.closeCustomPopup();
+              this.showBanner('☁️ Menghubungkan dan mengunduh data...');
+              await clearLocalDataOnly();
+              setDeviceId(syncKey);
+              const syncRes = await syncWithCloud();
+              this.archives = await getAllArchives();
+              this.renderSidebarArchiveList();
+              this.showInfoPopup(
+                'Sinkronisasi Selesai',
+                `Berhasil terhubung ke kunci baru!\n• ${formatNumber(syncRes.pulled)} arsip diunduh dari Supabase.`
+              );
+            }
+          },
+          {
+            label: 'Gabungkan Chat (Rekomendasi)',
+            variant: 'primary',
+            onClick: async () => {
+              this.closeCustomPopup();
+              this.showBanner('☁️ Menghubungkan dan menggabungkan data...');
+              setDeviceId(syncKey);
+              const syncRes = await syncWithCloud();
+              this.archives = await getAllArchives();
+              this.renderSidebarArchiveList();
+              this.showInfoPopup(
+                'Sinkronisasi Selesai',
+                `Berhasil terhubung ke kunci baru!\n• ${formatNumber(syncRes.pushed)} arsip diunggah\n• ${formatNumber(syncRes.pulled)} arsip diunduh.`
+              );
+            }
+          }
+        ]
+      });
+    } catch (err) {
+      console.warn('Gagal memproses parameter sinkronisasi URL:', err);
+    }
+  }
+
+  /**
+   * Open Custom Popup for Cross-Device Synchronization
+   * Displays the current device/sync key, quick share link with ?sync= param,
+   * copy buttons, input field to connect to another key, and new key generation.
+   */
+  openSyncDevicePopup() {
+    const currentKey = getDeviceId();
+    const shareUrl = `${window.location.origin}${window.location.pathname}?sync=${encodeURIComponent(currentKey)}`;
+
+    const container = document.createElement('div');
+    container.className = 'sync-container';
+
+    // Section 1: Kunci & Link Perangkat Ini
+    const sec1 = document.createElement('div');
+    sec1.className = 'popup-field-group';
+
+    const sec1Title = document.createElement('div');
+    sec1Title.className = 'sync-section-title';
+    sec1Title.textContent = '1. Kunci Sinkronisasi Perangkat Ini';
+
+    const sec1Desc = document.createElement('p');
+    sec1Desc.className = 'sync-hint';
+    sec1Desc.textContent = 'Gunakan kunci atau tautan di bawah ini di perangkat Anda yang lain (HP / Laptop) agar seluruh arsip chat Anda otomatis terhubung dan sama.';
+
+    // Code Box for Key
+    const keyBox = document.createElement('div');
+    keyBox.className = 'sync-box';
+    const keyCode = document.createElement('span');
+    keyCode.className = 'sync-code';
+    keyCode.textContent = currentKey;
+    const btnCopyKey = document.createElement('button');
+    btnCopyKey.type = 'button';
+    btnCopyKey.className = 'sync-btn-copy';
+    btnCopyKey.textContent = '📋 Salin Kunci';
+    btnCopyKey.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(currentKey);
+        btnCopyKey.textContent = '✅ Tersalin!';
+        setTimeout(() => { btnCopyKey.textContent = '📋 Salin Kunci'; }, 2000);
+      } catch {
+        this.showInfoPopup('Kunci Sinkronisasi', currentKey);
+      }
+    });
+    keyBox.appendChild(keyCode);
+    keyBox.appendChild(btnCopyKey);
+
+    // Link Preview & Copy
+    const linkLabel = document.createElement('label');
+    linkLabel.className = 'popup-field-label';
+    linkLabel.style.marginTop = '8px';
+    linkLabel.textContent = 'Tautan Cepat (Buka langsung di HP / Browser lain):';
+
+    const linkBox = document.createElement('div');
+    linkBox.className = 'sync-box';
+    const linkCode = document.createElement('span');
+    linkCode.className = 'sync-code';
+    linkCode.style.fontSize = '12px';
+    linkCode.textContent = shareUrl;
+    const btnCopyLink = document.createElement('button');
+    btnCopyLink.type = 'button';
+    btnCopyLink.className = 'sync-btn-copy';
+    btnCopyLink.textContent = '🔗 Salin Link';
+    btnCopyLink.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        btnCopyLink.textContent = '✅ Tersalin!';
+        setTimeout(() => { btnCopyLink.textContent = '🔗 Salin Link'; }, 2000);
+      } catch {
+        this.showInfoPopup('Tautan Sinkronisasi', shareUrl);
+      }
+    });
+    linkBox.appendChild(linkCode);
+    linkBox.appendChild(btnCopyLink);
+
+    sec1.appendChild(sec1Title);
+    sec1.appendChild(sec1Desc);
+    sec1.appendChild(keyBox);
+    sec1.appendChild(linkLabel);
+    sec1.appendChild(linkBox);
+
+    // Divider
+    const divider1 = document.createElement('div');
+    divider1.className = 'sync-divider';
+
+    // Section 2: Hubungkan ke Kunci Perangkat Lain
+    const sec2 = document.createElement('div');
+    sec2.className = 'popup-field-group';
+
+    const sec2Title = document.createElement('div');
+    sec2Title.className = 'sync-section-title';
+    sec2Title.textContent = '2. Hubungkan ke Kunci Perangkat Lain';
+
+    const sec2Desc = document.createElement('p');
+    sec2Desc.className = 'sync-hint';
+    sec2Desc.textContent = 'Masukkan kunci sinkronisasi dari perangkat Anda yang lain untuk mengunduh arsip chat:';
+
+    const inputOtherKey = document.createElement('input');
+    inputOtherKey.type = 'text';
+    inputOtherKey.className = 'popup-input';
+    inputOtherKey.placeholder = 'Tempel kunci di sini (contoh: dev-... atau UUID)';
+
+    const radioGroup = document.createElement('div');
+    radioGroup.className = 'popup-radio-list';
+    radioGroup.style.marginTop = '6px';
+
+    const optMerge = document.createElement('label');
+    optMerge.className = 'popup-radio-option selected';
+    const optMergeRadio = document.createElement('input');
+    optMergeRadio.type = 'radio';
+    optMergeRadio.name = 'syncAction';
+    optMergeRadio.value = 'merge';
+    optMergeRadio.checked = true;
+    const optMergeText = document.createElement('div');
+    optMergeText.className = 'popup-radio-left';
+    optMergeText.textContent = 'Gabungkan chat lokal dengan data kunci ini (Rekomendasi)';
+    optMerge.appendChild(optMergeRadio);
+    optMerge.appendChild(optMergeText);
+
+    const optReplace = document.createElement('label');
+    optReplace.className = 'popup-radio-option';
+    const optReplaceRadio = document.createElement('input');
+    optReplaceRadio.type = 'radio';
+    optReplaceRadio.name = 'syncAction';
+    optReplaceRadio.value = 'replace';
+    const optReplaceText = document.createElement('div');
+    optReplaceText.className = 'popup-radio-left';
+    optReplaceText.textContent = 'Ganti seluruh chat lokal dengan data dari kunci ini';
+    optReplace.appendChild(optReplaceRadio);
+    optReplace.appendChild(optReplaceText);
+
+    optMergeRadio.addEventListener('change', () => {
+      optMerge.classList.add('selected');
+      optReplace.classList.remove('selected');
+    });
+    optReplaceRadio.addEventListener('change', () => {
+      optReplace.classList.add('selected');
+      optMerge.classList.remove('selected');
+    });
+
+    radioGroup.appendChild(optMerge);
+    radioGroup.appendChild(optReplace);
+
+    sec2.appendChild(sec2Title);
+    sec2.appendChild(sec2Desc);
+    sec2.appendChild(inputOtherKey);
+    sec2.appendChild(radioGroup);
+
+    // Section 3: Reset / Buat Kunci Baru Mandiri
+    const sec3 = document.createElement('div');
+    sec3.style.display = 'flex';
+    sec3.style.justifyContent = 'space-between';
+    sec3.style.alignItems = 'center';
+    sec3.style.marginTop = '4px';
+
+    const btnNewKey = document.createElement('button');
+    btnNewKey.type = 'button';
+    btnNewKey.className = 'sync-btn-copy';
+    btnNewKey.style.fontSize = '12px';
+    btnNewKey.textContent = '🔄 Buat Kunci Baru Mandiri';
+    btnNewKey.addEventListener('click', () => {
+      this.closeCustomPopup();
+      this.showConfirmPopup({
+        title: 'Buat Kunci Baru?',
+        message: 'Perangkat ini akan diputuskan dari kunci saat ini dan diberikan kunci baru yang terpisah. Apakah Anda yakin?',
+        confirmLabel: 'Ya, Buat Kunci Baru',
+        confirmVariant: 'primary',
+        onConfirm: async () => {
+          generateNewDeviceId();
+          this.showBanner('Kunci baru dibuat. Menyinkronkan...');
+          const syncRes = await syncWithCloud();
+          this.archives = await getAllArchives();
+          this.renderSidebarArchiveList();
+          this.showInfoPopup('Kunci Baru Berhasil Dibuat', `Kunci baru perangkat ini:\n${getDeviceId()}`);
+        }
+      });
+    });
+    sec3.appendChild(btnNewKey);
+
+    container.appendChild(sec1);
+    container.appendChild(divider1);
+    container.appendChild(sec2);
+    container.appendChild(sec3);
+
+    const applyConnect = async () => {
+      const targetKey = (inputOtherKey.value || '').trim();
+      if (!targetKey) {
+        inputOtherKey.focus();
+        return;
+      }
+      if (targetKey === currentKey) {
+        this.closeCustomPopup();
+        this.showInfoPopup('Informasi', 'Kunci yang dimasukkan sama dengan kunci perangkat saat ini.');
+        return;
+      }
+
+      const shouldReplace = optReplaceRadio.checked;
+      this.closeCustomPopup();
+      this.showBanner('☁️ Menghubungkan perangkat dan menyinkronkan chat...');
+
+      if (shouldReplace) {
+        await clearLocalDataOnly();
+      }
+
+      setDeviceId(targetKey);
+      const syncRes = await syncWithCloud();
+      this.archives = await getAllArchives();
+      this.renderSidebarArchiveList();
+
+      if (this.currentArchive) {
+        this.closeActiveChat();
+      }
+
+      this.showInfoPopup(
+        'Sinkronisasi Berhasil Terhubung',
+        `Perangkat ini telah dihubungkan ke kunci baru!\n\n• ${formatNumber(syncRes.pulled)} arsip diunduh dari Supabase\n• ${formatNumber(syncRes.pushed)} arsip diunggah ke Supabase.`
+      );
+    };
+
+    this.openCustomPopup({
+      title: 'Sinkronkan Antar Perangkat (Cross-Device)',
+      bodyNode: container,
+      buttons: [
+        { label: 'Tutup', variant: 'cancel' },
+        { label: 'Hubungkan & Sinkronkan', variant: 'primary', onClick: applyConnect }
+      ]
+    });
+
+    setTimeout(() => {
+      inputOtherKey.focus();
+    }, 50);
   }
 
   /**

@@ -1578,3 +1578,87 @@ mark.search-highlight {
     display: none;
   }
 }
+
+/* ==========================================================================
+   Device Sync Modal & Widgets
+   ========================================================================== */
+
+.sync-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 13.5px;
+}
+
+.sync-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-accent);
+  margin-bottom: 4px;
+}
+
+.sync-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background-color: var(--bg-sidebar);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.sync-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-all;
+  user-select: all;
+}
+
+.sync-btn-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-panel-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.sync-btn-copy:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--text-accent);
+  color: var(--text-accent);
+}
+
+.sync-divider {
+  height: 1px;
+  background-color: var(--border-strong);
+  margin: 4px 0;
+}
+
+.sync-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.sync-link-preview {
+  font-size: 12px;
+  color: var(--text-link);
+  word-break: break-all;
+  user-select: all;
+  background: rgba(83, 189, 235, 0.08);
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px dashed rgba(83, 189, 235, 0.35);
+}

@@ -31,7 +31,10 @@ import {
   cloudUpdateMeta,
   cloudDeleteArchive,
   cloudClearAll,
-  rowToMeta
+  rowToMeta,
+  getDeviceId,
+  setDeviceId,
+  generateNewDeviceId
 } from './supabase-store.js';
 
 const DB_NAME = 'WhatsAppArchiveDB';
@@ -576,3 +579,14 @@ export async function setSetting(key, value) {
   tx.objectStore('settings').put({ key, value });
   await txDone(tx);
 }
+
+/**
+ * Clear local IndexedDB records without deleting from cloud.
+ * Used when switching device sync key and choosing to replace local archives.
+ * @returns {Promise<void>}
+ */
+export async function clearLocalDataOnly() {
+  await idbClearAll();
+}
+
+export { getDeviceId, setDeviceId, generateNewDeviceId };

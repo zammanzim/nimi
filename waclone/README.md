@@ -32,6 +32,7 @@ Pemrosesan file dan pencarian dilakukan **100% di browser Anda** (File API), sem
    - Setiap import TXT **langsung disimpan ke Supabase** (tabel `wa_archives` / `wa_messages`), lalu juga dicadangkan ke IndexedDB.
    - Arsip tetap tersimpan meskipun halaman dimuat ulang (*reload*) **atau Anda sedang offline** — perubahan yang dibuat saat offline otomatis diunggah saat aplikasi dibuka kembali dengan internet.
    - Privasi per perangkat: setiap browser punya *device id* unik dan Row Level Security (RLS) memastikan hanya arsip dari device yang sama yang bisa dibaca/dihapus.
+   - **Sinkronisasi Antar Perangkat (Cross-Device)**: Bagikan kunci perangkat atau buka tautan dengan URL parameter `?sync=<device_id>` di HP / Laptop lain untuk langsung mengakses dan menyinkronkan seluruh riwayat chat yang sama.
    - Mendukung ganti nama arsip, hapus satu arsip, atau hapus seluruh data lokal & cloud aplikasi.
 
 ---

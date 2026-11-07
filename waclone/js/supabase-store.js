@@ -46,6 +46,7 @@ export function getDeviceId() {
         id = generateId();
         localStorage.setItem(DEVICE_STORAGE_KEY, id);
       }
+      sessionDeviceId = id;
       return id;
     }
   } catch {
@@ -53,6 +54,35 @@ export function getDeviceId() {
   }
   if (!sessionDeviceId) sessionDeviceId = generateId();
   return sessionDeviceId;
+}
+
+/**
+ * Update the active device id / sync key. Persists to localStorage and session cache.
+ * @param {string} newId
+ * @returns {string} trimmed new id
+ */
+export function setDeviceId(newId) {
+  if (!newId || typeof newId !== 'string') return getDeviceId();
+  const trimmed = newId.trim();
+  if (!trimmed) return getDeviceId();
+  sessionDeviceId = trimmed;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(DEVICE_STORAGE_KEY, trimmed);
+    }
+  } catch {
+    // storage blocked
+  }
+  return trimmed;
+}
+
+/**
+ * Generate, set, and return a fresh device id / sync key.
+ * @returns {string}
+ */
+export function generateNewDeviceId() {
+  const newId = generateId();
+  return setDeviceId(newId);
 }
 
 function generateId() {
